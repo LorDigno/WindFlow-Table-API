@@ -1,0 +1,81 @@
+{
+    "query_id": "q1_q2_union",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "sensor_id",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "avg_temp",
+                "data_type": "DOUBLE"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "humidity",
+                "data_type": "DOUBLE"
+            }
+        ],
+        "schema_in": {
+            "sensor_id": "STRING",
+            "avg_temp": "DOUBLE",
+            "humidity": "DOUBLE"
+        },
+        "schema_out": {
+            "sensor_id": "STRING",
+            "avg_temp": "DOUBLE",
+            "humidity": "DOUBLE"
+        },
+        "parents": [
+            {
+                "op_type": "JOIN_INTERVAL",
+                "key": "sensor_id",
+                "attachment": {
+                    "type": "INTERVAL",
+                    "lower_bound": {
+                        "value": -5,
+                        "unit": "MINUTES"
+                    },
+                    "upper_bound": {
+                        "value": 5,
+                        "unit": "MINUTES"
+                    }
+                },
+                "tab1_schema": {
+                    "sensor_id": "STRING",
+                    "avg_temp": "DOUBLE"
+                },
+                "tab2_schema": {
+                    "sensor_id": "STRING",
+                    "humidity": "DOUBLE"
+                },
+                "schema_out": {
+                    "sensor_id": "STRING",
+                    "avg_temp": "DOUBLE",
+                    "humidity": "DOUBLE"
+                },
+                "parents": [
+                    {
+                        "op_type": "TAB_REF",
+                        "source_id": "sensor_q1",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "avg_temp": "DOUBLE"
+                        }
+                    },
+                    {
+                        "op_type": "TAB_REF",
+                        "source_id": "sensor_q2",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "humidity": "DOUBLE"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

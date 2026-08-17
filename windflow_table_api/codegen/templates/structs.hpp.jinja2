@@ -1,0 +1,40 @@
+#ifndef {{ query_id | upper }}_STRUCTS_HPP
+#define {{ query_id | upper }}_STRUCTS_HPP
+
+#include <string>
+#include <cstdint>
+#include <functional>
+
+{% for s in structs %}
+// ============================================================================
+// Struct: {{ s.struct_name }}
+// ============================================================================
+struct {{ s.struct_name }} {
+{% for f in s.fields %}
+    {{ f.cpp_type }} {{ f.name }};
+{% endfor %}
+
+{% if s.needs_hash %}
+    bool operator==(const {{ s.struct_name }}& other) const {
+        return {% for f in s.fields %}{{ f.name }} == other.{{ f.name }}{% if not loop.last %} && {% endif %}{% endfor %};
+    }
+{% endif %}
+};
+
+{% if s.needs_hash %}
+namespace std {
+    template<>
+    struct hash<{{ s.struct_name }}> {
+        size_t operator()(const {{ s.struct_name }}& k) const {
+            size_t h = 0;
+            {% for f in s.fields %}
+            h ^= std::hash<{{ f.cpp_type }}>{}(k.{{ f.name }}) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            {% endfor %}
+            return h;
+        }
+    };
+}
+{% endif %}
+
+{% endfor %}
+#endif // {{ query_id | upper }}_STRUCTS_HPP
