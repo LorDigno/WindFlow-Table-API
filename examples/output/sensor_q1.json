@@ -50,7 +50,7 @@
                 },
                 "schema_out": {
                     "sensor_id": "STRING",
-                    "COUNT(DISTINCT temperature)": "BIGINT",
+                    "COUNT(*)": "BIGINT",
                     "SUM(temperature)": "DOUBLE",
                     "avg_temp": "DOUBLE"
                 },
@@ -64,12 +64,8 @@
                         "expr_type": "AGGREGATE",
                         "func": "COUNT",
                         "data_type": "BIGINT",
-                        "target": {
-                            "expr_type": "COL_REF",
-                            "name": "temperature",
-                            "data_type": "DOUBLE"
-                        },
-                        "is_distinct": true
+                        "target": null,
+                        "is_distinct": false
                     },
                     {
                         "expr_type": "AGGREGATE",

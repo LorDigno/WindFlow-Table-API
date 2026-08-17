@@ -228,7 +228,7 @@ class TableEnvironment:
             if isinstance(expr, AggregateExpression):
                 if expr.func_type == AggFuncType.AVG and expr.target_expr:
                     target = expr.target_expr
-                    self._add_aggregation(aggregations, count(target))
+                    self._add_aggregation(aggregations, count())
                     self._add_aggregation(aggregations, sum(target))
 
                 self._add_aggregation(aggregations, expr)
