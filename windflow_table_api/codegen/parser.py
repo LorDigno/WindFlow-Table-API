@@ -2,6 +2,7 @@ import json
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Set
 from dataclasses import dataclass, field
+from .utility import OP_TYPE
 
 @dataclass
 class OpNode:
@@ -94,7 +95,7 @@ class JsonParser:
         op_type = op_dict.get("op_type", "UNKNOWN")
 
         #passi ad esplorare un'altra query
-        if op_type == "TAB_REF":
+        if op_type == OP_TYPE.TAB_REF.name:
             return self._handle_tab_ref(op_dict)
 
         #generazione dell'id del nodo

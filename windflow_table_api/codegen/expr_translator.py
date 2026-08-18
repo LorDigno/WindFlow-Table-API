@@ -1,5 +1,5 @@
 from typing import Dict, List, Any, Optional
-from utility_maps import OPERATOR_MAP
+from .utility import OPERATOR_MAP
 
 class ExpressionTranslator:
     """
@@ -49,7 +49,7 @@ class ExpressionTranslator:
         val = expr_dict["value"]
         data_type = expr_dict.get("data_type")
 
-        if data_type in ("BOOLEAN", "BOOL") or isinstance(val, bool):
+        if data_type == "BOOLEAN" or isinstance(val, bool):
             return "true" if val else "false"
 
         if data_type == "STRING" or isinstance(val, str):

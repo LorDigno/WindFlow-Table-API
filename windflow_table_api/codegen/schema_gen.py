@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Set
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
-from utility_maps import TYPE_MAP
+from .utility import TYPE_MAP
 
 @dataclass
 class CppField:

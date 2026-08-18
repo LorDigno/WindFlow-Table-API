@@ -1,0 +1,7 @@
+[](const {{ input_struct }}& {{ input_var }}) -> {{ output_struct }} {
+    {{ output_struct }} out;
+    {% for target, expr in mappings %}
+    out.{{ target }} = {{ expr }};
+    {% endfor %}
+    return out;
+}

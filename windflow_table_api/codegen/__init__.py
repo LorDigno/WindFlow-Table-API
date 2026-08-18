@@ -6,6 +6,8 @@ e della generazione del codice C++ nativo per WindFlow.
 from .parser import OpNode, ParsedGraph, JsonParser
 from .schema_gen import CppField, CppStruct, SchemaGenerator
 from .expr_translator import ExpressionTranslator
+from .utility import TYPE_MAP, OPERATOR_MAP
+from .lambda_gen import LambdaGenerator
 
 __all__ = [
     "OpNode",
@@ -14,5 +16,8 @@ __all__ = [
     "CppField",
     "CppStruct",
     "SchemaGenerator",
-    "ExpressionTranslator"
+    "ExpressionTranslator",
+    "TYPE_MAP",
+    "OPERATOR_MAP",
+    "LambdaGenerator"
 ]
