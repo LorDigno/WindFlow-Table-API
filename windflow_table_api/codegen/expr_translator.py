@@ -1,45 +1,10 @@
 from typing import Dict, List, Any, Optional
-
+from utility_maps import OPERATOR_MAP
 
 class ExpressionTranslator:
     """
     Traduce le espressioni nel JSON in stringhe di codice C++. 
     """
-
-    #mappa dei tipi logici coi rispettivi tipi C++
-    TYPE_MAP: Dict[str, str] = {
-        "INT": "int32_t",
-        "BIGINT": "int64_t",
-        "FLOAT": "float",
-        "DOUBLE": "double",
-        "STRING": "std::string",
-        "BOOL": "bool",
-    }
-
-    #mappa degli operatori logici/aritmetici tra JSON e C++
-    OPERATOR_MAP: Dict[str, str] = {
-        # Logici
-        "&&": "&&",
-        "||": "||",
-        "and": "&&",
-        "or": "||",
-        "!": "!",
-        "not": "!",
-        "~": "!",
-        # Confronto
-        "==": "==",
-        "!=": "!=",
-        "<": "<",
-        "<=": "<=",
-        ">": ">",
-        ">=": ">=",
-        # Aritmetici
-        "+": "+",
-        "-": "-",
-        "*": "*",
-        "/": "/",
-        "%": "%",
-    }
 
     @staticmethod
     def translate_expr(expr_dict: Dict[str, Any], input_var: str = "in") -> str:
@@ -111,10 +76,10 @@ class ExpressionTranslator:
         """
 
         raw_op = expr_dict["op"]
-        if raw_op not in ExpressionTranslator.OPERATOR_MAP:
+        if raw_op not in OPERATOR_MAP:
             raise KeyError(f"Operatore binario non supportato: '{raw_op}'")
 
-        cpp_op = ExpressionTranslator.OPERATOR_MAP[raw_op]
+        cpp_op = OPERATOR_MAP[raw_op]
 
         #tarduzione ricorsiva
         left_cpp = ExpressionTranslator.translate_expr(expr_dict["left"], input_var)
@@ -129,10 +94,10 @@ class ExpressionTranslator:
         """
 
         raw_op = expr_dict["op"]
-        if raw_op not in ExpressionTranslator.OPERATOR_MAP:
+        if raw_op not in OPERATOR_MAP:
             raise KeyError(f"Operatore unario non supportato: '{raw_op}'")
 
-        cpp_op = ExpressionTranslator.OPERATOR_MAP[raw_op]
+        cpp_op = OPERATOR_MAP[raw_op]
 
         inner_expr = expr_dict.get("expr")
         if inner_expr is None:

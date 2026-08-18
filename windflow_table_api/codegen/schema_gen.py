@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Set
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
+from utility_maps import TYPE_MAP
 
 @dataclass
 class CppField:
@@ -35,16 +36,6 @@ class SchemaGenerator:
     Tutti gli struct generati ordinano alfabeticamente i campi per valutare al meglio l'equivalenza fra schemi.
     """
 
-    #mappa dei tipi logici coi rispettivi tipi C++
-    TYPE_MAP: Dict[str, str] = {
-        "INT": "int32_t",
-        "BIGINT": "int64_t",
-        "FLOAT": "float",
-        "DOUBLE": "double",
-        "STRING": "std::string",
-        "BOOL": "bool",
-    }
-
     def __init__(self):
         #cache usata per non creare due volte schemi equivalenti fra loro
         self._struct_cache: Dict[Tuple[Tuple[str, str], ...], CppStruct] = {}
@@ -67,10 +58,10 @@ class SchemaGenerator:
         Lancia KeyError se il tipo non è supportato.
         """
 
-        if json_type not in self.TYPE_MAP:
+        if json_type not in TYPE_MAP:
             raise KeyError(f"Il tipo {json_type} non è supportato.")
 
-        return self.TYPE_MAP[json_type]
+        return TYPE_MAP[json_type]
 
     def get_or_create_struct(
         self, 

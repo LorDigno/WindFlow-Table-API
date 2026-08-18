@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import Dict, List, Any, Optional, Set
 from dataclasses import dataclass, field
 
-
 @dataclass
 class OpNode:
     """
