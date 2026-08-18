@@ -1,5 +1,5 @@
 {
-    "query_id": "group_tests",
+    "query_id": "group_keyed_test",
     "root": {
         "op_type": "SELECT",
         "expressions": [

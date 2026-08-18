@@ -1,0 +1,61 @@
+{
+    "query_id": "group_global_test",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "COUNT(DISTINCT key)",
+                "data_type": "BIGINT",
+                "alias": "uniques"
+            }
+        ],
+        "schema_in": {
+            "COUNT(DISTINCT key)": "BIGINT"
+        },
+        "schema_out": {
+            "uniques": "BIGINT"
+        },
+        "parents": [
+            {
+                "op_type": "GROUP_BY",
+                "keys": [],
+                "window": null,
+                "schema_out": {
+                    "COUNT(DISTINCT key)": "BIGINT"
+                },
+                "schema_in": {
+                    "key": "STRING",
+                    "number": "DOUBLE"
+                },
+                "aggregations": [
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "COUNT",
+                        "data_type": "BIGINT",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "name": "key",
+                            "data_type": "STRING"
+                        },
+                        "is_distinct": true,
+                        "name": "COUNT(DISTINCT key)",
+                        "alias": "uniques"
+                    }
+                ],
+                "parents": [
+                    {
+                        "op_type": "FROM",
+                        "source_id": "source_stream_file_1",
+                        "schema_out": {
+                            "key": "STRING",
+                            "number": "DOUBLE"
+                        },
+                        "file_path": "test.csv",
+                        "time_col": null
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -121,9 +121,16 @@ class Table:
                     f"Atteso 'str' o 'Expression'."
                 )
 
-        if isinstance(draft.get_last_operator(), GroupByOp):
-            selections = draft.handle_group(selections)
-       
+        #controllo di aggregazioni
+        has_aggregates = any(len(e.aggregation_dependencies()) > 0 for e in selections)
+        if has_aggregates:
+            if not isinstance(draft.get_last_operator(), GroupByOp): 
+                #aggregazione globale, creo il GroupByOp senza chiavi e lo inserisco
+                group_op = GroupByOp(draft.current_schema, [])
+                draft.add_unary_operator(group_op)
+
+            selections = draft.handle_group(selections)    
+    
         select_op = SelectOp(selections, draft.current_schema)
         draft.add_unary_operator(select_op)
 
