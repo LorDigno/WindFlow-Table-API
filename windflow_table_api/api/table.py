@@ -100,10 +100,11 @@ class Table:
 
         return self
 
-    def select(self, *columns: Union[str, Expression]) -> Query:
+    def select(self, *columns: Union[str, Expression], distinct: bool = False) -> Query:
         """
         Proietta o calcola nuove colonne a partire da nomi o espressioni.
         Finalizza la nuova Query nell'ambiente e la rende.
+        Con distinct = True aggiunge un operatori di Distinct a seguito della selezione. 
         """
 
         draft = self.get_draft()
@@ -120,13 +121,20 @@ class Table:
                     f"Atteso 'str' o 'Expression'."
                 )
 
+        if isinstance(draft.get_last_operator(), GroupByOp):
+            selections = draft.handle_group(selections)
+       
         select_op = SelectOp(selections, draft.current_schema)
         draft.add_unary_operator(select_op)
+
+        if distinct:
+            distinct_op = DistinctOp(draft.current_schema)
+            draft.add_unary_operator(distinct_op)
              
         q = self.env.create_query(
-            select_op.schema_out,
+            draft.current_schema,
             self._table_id,
-            select_op,
+            draft.get_last_operator(),
             draft.custom_name
         )
 
@@ -230,49 +238,10 @@ class Table:
             raise ValueError("È necessario specificare almeno una colonna come chiave di raggruppamento in group_by().")
 
         draft = self.get_draft()
-        group_op = GroupByOp( draft.current_schema, list(keys), window)
+        group_op = GroupByOp(draft.current_schema, list(keys), window)
         draft.add_unary_operator(group_op)
 
         return self
-
-    def select_distinct(self, *columns: Union[str, Expression]) -> Query:
-        """
-        Seleziona e poi rimuove i duplicati.
-        Implementata tramite un operatore di select e uno di distinct. 
-        Crea nell'ambiente e rende la Query risultante.
-        Stato potenzialmente infinito in base al numero di tuple uniche.
-        """
-
-        draft = self.get_draft()
-        
-        selections = []
-        for c in columns:
-            if isinstance(c, str):
-                selections.append(col(c))
-            elif isinstance(c, Expression):
-                selections.append(c)
-            else:
-                raise TypeError(
-                    f"Tipo non supportato all'interno di select(): {type(c).__name__}. "
-                    f"Atteso 'str' o 'Expression'."
-                )
-        
-        select_op = SelectOp(selections, draft.current_schema)
-        draft.add_unary_operator(select_op)
-
-        distinct_op = DistinctOp(draft.current_schema)
-        draft.add_unary_operator(distinct_op)
-        
-        q = self.env.create_query(
-            distinct_op.schema_out,
-            self._table_id,
-            distinct_op,
-            draft.custom_name
-        )
-
-        self.clear_draft()
-
-        return q
 
     def distinct(self) -> Table:
         """

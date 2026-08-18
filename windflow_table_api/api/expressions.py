@@ -66,6 +66,11 @@ class Expression(ABC):
         """Rende le aggregazioni che è necessario calcolare per valutare l'espressione."""
         pass
 
+    @abstractmethod
+    def rewrite_grouped(self) -> "Expression":
+        """Riscrive l'espressione affinché faccia riferimento ai campi generati dallo schema del GroupByOp."""
+        pass
+
     def _to_expr(self, other: Any) -> "Expression":
         """Converte un valore scalare in una LiteralExpression se necessario."""
 
@@ -157,6 +162,9 @@ class ColRefExpression(Expression):
     def aggregation_dependencies(self) -> List[AggregateExpression]:
         return []
 
+    def rewrite_grouped(self) -> Expression:
+        return self    
+
 class LiteralExpression(Expression):
     """Rappresenta una costante con relativo DataType."""
 
@@ -180,8 +188,10 @@ class LiteralExpression(Expression):
             "expr_type": "LITERAL",
             "value": self.value,
             "data_type": self.data_type.name,
-            "alias": self.get_name()
+            "name": self.get_default_name()
         }
+        if self._alias_name:
+            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
@@ -190,6 +200,9 @@ class LiteralExpression(Expression):
 
     def aggregation_dependencies(self) -> List[AggregateExpression]:
             return []
+
+    def rewrite_grouped(self) -> Expression:
+        return self
 
 class BinaryOpExpression(Expression):
     """Rappresenta un'operazione binaria tra due espressioni."""
@@ -243,8 +256,10 @@ class BinaryOpExpression(Expression):
             "data_type": self.get_type(applied_schema).name,
             "left": self.left.to_dict(applied_schema),
             "right": self.right.to_dict(applied_schema),
-            "alias": self.get_name()
+            "name": self.get_default_name()
         }
+        if self._alias_name:
+            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
@@ -256,6 +271,14 @@ class BinaryOpExpression(Expression):
         out += self.left.aggregation_dependencies()
         out += self.right.aggregation_dependencies()
         return out  
+
+    def rewrite_grouped(self) -> Expression:
+        res = BinaryOpExpression(
+            self.left.rewrite_grouped(), self.op, self.right.rewrite_grouped()
+        )
+        if self._alias_name:
+            res.alias(self._alias_name)
+        return res
 
 class UnaryOpExpression(Expression):
     """Rappresenta un'operazione unaria su un'espressione."""
@@ -288,8 +311,16 @@ class UnaryOpExpression(Expression):
             "op": self.op,
             "data_type": self.get_type(applied_schema).name,
             "expr": self.expr.to_dict(applied_schema),
-            "alias": self.get_name()
+            "name": self.get_default_name()
         }
+        if self._alias_name:
+            res["alias"] = self._alias_name
+        return res
+
+    def rewrite_grouped(self) -> Expression:
+        res = UnaryOpExpression(self.expr.rewrite_grouped(), self.op)
+        if self._alias_name:
+            res.alias(self._alias_name)
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
@@ -390,8 +421,10 @@ class AggregateExpression(Expression):
             "data_type": self.get_type(applied_schema).name,
             "target": self.target_expr.to_dict(applied_schema) if self.target_expr else None,
             "is_distinct": self.is_distinct,
-            "alias": self.get_name()
+            "name": self.get_default_name()
         }
+        if self._alias_name:
+            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
@@ -404,6 +437,12 @@ class AggregateExpression(Expression):
             out.append(count())
             out.append(sum(self.target_expr))
         return out
+
+    def rewrite_grouped(self) -> Expression:
+        res = ColRefExpression(self.get_default_name())
+        if self._alias_name:
+            res.alias(self._alias_name)
+        return res
 
 # -------------------------------------------------------------------------
 # Helper Functions per l'interfaccia utente

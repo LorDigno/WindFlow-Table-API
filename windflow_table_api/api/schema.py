@@ -109,15 +109,22 @@ class SchemaBuilder:
         self._fields[name] = Field(name, data_type, expression)
         return self
 
-    def add_expression(self, expr: Expression, input_schema: Schema) -> SchemaBuilder:
+    def add_expression(
+            self, expr: Expression, 
+            input_schema: Schema, 
+            default_name: Optional[bool] = False
+        ) -> SchemaBuilder:
         """
         Aggiunge una colonna derivata direttamente da un'Expression:
-        - Estrae il nome dall'alias o dal nome di default dell'espressione
+        - Estrae il nome dall'alias o dal nome di default dell'espressione (se default_name = True prende sempre il default)
         - Calcola il DataType applicando l'espressione sullo schema di input
         - Associa l'oggetto Expression al campo
         """
 
-        col_name = expr.get_name()
+        if default_name:
+            col_name = expr.get_default_name()
+        else:    
+            col_name = expr.get_name()
         col_type = expr.get_type(input_schema)
         return self.add_column(col_name, col_type, expression=expr)
 

@@ -172,8 +172,15 @@ class TableEnvironment:
                 raise RuntimeError(f"La tabella {op.source_table_id} non è presente nell'ambiente.")
 
         #nei groupBy seguiti da select si mettono le aggregazioni nel JSON del groupBy
-        if isinstance(op, SelectOp) and op.parents and isinstance(op.parents[0], GroupByOp):
-            self._handle_group(op, op.parents[0])
+        if ( isinstance(op, GroupByOp)
+            and op.window is not None
+            and op.window.window_type == WindowType.TIME
+            and self.policy == TimePolicy.NO_POLICY
+            ):
+            raise RuntimeError(
+                f"Con NO_POLICY non si possono usare costrutti temporali."
+                f" {op.window}"
+            )
 
         #controllo la politica di tempo sull'attachment della join se presente 
         if isinstance(op, JoinOp) and op.attachment is not None:
@@ -202,7 +209,7 @@ class TableEnvironment:
         Metodo che date le informazioni nella select instanzia nel GroupByOp 
         le aggregazioni necessarie e stabilisce lo schema di output reale.
         """
-
+    """
         if (
             group_op.window is not None
             and group_op.window.window_type == WindowType.TIME
@@ -226,7 +233,7 @@ class TableEnvironment:
             for agg in expr.aggregation_dependencies():
                 sig = agg.get_default_name()
                 if sig not in aggregations_map:
-                    aggregations_map[sig] = agg
+                    aggregations_map[sig] = agg    
 
         #costruzione dello schema di output come aggregazioni + chiavi
         builder = SchemaBuilder()
@@ -235,10 +242,13 @@ class TableEnvironment:
             builder.add_column(name, old_schema.fields[name])
 
         for aggr in aggregations_map.values():
-            builder.add_expression(aggr, old_schema)
+            builder.add_expression(aggr, old_schema, default_name=True)
 
         group_op._schema_out = builder.build()
-        group_op.aggregations = list(aggregations_map.values())       
+        group_op.aggregations = list(aggregations_map.values())
+
+        sel_op._input_schema = group_op.schema_out       
+    """
 
     def _collect_referenced_queries(self, op: Operator, collected: Set[str]) -> None:
         """

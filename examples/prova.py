@@ -33,7 +33,7 @@ tab.name_draft("sensor_q1")
 q1 = (tab
      .where(cond)
      .group_by("sensor_id", window=window)
-     .select("sensor_id", avg("temperature"))
+     .select("sensor_id", avg("temperature").alias("avg_temp"), count().alias("conteggio"))
     )   
 
 tab.name_draft("sensor_q2")
@@ -42,7 +42,7 @@ q2 = (tab.select("sensor_id", "humidity"))
 q1.name_draft("q1_q2_join")
 q3 = (q1                                    
       .join(q2, "sensor_id", interval)                            
-      .select("sensor_id", "humidity")      
+      .select("sensor_id", "avg_temp", "humidity")      
       )
 
 print(tab)
