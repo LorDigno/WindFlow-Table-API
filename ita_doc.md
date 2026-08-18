@@ -24,7 +24,6 @@ api/
 C'è molto da dire su vari di questi moduli quindi ci sarà una sezione per molti di loro.
 A tempo di scrittura sono tutti "completi" tralasciando la rappresentazione in JSON e table_env.py a cui manca il metodo .execute(query), il cui scopo è appunto esplorare le varie Table e fare il JSON.
 # Sotto-package Api
-
 Si presuppone che ci sia stato un import di tipo:
 ```
 import windflow_table_api as wf
@@ -1405,6 +1404,8 @@ def neg(expr: Expression) -> UnaryOpExpression:
 
 Il funzionamento di UnaryOpExpression è poi similare a BinaryOpExpression con get_type che controlla che l'espressione di input sia di un tipo compatibile all'operatore utilizzato.
 ## 6.0 Schemi e Validità del GroupBy 
+Quanto segue si applica sia ad aggregazioni globali (senza chiavi) che keyed, l'unica differenza fra le due è che l'operatore di group_by viene inserito in automatico dal metodo select di Table per le globali.
+
 Il group_by è il primo (e per ora unico) operatore che necessità dell'operatore successivo per completarsi dato che è la select ad avere le aggregazioni.
 Per questo non ci possono essere operatori fra il group_by e la relativa select.
 
@@ -1804,5 +1805,5 @@ Di default è False per evitare di riscrivere più volte un file identico scritt
 
 Attenzione però che se l'esecuzione di una query precedente sta leggendo il file durante la sovrascrittura tale esecuzione non andrà a compimento.
 #### 8.4 Esecuzione del Livello Inferiore
-Attualmente non implementata dato che il livello inferiore (parser e codegen) non esiste o è in early development. 
+Attualmente non implementata dato che il livello inferiore (parser e codegen) non esiste. 
 #####TODO  

@@ -373,8 +373,8 @@ class AggregateExpression(Expression):
 
     def get_default_name(self) -> str:
         dist_str = "DISTINCT " if self.is_distinct else ""
-        target_str = self.target_expr.get_name() if self.target_expr else "*"
-        return f"{self.func_type.value}({dist_str}{target_str})"
+        target_str = self.target_expr.get_name() if self.target_expr else ""
+        return f"{self.func_type.value}_{dist_str}{target_str}"
 
     def get_type(self, schema: Schema) -> DataTypes:
         #COUNT rende un BIGINT perchè il numero di tuple è potenzialmente infinito
