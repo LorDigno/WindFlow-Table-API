@@ -44,10 +44,37 @@ class LambdaGenerator:
         )
 
     @staticmethod
-    def groupBy_lambda():
-        pass
+    def groupBy_lambda(
+        in_struct: str,
+        out_struct: str,
+        key_mappings: List[Tuple[str, str]],
+        accumulations: List[str], 
+        in_var: str = "in",
+        out_var: str = "out"
+    ) -> str:
+        template = _ENV.get_template("group_lambda.jinja2")
+        return template.render(
+            input_struct=in_struct,
+            output_struct= out_struct,
+            keys= key_mappings,
+            accumulations= accumulations, 
+            input_var= in_var,
+            output_var= out_var
+        )
 
     @staticmethod
-    def join_lambda():
-        pass
-
+    def join_lambda(
+        input_struct: str,
+        out_struct: str,
+        mappings: List[Tuple[str, str]],
+        left_var: str = "left",
+        right_var: str = "right",
+    ) -> str:
+        template = _ENV.get_template("join_lambda.jinja2")
+        return template.render(
+            input_struct=input_struct,
+            output_struct= out_struct,
+            mappings= mappings, 
+            left_var= left_var,
+            right_var= right_var
+        )        

@@ -1,0 +1,9 @@
+[](const {{ input_struct }}& {{ input_var }}, {{ output_struct }}& {{ output_var }}) -> void {
+    {% for target, expr in keys %}
+    {{ output_var }}.{{ target }} = {{ expr }};
+    {% endfor %}
+
+    {% for expr in accumulations %}
+    {{ expr }};
+    {% endfor %}
+}
