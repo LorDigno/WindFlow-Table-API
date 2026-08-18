@@ -18,7 +18,7 @@
                     "data_type": "DOUBLE"
                 },
                 "is_distinct": false,
-                "alias": "avg_temp"
+                "alias": "AVG(temperature)"
             }
         ],
         "schema_in": {
@@ -28,7 +28,7 @@
         },
         "schema_out": {
             "sensor_id": "STRING",
-            "avg_temp": "DOUBLE"
+            "AVG(temperature)": "DOUBLE"
         },
         "parents": [
             {
@@ -52,7 +52,7 @@
                     "sensor_id": "STRING",
                     "COUNT(*)": "BIGINT",
                     "SUM(temperature)": "DOUBLE",
-                    "avg_temp": "DOUBLE"
+                    "AVG(temperature)": "DOUBLE"
                 },
                 "schema_in": {
                     "sensor_id": "STRING",
@@ -65,7 +65,8 @@
                         "func": "COUNT",
                         "data_type": "BIGINT",
                         "target": null,
-                        "is_distinct": false
+                        "is_distinct": false,
+                        "alias": "COUNT(*)"
                     },
                     {
                         "expr_type": "AGGREGATE",
@@ -76,7 +77,8 @@
                             "name": "temperature",
                             "data_type": "DOUBLE"
                         },
-                        "is_distinct": false
+                        "is_distinct": false,
+                        "alias": "SUM(temperature)"
                     },
                     {
                         "expr_type": "AGGREGATE",
@@ -88,7 +90,7 @@
                             "data_type": "DOUBLE"
                         },
                         "is_distinct": false,
-                        "alias": "avg_temp"
+                        "alias": "AVG(temperature)"
                     }
                 ],
                 "parents": [
@@ -114,8 +116,10 @@
                                     "right": {
                                         "expr_type": "LITERAL",
                                         "value": 20,
-                                        "data_type": "INT"
-                                    }
+                                        "data_type": "INT",
+                                        "alias": "20"
+                                    },
+                                    "alias": "(humidity > 20)"
                                 },
                                 "right": {
                                     "expr_type": "BINARY_OP",
@@ -129,9 +133,12 @@
                                     "right": {
                                         "expr_type": "LITERAL",
                                         "value": 20,
-                                        "data_type": "INT"
-                                    }
-                                }
+                                        "data_type": "INT",
+                                        "alias": "20"
+                                    },
+                                    "alias": "(temperature > 20)"
+                                },
+                                "alias": "((humidity > 20) && (temperature > 20))"
                             },
                             "right": {
                                 "expr_type": "BINARY_OP",
@@ -145,9 +152,12 @@
                                 "right": {
                                     "expr_type": "LITERAL",
                                     "value": 30,
-                                    "data_type": "INT"
-                                }
-                            }
+                                    "data_type": "INT",
+                                    "alias": "30"
+                                },
+                                "alias": "(temperature < 30)"
+                            },
+                            "alias": "(((humidity > 20) && (temperature > 20)) && (temperature < 30))"
                         },
                         "schema_out": {
                             "sensor_id": "STRING",

@@ -61,6 +61,11 @@ class Expression(ABC):
         """Controlla che questa espressione possa essere selezionata a seguito di un group_by(keys)."""
         pass
 
+    @abstractmethod
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+        """Rende le aggregazioni che è necessario calcolare per valutare l'espressione."""
+        pass
+
     def _to_expr(self, other: Any) -> "Expression":
         """Converte un valore scalare in una LiteralExpression se necessario."""
 
@@ -149,6 +154,9 @@ class ColRefExpression(Expression):
         #si possono selezionare solo le colonne chiave
         return self.column_name in keys
 
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+        return []
+
 class LiteralExpression(Expression):
     """Rappresenta una costante con relativo DataType."""
 
@@ -171,15 +179,17 @@ class LiteralExpression(Expression):
         res = {
             "expr_type": "LITERAL",
             "value": self.value,
-            "data_type": self.data_type.name
+            "data_type": self.data_type.name,
+            "alias": self.get_name()
         }
-        if self._alias_name:
-            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
             #si può sempre avere un Literal in più
             return True
+
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+            return []
 
 class BinaryOpExpression(Expression):
     """Rappresenta un'operazione binaria tra due espressioni."""
@@ -232,19 +242,20 @@ class BinaryOpExpression(Expression):
             "op": self.op,
             "data_type": self.get_type(applied_schema).name,
             "left": self.left.to_dict(applied_schema),
-            "right": self.right.to_dict(applied_schema)
+            "right": self.right.to_dict(applied_schema),
+            "alias": self.get_name()
         }
-        if self._alias_name:
-            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
-            #essendo le aggregazioni non colonne per ora non le supportiamo in espressioni binarie
-            if isinstance(self.right, AggregateExpression) or isinstance(self.left, AggregateExpression):
-                return False
-
             #valida solo se sono valide le sue sotto-espressioni
             return self.left.validate_grouped(keys) and self.right.validate_grouped(keys)
+
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+        out = []
+        out += self.left.aggregation_dependencies()
+        out += self.right.aggregation_dependencies()
+        return out  
 
 class UnaryOpExpression(Expression):
     """Rappresenta un'operazione unaria su un'espressione."""
@@ -276,10 +287,9 @@ class UnaryOpExpression(Expression):
             "expr_type": "UNARY_OP",
             "op": self.op,
             "data_type": self.get_type(applied_schema).name,
-            "expr": self.expr.to_dict(applied_schema)
+            "expr": self.expr.to_dict(applied_schema),
+            "alias": self.get_name()
         }
-        if self._alias_name:
-            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
@@ -289,6 +299,9 @@ class UnaryOpExpression(Expression):
         
         #valida solo se sono valide le sue sotto-espressioni
         return self.expr.validate_grouped(keys)
+
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+        return self.expr.aggregation_dependencies()
 
 # -------------------------------------------------------------------------
 # Aggregazioni
@@ -376,15 +389,21 @@ class AggregateExpression(Expression):
             "func": self.func_type.value,
             "data_type": self.get_type(applied_schema).name,
             "target": self.target_expr.to_dict(applied_schema) if self.target_expr else None,
-            "is_distinct": self.is_distinct
+            "is_distinct": self.is_distinct,
+            "alias": self.get_name()
         }
-        if self._alias_name:
-            res["alias"] = self._alias_name
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
         #il group_by serve proprio per fare le aggregazioni
         return True
+
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+        out:List[AggregateExpression] = [self]
+        if self.func_type == AggFuncType.AVG and self.target_expr:
+            out.append(count())
+            out.append(sum(self.target_expr))
+        return out
 
 # -------------------------------------------------------------------------
 # Helper Functions per l'interfaccia utente

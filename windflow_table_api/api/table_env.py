@@ -203,63 +203,42 @@ class TableEnvironment:
         le aggregazioni necessarie e stabilisce lo schema di output reale.
         """
 
-        #schema originale di input del group_by
-        old_schema = group_op.input_schema
-
-        #controllo la politica di tempo sulla finestra se presente
-        if (group_op.window is not None 
-            and group_op.window.window_type == WindowType.TIME 
+        if (
+            group_op.window is not None
+            and group_op.window.window_type == WindowType.TIME
             and self.policy == TimePolicy.NO_POLICY
             ):
             raise RuntimeError(
                 f"Con NO_POLICY non si possono usare costrutti temporali."
-                f"{group_op.window}"
+                f" {group_op.window}"
             )
-        
-        #aggiungo le aggregazioni da calcolare e controllo la validità della selezione
-        aggregations: List[AggregateExpression] = []
+
+        aggregations_map: Dict[str, AggregateExpression] = {}
+
         for expr in sel_op.expressions:
             if not expr.validate_grouped(group_op.keys):
                 raise ValueError(
-                    f"L'espressione {expr}, \n"
-                    f"non si può selezionare a seguito di un group_by({group_op.keys})"
+                    f"L'espressione {expr}, \nnon si può selezionare a seguito di un"
+                    f" group_by({group_op.keys})"
                 )
 
-            if isinstance(expr, AggregateExpression):
-                if expr.func_type == AggFuncType.AVG and expr.target_expr:
-                    target = expr.target_expr
-                    self._add_aggregation(aggregations, count())
-                    self._add_aggregation(aggregations, sum(target))
+            #controllo ricorsivamente in espressioni con operatori
+            for agg in expr.aggregation_dependencies():
+                sig = agg.get_default_name()
+                if sig not in aggregations_map:
+                    aggregations_map[sig] = agg
 
-                self._add_aggregation(aggregations, expr)
-
-        #creo il nuovo schema aggiungendo a tutti gli attributi già presenti, 
-        # anche quelli per le aggregazioni 
+        #costruzione dello schema di output come aggregazioni + chiavi
         builder = SchemaBuilder()
+        old_schema = group_op.input_schema
         for name in group_op.keys:
             builder.add_column(name, old_schema.fields[name])
 
-        for aggr in aggregations:
+        for aggr in aggregations_map.values():
             builder.add_expression(aggr, old_schema)
 
-        group_op._schema_out = builder.build()    
-        group_op.aggregations = aggregations    
-
-    def _add_aggregation(self, 
-        aggregations: List[AggregateExpression], 
-        current: AggregateExpression
-        ):
-        """
-        Aggiunge aggregazioni alla lista senza aggiungere più volte i duplicati.
-        Usata perchè il metodo __eq__ è già sovrascritto.
-        """
-
-        for e in aggregations:
-            if e.get_default_name() == current.get_default_name():
-                return
-
-        aggregations.append(current)    
-
+        group_op._schema_out = builder.build()
+        group_op.aggregations = list(aggregations_map.values())       
 
     def _collect_referenced_queries(self, op: Operator, collected: Set[str]) -> None:
         """
