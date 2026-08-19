@@ -10,25 +10,25 @@
             },
             {
                 "expr_type": "COL_REF",
-                "name": "AVG(number)",
+                "name": "AVG__number",
                 "data_type": "DOUBLE"
             },
             {
                 "expr_type": "COL_REF",
-                "name": "AVG(number)",
+                "name": "AVG__number",
                 "data_type": "DOUBLE",
                 "alias": "media"
             }
         ],
         "schema_in": {
             "key": "STRING",
-            "AVG(number)": "DOUBLE",
-            "COUNT(*)": "BIGINT",
-            "SUM(number)": "DOUBLE"
+            "AVG__number": "DOUBLE",
+            "COUNT__": "BIGINT",
+            "SUM__number": "DOUBLE"
         },
         "schema_out": {
             "key": "STRING",
-            "AVG(number)": "DOUBLE",
+            "AVG__number": "DOUBLE",
             "media": "DOUBLE"
         },
         "parents": [
@@ -40,9 +40,9 @@
                 "window": null,
                 "schema_out": {
                     "key": "STRING",
-                    "AVG(number)": "DOUBLE",
-                    "COUNT(*)": "BIGINT",
-                    "SUM(number)": "DOUBLE"
+                    "AVG__number": "DOUBLE",
+                    "COUNT__": "BIGINT",
+                    "SUM__number": "DOUBLE"
                 },
                 "schema_in": {
                     "key": "STRING",
@@ -59,7 +59,7 @@
                             "data_type": "DOUBLE"
                         },
                         "is_distinct": false,
-                        "name": "AVG(number)"
+                        "name": "AVG__number"
                     },
                     {
                         "expr_type": "AGGREGATE",
@@ -67,7 +67,7 @@
                         "data_type": "BIGINT",
                         "target": null,
                         "is_distinct": false,
-                        "name": "COUNT(*)"
+                        "name": "COUNT__"
                     },
                     {
                         "expr_type": "AGGREGATE",
@@ -79,7 +79,7 @@
                             "data_type": "DOUBLE"
                         },
                         "is_distinct": false,
-                        "name": "SUM(number)"
+                        "name": "SUM__number"
                     }
                 ],
                 "parents": [

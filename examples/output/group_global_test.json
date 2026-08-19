@@ -5,13 +5,13 @@
         "expressions": [
             {
                 "expr_type": "COL_REF",
-                "name": "COUNT(DISTINCT key)",
+                "name": "COUNT_DISTINCT_key",
                 "data_type": "BIGINT",
                 "alias": "uniques"
             }
         ],
         "schema_in": {
-            "COUNT(DISTINCT key)": "BIGINT"
+            "COUNT_DISTINCT_key": "BIGINT"
         },
         "schema_out": {
             "uniques": "BIGINT"
@@ -22,7 +22,7 @@
                 "keys": [],
                 "window": null,
                 "schema_out": {
-                    "COUNT(DISTINCT key)": "BIGINT"
+                    "COUNT_DISTINCT_key": "BIGINT"
                 },
                 "schema_in": {
                     "key": "STRING",
@@ -39,7 +39,7 @@
                             "data_type": "STRING"
                         },
                         "is_distinct": true,
-                        "name": "COUNT(DISTINCT key)",
+                        "name": "COUNT_DISTINCT_key",
                         "alias": "uniques"
                     }
                 ],
