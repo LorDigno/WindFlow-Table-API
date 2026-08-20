@@ -150,13 +150,13 @@ class ExpressionTranslator:
         if agg_type == "COUNT":
             return self._translate_count(expr_dict, output_var)
         elif agg_type == "SUM":
-            return self._translate_sum(expr_dict, output_var)
+            return self._translate_sum(expr_dict, input_var, output_var)
         elif agg_type == "MAX":
-            return self._translate_max(expr_dict, output_var)
+            return self._translate_max(expr_dict, input_var, output_var)
         elif agg_type == "MIN":
-            return self._translate_min(expr_dict, output_var)
+            return self._translate_min(expr_dict, input_var, output_var)
         elif agg_type == "AVG":
-            pass
+            return self._translate_avg(expr_dict, input_var, output_var)
         return ""
 
     def _translate_count(self, expr_dict: Dict[str, Any], output_var: str = "out") -> str:
@@ -233,4 +233,23 @@ class ExpressionTranslator:
                 target= target_cpp
             )       
 
-        return ""          
+        return ""        
+
+    def _translate_avg(self, 
+        expr_dict: Dict[str, Any], 
+        input_var:str = "in", 
+        output_var: str = "out"
+        ) -> str:
+        target = expr_dict["target"]
+
+        if not expr_dict.get("distinct"):
+            #avg semplice
+
+            template = self.jinja_env.get_template("avg.jinja2")
+            return template.render(
+                field= expr_dict["name"],
+                out_var= output_var,
+                target= target["name"]
+            )       
+
+        return ""   

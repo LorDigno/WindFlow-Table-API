@@ -19,3 +19,44 @@ def post_visit(root: OpNode):
         print(etl.translate_expr(root.raw_dict["condition"]))
              
 post_visit(gra.target_root)
+
+#test su funzioni d'aggregazione
+aggregations = [
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "AVG",
+                        "data_type": "DOUBLE",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "name": "temperature",
+                            "data_type": "DOUBLE"
+                        },
+                        "is_distinct": False,
+                        "name": "AVG_temperature",
+                        "alias": "avg_temp"
+                    },
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "COUNT",
+                        "data_type": "BIGINT",
+                        "target": None,
+                        "is_distinct": False,
+                        "name": "COUNT_"
+                    },
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "SUM",
+                        "data_type": "DOUBLE",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "name": "temperature",
+                            "data_type": "DOUBLE"
+                        },
+                        "is_distinct": False,
+                        "name": "SUM_temperature"
+                    }
+]
+
+for a in aggregations:
+    print(etl.translate_aggregate(a))
+    
