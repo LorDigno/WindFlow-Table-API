@@ -11,6 +11,7 @@ class CppField:
     name: str
     cpp_type: str
     json_type: str
+    default: Optional[str] = None
 
 @dataclass
 class CppStruct:
@@ -21,6 +22,8 @@ class CppStruct:
     struct_name: str
     fields: List[CppField]
     needs_hash: bool = False
+    needs_win: bool = False
+    key_struct: Optional['CppStruct'] = None
     
     @property
     def canonical_signature(self) -> Tuple[Tuple[str, str], ...]:
@@ -67,7 +70,10 @@ class SchemaGenerator:
         self, 
         schema_dict: Dict[str, str], 
         name_hint: str = "TupleStruct", 
-        needs_hash: bool = False
+        needs_hash: bool = False,
+        needs_win: bool = False,
+        key_struct: Optional[CppStruct] = None,
+        defaults: Optional[Dict[str, str]] = None
     ) -> CppStruct:
         """
         Dato uno schema JSON:
@@ -76,12 +82,24 @@ class SchemaGenerator:
         - Altrimenti, genera un nuovo nome univoco, crea il CppStruct e lo salva in cache.
         """
 
+        schema_copy = dict(schema_dict)
+        #aggiungiamo il win_id se necessario
+        if needs_win and "win_id" not in schema_copy:
+            schema_copy["win_id"] = "UBIGINT"
+
         #costruzione dei field
         cpp_fields: List[CppField] = []
-        for field_name, json_type in schema_dict.items():
+        for field_name, json_type in schema_copy.items():
             cpp_type = self.map_type(json_type)
+
+            default = None
+            if defaults and field_name in defaults:
+                default = defaults[field_name]
+            if field_name == "win_id":
+                default = "0"    
+
             cpp_fields.append(
-                CppField(name=field_name, cpp_type=cpp_type, json_type=json_type)
+                CppField(name=field_name, cpp_type=cpp_type, json_type=json_type, default=default)
             )
 
         #struct temporaneo per verificare la presenza di uno equivalente
@@ -95,15 +113,21 @@ class SchemaGenerator:
             #se ottiene la necessità dell'hash aggiunge il flag
             if needs_hash and not cached_struct.needs_hash:
                 cached_struct.needs_hash = True
+            #aggiunge la necessità della chiave    
+            if needs_win and not cached_struct.needs_win:    
+                cached_struct.needs_win = True
+                cached_struct.key_struct = key_struct
 
-            return cached_struct
+            return cached_struct    
 
         #finalizzazione del nuovo struct
         unique_name = self._generate_unique_name(name_hint)
         real_struct = CppStruct(
             struct_name=unique_name, 
             fields=cpp_fields, 
-            needs_hash=needs_hash
+            needs_hash=needs_hash,
+            needs_win=needs_win,
+            key_struct=key_struct
         )
         
         self._struct_cache[signature] = real_struct

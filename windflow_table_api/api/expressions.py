@@ -435,7 +435,10 @@ class AggregateExpression(Expression):
         out:List[AggregateExpression] = [self]
         if self.func_type == AggFuncType.AVG and self.target_expr:
             out.append(count())
-            out.append(sum(self.target_expr))
+            s = sum(self.target_expr)
+            if(self.is_distinct):
+                s.distinct()
+            out.append(s)
         return out
 
     def rewrite_grouped(self) -> Expression:

@@ -1,0 +1,4 @@
+auto {{field}}_tmp = {{ target }}; 
+if( {{field}}_tmp < {{ out_var }}.{{ field }} ){
+    {{ out_var }}.{{ field }} = {{field}}_tmp;
+}

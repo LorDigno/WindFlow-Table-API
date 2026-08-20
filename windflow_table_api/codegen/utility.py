@@ -5,6 +5,7 @@ from enum import Enum
 TYPE_MAP: Dict[str, str] = {
         "INT": "int32_t",
         "BIGINT": "int64_t",
+        "UBIGINT": "uint64_t",         #usato per i window id, non esposto all'utente
         "FLOAT": "float",
         "DOUBLE": "double",
         "STRING": "std::string",

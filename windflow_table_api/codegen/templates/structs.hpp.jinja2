@@ -4,6 +4,7 @@
 #include <string>
 #include <cstdint>
 #include <functional>
+#include <limits>
 
 {% for s in structs %}
 // ============================================================================
@@ -11,8 +12,24 @@
 // ============================================================================
 struct {{ s.struct_name }} {
 {% for f in s.fields %}
+    {% if f.default %}
+    {{ f.cpp_type }} {{ f.name }} = {{ f.default }}; 
+    {% else %}
     {{ f.cpp_type }} {{ f.name }};
+{% endif %}
 {% endfor %}
+
+{% if s.needs_win %}
+    {{ s.struct_name }}() = default;
+
+    {{ s.struct_name }}(uint64_t _id) 
+        : win_id(_id) {}
+
+{% if s.key_struct %}
+    {{ s.struct_name }}(const {{ s.key_struct.struct_name }}& _key, uint64_t _id) 
+        :{% for k in s.key_struct.fields %} {{ k.name }}(_key.{{ k.name }}),{% endfor %} win_id(_id) {}
+{% endif %}
+{% endif %}
 
 {% if s.needs_hash %}
     bool operator==(const {{ s.struct_name }}& other) const {
