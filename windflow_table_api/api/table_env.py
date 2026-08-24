@@ -204,52 +204,6 @@ class TableEnvironment:
             
         return node
 
-    def _handle_group(self, sel_op:SelectOp, group_op:GroupByOp):
-        """
-        Metodo che date le informazioni nella select instanzia nel GroupByOp 
-        le aggregazioni necessarie e stabilisce lo schema di output reale.
-        """
-    """
-        if (
-            group_op.window is not None
-            and group_op.window.window_type == WindowType.TIME
-            and self.policy == TimePolicy.NO_POLICY
-            ):
-            raise RuntimeError(
-                f"Con NO_POLICY non si possono usare costrutti temporali."
-                f" {group_op.window}"
-            )
-
-        aggregations_map: Dict[str, AggregateExpression] = {}
-
-        for expr in sel_op.expressions:
-            if not expr.validate_grouped(group_op.keys):
-                raise ValueError(
-                    f"L'espressione {expr}, \nnon si può selezionare a seguito di un"
-                    f" group_by({group_op.keys})"
-                )
-
-            #controllo ricorsivamente in espressioni con operatori
-            for agg in expr.aggregation_dependencies():
-                sig = agg.get_default_name()
-                if sig not in aggregations_map:
-                    aggregations_map[sig] = agg    
-
-        #costruzione dello schema di output come aggregazioni + chiavi
-        builder = SchemaBuilder()
-        old_schema = group_op.input_schema
-        for name in group_op.keys:
-            builder.add_column(name, old_schema.fields[name])
-
-        for aggr in aggregations_map.values():
-            builder.add_expression(aggr, old_schema, default_name=True)
-
-        group_op._schema_out = builder.build()
-        group_op.aggregations = list(aggregations_map.values())
-
-        sel_op._input_schema = group_op.schema_out       
-    """
-
     def _collect_referenced_queries(self, op: Operator, collected: Set[str]) -> None:
         """
         Attraversa il grafo degli operatori per trovare tutte le Query 

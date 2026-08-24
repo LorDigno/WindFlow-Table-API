@@ -1,7 +1,7 @@
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 from jinja2 import Environment, FileSystemLoader
-from .utility import OPERATOR_MAP, TYPE_MAP
+from .utility import OPERATOR_MAP
 
 
 class ExpressionTranslator:
@@ -156,7 +156,7 @@ class ExpressionTranslator:
         elif agg_type == "MIN":
             return self._translate_min(expr_dict, input_var, output_var)
         elif agg_type == "AVG":
-            return self._translate_avg(expr_dict, input_var, output_var)
+            return self._translate_avg(expr_dict, output_var)
         return ""
 
     def _translate_count(self, expr_dict: Dict[str, Any], output_var: str = "out") -> str:
@@ -237,7 +237,6 @@ class ExpressionTranslator:
 
     def _translate_avg(self, 
         expr_dict: Dict[str, Any], 
-        input_var:str = "in", 
         output_var: str = "out"
         ) -> str:
         target = expr_dict["target"]
@@ -252,4 +251,5 @@ class ExpressionTranslator:
                 target= target["name"]
             )       
 
-        return ""   
+        return ""
+   

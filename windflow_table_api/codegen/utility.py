@@ -34,7 +34,6 @@ OPERATOR_MAP: Dict[str, str] = {
         "-": "-",
         "*": "*",
         "/": "/",
-        "%": "%",
     }
 
 class OP_TYPE(Enum):
@@ -52,4 +51,30 @@ class OP_TYPE(Enum):
     UNION_ALL = "UNION_ALL"
     INTERSECT = "INTERSECT"
     INTERSECT_ALL = "INTERSECT_ALL"
+
+def get_aggregate_default(func_type: str, json_type: str) -> str:
+    """
+    Restituisce la stringa del valore di default C++ per un dato aggregato.
+    """
     
+    cpp_type = TYPE_MAP[json_type]
+
+    if func_type == "SUM":
+        if json_type in ("DOUBLE", "FLOAT"):
+            return "0.0"
+        return "0"
+
+    elif func_type == "AVG":
+        return "0.0"
+
+    elif func_type == "COUNT":
+        return "0"
+
+    elif func_type == "MAX":
+        return f"std::numeric_limits<{cpp_type}>::lowest()"
+
+    elif func_type == "MIN":
+        return f"std::numeric_limits<{cpp_type}>::max()"
+
+    else:
+        raise ValueError(f"Funzione di aggregazione sconosciuta: {func_type}")    
