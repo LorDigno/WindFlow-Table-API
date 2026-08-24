@@ -1,0 +1,106 @@
+{
+    "query_id": "avg_cold_temperature",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "sensor_id",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "AVG_temperature",
+                "data_type": "DOUBLE",
+                "alias": "avg_temp"
+            }
+        ],
+        "schema_in": {
+            "sensor_id": "STRING",
+            "COUNT_": "BIGINT",
+            "SUM_temperature": "DOUBLE",
+            "AVG_temperature": "DOUBLE"
+        },
+        "schema_out": {
+            "sensor_id": "STRING",
+            "avg_temp": "DOUBLE"
+        },
+        "parents": [
+            {
+                "op_type": "WINDOW_GROUP_BY",
+                "keys": [
+                    "sensor_id"
+                ],
+                "window": {
+                    "type": "WINDOW_TIME",
+                    "kind": "SLIDING",
+                    "size": {
+                        "value": 2,
+                        "unit": "MINUTES"
+                    },
+                    "slide": {
+                        "value": 1,
+                        "unit": "MINUTES"
+                    }
+                },
+                "schema_out": {
+                    "sensor_id": "STRING",
+                    "COUNT_": "BIGINT",
+                    "SUM_temperature": "DOUBLE",
+                    "AVG_temperature": "DOUBLE"
+                },
+                "schema_in": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE",
+                    "humidity": "DOUBLE"
+                },
+                "aggregations": [
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "COUNT",
+                        "data_type": "BIGINT",
+                        "target": null,
+                        "is_distinct": false,
+                        "name": "COUNT_"
+                    },
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "SUM",
+                        "data_type": "DOUBLE",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "name": "temperature",
+                            "data_type": "DOUBLE"
+                        },
+                        "is_distinct": false,
+                        "name": "SUM_temperature"
+                    },
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "AVG",
+                        "data_type": "DOUBLE",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "name": "temperature",
+                            "data_type": "DOUBLE"
+                        },
+                        "is_distinct": false,
+                        "name": "AVG_temperature",
+                        "alias": "avg_temp"
+                    }
+                ],
+                "parents": [
+                    {
+                        "op_type": "TAB_REF",
+                        "source_id": "cold_and_dry",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
