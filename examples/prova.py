@@ -45,9 +45,4 @@ q3 = (q1
       .select("sensor_id", "avg_temp", "humidity")      
       )
 
-print(tab)
-print(q1)
-print(q2)
-print(q3)
-
 env.execute(q3, "./output", rexecute=True)

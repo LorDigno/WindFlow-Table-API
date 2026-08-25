@@ -49,6 +49,6 @@ sensor_json = {
 }
 
 gen.get_or_create_struct(sensor_json, "sensor_input", needs_hash=True)
-gen.write_header_file(Path("./output"), "cold_and_dry",)
+gen.write_header_file(Path("./output"), "simple",)
 
 

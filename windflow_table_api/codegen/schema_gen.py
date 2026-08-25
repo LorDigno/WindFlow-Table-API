@@ -83,6 +83,7 @@ class SchemaGenerator:
         """
 
         schema_copy = dict(schema_dict)
+
         #aggiungiamo il win_id se necessario
         if needs_win and "win_id" not in schema_copy:
             schema_copy["win_id"] = "UBIGINT"

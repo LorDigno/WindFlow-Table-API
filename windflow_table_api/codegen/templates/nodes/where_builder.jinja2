@@ -1,0 +1,6 @@
+auto {{ var_name }} = Where_Builder<{{ in_struct }}>(
+        {{ filt_func }}
+    )
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+    .build();

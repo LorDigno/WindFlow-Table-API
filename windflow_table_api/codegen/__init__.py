@@ -8,6 +8,7 @@ from .schema_gen import CppField, CppStruct, SchemaGenerator
 from .expr_translator import ExpressionTranslator
 from .utility import TYPE_MAP, OPERATOR_MAP
 from .lambda_gen import LambdaGenerator
+from .explorer import GraphExplorer
 
 __all__ = [
     "OpNode",
@@ -19,5 +20,6 @@ __all__ = [
     "ExpressionTranslator",
     "TYPE_MAP",
     "OPERATOR_MAP",
-    "LambdaGenerator"
+    "LambdaGenerator",
+    "GraphExplorer"
 ]
