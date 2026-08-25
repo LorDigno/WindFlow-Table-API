@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Tuple
 from jinja2 import Environment, FileSystemLoader
 from .parser import ParsedGraph, OpNode
 from .schema_gen import SchemaGenerator
@@ -64,15 +64,12 @@ class GraphExplorer:
             #chiamata ricorsiva
             self.visit(p, old_pipe)
 
-
-
         #corpo della visita, da implementare diversamente in base all'operatore
         #eseguito per la prima volta quando trova un from senza parents
         op_type = root.op_type
     
         if op_type == "FROM":
-            #self._visit_from(root)
-            pass
+            self._visit_from(root, current_pipe)
         elif op_type == "WHERE":
             self._visit_where(root, current_pipe)
         elif op_type == "SELECT":
@@ -81,20 +78,22 @@ class GraphExplorer:
             self._visit_group(root, current_pipe)
         elif op_type in ("DISTINCT"):
             self._visit_distinct(root, current_pipe)    
-        elif op_type in ("JOIN", "INTERVAL_JOIN", "WINDOW_JOIN"):
+        elif op_type in ("JOIN", "JOIN_INTERVAL", "JOIN_WINDOW"):
             self._visit_join(root, current_pipe, to_merge)
         elif op_type in ("UNION", "UNION_ALL"):
             self._visit_union(root, current_pipe, to_merge)    
         elif op_type in ("INTERSECT", "INTERSECT_ALL"):
             self._visit_intersect(root, current_pipe, to_merge)    
 
+    def _visit_from(self, node: OpNode, pipe: str):
+        self.pipes[pipe] = "from"
 
     def _visit_where(self, node: OpNode, pipe: str):
         #genero lo schema
         #non richiede altro dato che la filter anche parallela non richiede hashing o keyBy
         struct = self.sch_gen.get_or_create_struct(
-            node.raw_dict["schema_in"],
-            node.node_id + "_struct",
+            schema_dict= node.raw_dict["schema_in"],
+            name_hint= node.node_id + "_struct",
         )
 
         #generazione lambda
@@ -122,9 +121,52 @@ class GraphExplorer:
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
         
-
     def _visit_select(self, node: OpNode, pipe: str):
-        pass
+        #generazione schemi di input e output
+        #non necessitano ne di keyby forzato ne di hashing
+        struct_in = self.sch_gen.get_or_create_struct(
+            schema_dict= node.raw_dict["schema_in"],
+            name_hint= node.node_id + "_struct_in",
+        )
+        struct_out = self.sch_gen.get_or_create_struct(
+            schema_dict= node.raw_dict["schema_out"],
+            name_hint= node.node_id + "_struct_out",
+        )
+
+        #inferisco i mappings
+        mappings: List[Tuple[str, str]] = []
+        for e in node.raw_dict["expressions"]:
+            #traduco l'espressione da assegnare
+            value = self.expr_tl.translate_expr(e)
+
+            target = e["alias"] if "alias" in e else e["name"]
+
+            mappings.append((target, value))
+        
+        #generazione lambda
+        map_func = LambdaGenerator.map_lambda(
+            in_struct= struct_in.struct_name,
+            out_struct= struct_out.struct_name,
+            mappings= mappings
+        )
+
+        self.node_counter += 1
+        var_name = f"select_{self.node_counter}_op"
+
+        #generazione builder
+        template = self._jinja_env.get_template("select_builder.jinja2")
+        builder = template.render(
+            var_name= var_name,
+            in_struct= struct_in.struct_name,
+            out_struct= struct_out.struct_name,
+            map_func= map_func,
+            op_name= f"select_{node.node_id}",
+            par= self.parallelism
+        )
+        self.builders.append(builder)
+
+        #aggiungo alla pipe l'operatore
+        self.pipes[pipe] += f".add({var_name})"
 
     def _visit_group(self, node: OpNode, pipe: str):
         pass
@@ -133,13 +175,13 @@ class GraphExplorer:
         pass
 
     def _visit_join(self, node: OpNode, pipe: str, to_merge: List[str]):
-        pass
+        self.pipes[pipe] = "join"
 
     def _visit_union(self, node: OpNode, pipe: str, to_merge: List[str]):
-        pass
+        self.pipes[pipe] = "union"
 
     def _visit_intersect(self, node: OpNode, pipe: str, to_merge: List[str]):
-        pass
+        self.pipes[pipe] = "intersect"
 
 
         

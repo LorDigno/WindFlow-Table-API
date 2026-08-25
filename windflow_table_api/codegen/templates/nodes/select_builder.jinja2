@@ -1,0 +1,6 @@
+auto {{ var_name }} = Select_Builder<{{ in_struct }}, {{ out_struct }}>(
+        {{ map_func }}
+    )
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+    .build();
