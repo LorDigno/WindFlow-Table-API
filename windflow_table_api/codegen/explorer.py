@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import List, Optional, Dict, Tuple
 from jinja2 import Environment, FileSystemLoader
 from .parser import ParsedGraph, OpNode
-from .schema_gen import SchemaGenerator
+from .schema_gen import SchemaGenerator, CppStruct, CppField
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator        
 
@@ -173,11 +173,39 @@ class GraphExplorer:
 
     def _visit_distinct(self, node: OpNode, pipe: str):
         #generazione schema 
+        #richiede l'hash per le hash_map
         schema = self.sch_gen.get_or_create_struct(
             schema_dict= node.raw_dict["schema_in"],
             name_hint= node.node_id + "_struct_in",
             needs_hash= True
         )
+
+        key_lambda = None
+        if self.parallelism > 1:
+            #genrazione della lambda di estrazione della chiave
+            #in questo caso si tratta di rendere l'intero struct ricevuto in input
+
+            key_lambda = (
+                f"[](const {schema.struct_name}& in) -> {schema.struct_name}" + "{ return in; }"
+            )
+
+        self.node_counter += 1
+        var_name = f"distinct_{self.node_counter}_op"
+
+        #generazione builder (il distinct non richiede una lambda)
+        template = self._jinja_env.get_template("distinct_builder.jinja2")
+        builder = template.render(
+            var_name= var_name,
+            in_struct= schema.struct_name,
+            key_struct= schema.struct_name,
+            key_lambda= key_lambda, 
+            op_name= f"distinct_{node.node_id}",
+            par = self.parallelism
+        )
+        self.builders.append(builder)
+        
+        #aggiungo alla pipe l'operatore
+        self.pipes[pipe] += f".add({var_name})"
 
     def _visit_join(self, node: OpNode, pipe: str, to_merge: List[str]):
         self.pipes[pipe] = "join"

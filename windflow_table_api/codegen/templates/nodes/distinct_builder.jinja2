@@ -1,0 +1,9 @@
+auto {{ var_name }} = Distinct_Builder<{{ in_struct }}, {{ key_struct }}>()
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})     
+{% if (par > 1) and (key_lambda) %}
+    .withKeyBy({{ key_lambda }})
+    .build_keyed();
+{% else %}
+    .build();
+{% endif %}

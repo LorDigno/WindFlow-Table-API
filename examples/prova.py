@@ -37,7 +37,7 @@ q1 = (tab
     )   
 
 tab.name_draft("sensor_q2")
-q2 = (tab.select("sensor_id", "humidity"))
+q2 = (tab.select("sensor_id", "humidity", distinct=True))
 
 q1.name_draft("q1_q2_join")
 q3 = (q1                                    
