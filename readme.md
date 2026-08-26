@@ -14,3 +14,5 @@ La componente di runtime è per ora vuota.
 In examples/ si trovano esempi di query (simple.py, prova.py, group.py) e di generazione/traduzione del codice/espressioni (expr.py, builders.py, lambdas.py, structs.py).
 
 Nella versione completa il metodo execute dovrà chiamare il main di codegen a seguito di una fork, questo attualmente non è ancora implementato dunque alcuni esempi non fanno altro che generare il json se non è esplicitata la chiamata al codegen.
+
+Per l'esecuzione del codice in examples/ io mi sono limitato a creare un ambiente virtuale nella root in cui poi ho installato il package con pip.
