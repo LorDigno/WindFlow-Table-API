@@ -172,7 +172,12 @@ class GraphExplorer:
         pass
 
     def _visit_distinct(self, node: OpNode, pipe: str):
-        pass
+        #generazione schema 
+        schema = self.sch_gen.get_or_create_struct(
+            schema_dict= node.raw_dict["schema_in"],
+            name_hint= node.node_id + "_struct_in",
+            needs_hash= True
+        )
 
     def _visit_join(self, node: OpNode, pipe: str, to_merge: List[str]):
         self.pipes[pipe] = "join"
