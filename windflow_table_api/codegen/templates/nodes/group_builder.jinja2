@@ -1,0 +1,31 @@
+{% if is_windowed %}
+auto {{ var_name }} = Windowed_Group_Builder<{{ in_struct }}, {{ out_struct }}{% if key_struct %}, {{ key_struct }}{% endif %}>(
+    {{ lambda_func }}
+)
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+{% if win_type == 'TIME' %}
+    .withTBWindow({{ win_size }}, {{ win_slide }})
+{% elif win_type == 'COUNT' %}
+    .withCBWindow({{ win_size }}, {{ win_slide }})
+{% endif %}
+{% if needs_key %}
+    .withKeyBy({{ key_lambda }})
+    .build_keyed();
+{% else %}
+    .build()    
+{% endif %}
+    
+{% else %}
+auto {{ var_name }} = Global_Group_Builder<{{ in_struct }}, {{ out_struct }}{% if key_struct %}, {{ key_struct }}{% endif %}>(
+    {{ lambda_func }}
+)
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+{% if needs_key %}
+    .withKeyBy({{ key_lambda }})
+    .build_keyed();
+{% else %}
+    .build();
+{% endif %}
+{% endif %}

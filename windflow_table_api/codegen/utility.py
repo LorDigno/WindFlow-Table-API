@@ -1,4 +1,4 @@
-from typing import Dict
+from typing import Dict, Any, Tuple
 from enum import Enum
 
 #mappa dei tipi logici coi rispettivi tipi C++
@@ -78,3 +78,32 @@ def get_aggregate_default(func_type: str, json_type: str) -> str:
 
     else:
         raise ValueError(f"Funzione di aggregazione sconosciuta: {func_type}")    
+
+def parse_window(window: Dict[str, Any]) -> Tuple[str, int, int]:
+    if window["type"] == "WINDOW_COUNT":
+        return ("COUNT", window["size"], window["slide"])
+
+    #finestra temporale
+    d1 = parse_duration_to_microseconds(window["size"])
+    d2 = parse_duration_to_microseconds( window["slide"])
+    return ("TIME", d1, d2)
+
+def parse_duration_to_microseconds(duration: Dict[str, Any]) -> int:
+    unit = duration["unit"]
+    value = duration["value"]
+
+    if unit == "MICROSECONDS":
+        return value
+    elif unit == "MILLISECONDS":
+        return value * 1000   
+    elif unit == "SECONDS":
+        return value * 1000000
+    elif unit == "MINUTES":
+        return value * 1000000 * 60
+    elif unit == "HOURS":
+        return value * 1000000 * 60 * 60
+    elif unit == "DAYS":
+        return value * 1000000 * 60 * 60 * 24
+
+    raise ValueError(f"Unità di tempo {unit} sconosciuta.")
+    

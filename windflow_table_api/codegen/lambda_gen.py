@@ -47,7 +47,7 @@ class LambdaGenerator:
     def groupBy_lambda(
         in_struct: str,
         out_struct: str,
-        key_mappings: List[Tuple[str, str]],
+        keys: List[str],
         accumulations: List[str], 
         in_var: str = "in",
         out_var: str = "out"
@@ -56,7 +56,7 @@ class LambdaGenerator:
         return template.render(
             input_struct=in_struct,
             output_struct= out_struct,
-            keys= key_mappings,
+            keys= keys,
             accumulations= accumulations, 
             input_var= in_var,
             output_var= out_var

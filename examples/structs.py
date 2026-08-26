@@ -14,7 +14,7 @@ def post_visit(root: OpNode):
         gen.get_or_create_struct(root.schema_in, "q1_q2_join_input")
 
     if root.schema_out:  
-        gen.get_or_create_struct(root.schema_out, "q1_q2_join_output", True)    
+        gen.get_or_create_struct(root.schema_out, "q1_q2_join_output", True, True)    
 
 post_visit(gra.target_root)
        

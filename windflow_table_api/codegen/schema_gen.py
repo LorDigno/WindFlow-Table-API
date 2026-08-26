@@ -114,7 +114,7 @@ class SchemaGenerator:
             #se ottiene la necessità dell'hash aggiunge il flag
             if needs_hash and not cached_struct.needs_hash:
                 cached_struct.needs_hash = True
-            #aggiunge la necessità della chiave    
+            #aggiunge la necessità della chiave e della finestra
             if needs_win and not cached_struct.needs_win:    
                 cached_struct.needs_win = True
                 cached_struct.key_struct = key_struct

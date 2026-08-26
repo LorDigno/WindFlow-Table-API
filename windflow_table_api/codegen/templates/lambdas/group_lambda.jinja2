@@ -1,6 +1,6 @@
 [](const {{ input_struct }}& {{ input_var }}, {{ output_struct }}& {{ output_var }}) -> void {
-    {% for target, expr in keys %}
-    {{ output_var }}.{{ target }} = {{ expr }};
+    {% for k in keys %}
+    {{ output_var }}.{{ k }} = {{ input_var }}.{{ k }};
     {% endfor %}
 
     {% for expr in accumulations %}

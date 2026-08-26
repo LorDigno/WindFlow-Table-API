@@ -22,7 +22,8 @@ accumulations = [
     "out.avg = out.sum / out.count"
 ]
 
-print(LambdaGenerator.groupBy_lambda(schema1, schema3, mappings, accumulations, "in", "out"))
+keys = ["sensor_id", "humidity"]
+print(LambdaGenerator.groupBy_lambda(schema1, schema3, keys, accumulations, "in", "out"))
 
 joins = [
     ("sensor_id", "grouped.sensor_id"),

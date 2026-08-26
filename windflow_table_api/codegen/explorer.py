@@ -4,7 +4,8 @@ from jinja2 import Environment, FileSystemLoader
 from .parser import ParsedGraph, OpNode
 from .schema_gen import SchemaGenerator, CppStruct, CppField
 from .expr_translator import ExpressionTranslator
-from .lambda_gen import LambdaGenerator        
+from .lambda_gen import LambdaGenerator    
+from .utility import get_aggregate_default, parse_window 
 
 class GraphExplorer:
     """
@@ -164,12 +165,109 @@ class GraphExplorer:
             par= self.parallelism
         )
         self.builders.append(builder)
-
+        
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
 
     def _visit_group(self, node: OpNode, pipe: str):
-        pass
+        is_windowed = (node.raw_dict["op_type"] == "WINDOW_GROUP_BY")
+
+        #ricavo le aggregazioni
+        accs = []
+        defaults = {}
+        for a in node.raw_dict["aggregations"]:
+            #accumulatore
+            accs.append(self.expr_tl.translate_aggregate(a)) 
+
+            #valore di dafault dell'accumulatore
+            defaults[a["name"]] = get_aggregate_default(a["func"], a["data_type"])
+
+        #generazione schema input
+        struct_in = self.sch_gen.get_or_create_struct(
+            schema_dict= node.raw_dict["schema_in"],
+            name_hint= node.node_id + "_struct_in",
+        )
+
+        #gestione del keyBy
+        key_struct = None
+        key_lambda = None
+        has_keys = len(node.raw_dict["keys"]) > 0
+        keys = {}
+        mappings = []
+        if node.schema_in:
+            input = node.schema_in
+            iter = []
+            if has_keys:
+                iter = node.raw_dict["keys"]
+            elif not has_keys and self.parallelism > 1:
+                iter = input
+            for k in iter:
+                type = input[k]
+                keys[k] = type
+                mappings.append((k, f"in.{k}"))                      
+        
+        key_struct = self.sch_gen.get_or_create_struct(
+            schema_dict=keys,
+            name_hint= node.node_id + "_key_struct",
+            needs_hash=True
+        )  
+
+        key_lambda = LambdaGenerator.map_lambda(
+            in_struct= struct_in.struct_name,
+            out_struct= key_struct.struct_name,
+            mappings= mappings,
+            input_var= "in"
+        )
+
+        #generazione schema di output
+        struct_out = self.sch_gen.get_or_create_struct(
+            schema_dict= node.raw_dict["schema_out"],
+            name_hint= node.node_id + "_struct_out",
+            needs_win= is_windowed,
+            key_struct= key_struct,
+            defaults= defaults
+        )
+
+        #genrazione della lambda
+        lambda_func = LambdaGenerator.groupBy_lambda(
+            in_struct= struct_in.struct_name,
+            out_struct= struct_out.struct_name,
+            keys= node.raw_dict["keys"],
+            accumulations= accs,
+            in_var= "in",
+            out_var= "out"
+        )               
+
+        #gestione delle finestre
+        window = (None, None, None)
+        if is_windowed:
+            window = parse_window(node.raw_dict["window"])
+
+        self.node_counter += 1
+        var_name = f"group_{self.node_counter}_op"           
+
+        #generazione builder
+        template = self._jinja_env.get_template("group_builder.jinja2")
+        builder = template.render(
+            var_name = var_name,
+            in_struct= struct_in.struct_name,
+            out_struct= struct_out.struct_name,
+            lambda_func= lambda_func,
+            needs_key= has_keys and (self.parallelism > 1),
+            key_struct= key_struct.struct_name if key_struct else None,
+            key_lambda= key_lambda,
+            is_windowed= is_windowed,
+            win_type= window[0],
+            win_size= window[1],
+            win_slide= window[2],
+            op_name= f"group_{node.node_id}",
+            par= self.parallelism
+        )
+        self.builders.append(builder)
+                
+        #aggiungo alla pipe l'operatore
+        self.pipes[pipe] += f".add({var_name})"
+
 
     def _visit_distinct(self, node: OpNode, pipe: str):
         #generazione schema 
@@ -215,6 +313,3 @@ class GraphExplorer:
 
     def _visit_intersect(self, node: OpNode, pipe: str, to_merge: List[str]):
         self.pipes[pipe] = "intersect"
-
-
-        
