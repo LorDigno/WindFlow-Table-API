@@ -33,7 +33,9 @@
         "parents": [
             {
                 "op_type": "JOIN_INTERVAL",
-                "key": "sensor_id",
+                "keys": [
+                    "sensor_id"
+                ],
                 "attachment": {
                     "type": "INTERVAL",
                     "lower_bound": {

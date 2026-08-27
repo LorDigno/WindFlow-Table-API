@@ -88,6 +88,11 @@ def parse_window(window: Dict[str, Any]) -> Tuple[str, int, int]:
     d2 = parse_duration_to_microseconds( window["slide"])
     return ("TIME", d1, d2)
 
+def parse_interval(interval: Dict[str, Any]) -> Tuple[int, int]:
+    d1 = parse_duration_to_microseconds(interval["lower_bound"])
+    d2 = parse_duration_to_microseconds(interval["upper_bound"])
+    return (d1, d2)
+
 def parse_duration_to_microseconds(duration: Dict[str, Any]) -> int:
     unit = duration["unit"]
     value = duration["value"]

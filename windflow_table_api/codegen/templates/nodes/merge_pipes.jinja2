@@ -1,0 +1,7 @@
+std::vector<wf::MultiPipe*> {{ branches_var }} = {
+    {%- for b in branches -%}
+    &{{ b }}{% if not loop.last %}, {% endif %}
+    {%- endfor -%}
+};
+auto* {{ out_pipe }}_pointer = wf::merge_multipipes_func(&{{ topology_name }}, {{ branches_var }});
+auto {{ out_pipe }} = (*{{ out_pipe }}_pointer)

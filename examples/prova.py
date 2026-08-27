@@ -41,7 +41,7 @@ q2 = (tab.select("sensor_id", "humidity", distinct=True))
 
 q1.name_draft("q1_q2_join")
 q3 = (q1                                    
-      .join(q2, "sensor_id", interval)                            
+      .join("sensor_id", other= q2, attachment=interval)                            
       .select("sensor_id", "avg_temp", "humidity")      
       )
 

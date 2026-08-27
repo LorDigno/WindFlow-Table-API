@@ -268,8 +268,8 @@ class Table:
     # -------------------------------------------------------------------------
     def join(
         self,
+        *on: str,
         other: Table,
-        on: str,
         attachment: Optional[Union[Interval, Window]] = None
     ) -> Table:
         """
@@ -292,7 +292,7 @@ class Table:
             )
 
         draft = self.get_draft()
-        join_op = JoinOp(on, draft.current_schema, other.schema, attachment)
+        join_op = JoinOp(list(on), draft.current_schema, other.schema, attachment)
         draft.add_binary_operator(join_op, TableRefOp(other.table_id, other.schema))
 
         return self

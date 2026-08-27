@@ -343,12 +343,16 @@ class JoinOp(BinaryOperator):
 
     def __init__(
         self,
-        key: str,
+        keys: List[str],
         tab1_schema: Schema,
         tab2_schema: Schema,
         attachment: Optional[Union[Window, Interval]]
     ) -> None:
-        
+        if len(keys) < 1:
+            raise  ValueError(
+                f"L'operazione di join è supportata solo su con almeno una chiave."
+            )
+                
         if isinstance(attachment, Window) and attachment.window_type == WindowType.COUNT:
             raise TypeError(
                 f"L'operazione di window_join è supportata solo su finestre temporali! "
@@ -356,33 +360,34 @@ class JoinOp(BinaryOperator):
             )
         
         #interrompo se non hanno la chiave in comune con lo stesso tipo
-        if not tab1_schema.has_field(key):
-            raise RuntimeError(f"La tabella di sinistra non ha la key: {key}")
-        if not tab2_schema.has_field(key):
-            raise RuntimeError(f"La tabella di destra non ha la key: {key}")
-        if not (tab1_schema.get_type_for(key) == tab2_schema.get_type_for(key)):
-            raise RuntimeError(f"Le due tabelle hanno tipi diversi per la key: {key}")
+        for key in keys:
+            if not tab1_schema.has_field(key):
+                raise RuntimeError(f"La tabella di sinistra non ha la key: {key}")
+            if not tab2_schema.has_field(key):
+                raise RuntimeError(f"La tabella di destra non ha la key: {key}")
+            if not (tab1_schema.get_type_for(key) == tab2_schema.get_type_for(key)):
+                raise RuntimeError(f"Le due tabelle hanno tipi diversi per la key: {key}")
 
-        #calcolo lo schema di output
-        builder = SchemaBuilder().add_column(key, tab1_schema.get_type_for(key))
+            #calcolo lo schema di output
+            builder = SchemaBuilder().add_column(key, tab1_schema.get_type_for(key))
 
         #aggiungo gli attributi di tab1
         for f in tab1_schema.get_columns():
             current = tab1_schema.get_field(f)
-            if current.name == key:
+            if current.name in keys:
                 continue
             builder.add_column(current.name, current.data_type) 
 
         #aggiungo gli attributi di tab2
         for f in tab2_schema.get_columns():
             current = tab2_schema.get_field(f)
-            if current.name == key:
+            if current.name in keys:
                 continue
             builder.add_column(current.name, current.data_type)         
 
         super().__init__(schema_out=builder.build(), input_schema=tab1_schema)
 
-        self.key = key
+        self.keys = keys
         self.tab1_schema = tab1_schema
         self.tab2_schema = tab2_schema
         self.attachment = attachment
@@ -395,7 +400,7 @@ class JoinOp(BinaryOperator):
     def to_dict(self) -> Dict[str, Any]:
         return {
             "op_type": self.get_op_type(),
-            "key": self.key,
+            "keys": self.keys,
             "attachment": self.attachment.to_dict() if self.attachment else None,
             "tab1_schema": self.tab1_schema.to_dict(),
             "tab2_schema": self.tab2_schema.to_dict(),

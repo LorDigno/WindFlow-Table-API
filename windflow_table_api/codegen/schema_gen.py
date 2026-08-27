@@ -19,6 +19,7 @@ class CppStruct:
     Rappresenta uno struct C++ generato.
     Contiene sia i metadati dei campi che il codice C++ generato.
     """
+
     struct_name: str
     fields: List[CppField]
     needs_hash: bool = False
@@ -32,6 +33,11 @@ class CppStruct:
         Utilizzata come chiave per la deduplicazione degli struct identici.
         """
         return tuple(sorted((f.name, f.cpp_type) for f in self.fields))
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, CppStruct):
+            return False
+        return self.canonical_signature == other.canonical_signature
 
 class SchemaGenerator:
     """
@@ -185,3 +191,24 @@ class SchemaGenerator:
             f.write(header_code)
             
         return file_path
+
+    def struct_join(self, first: 'CppStruct', second: 'CppStruct') -> 'CppStruct':
+        """
+        Congiunge due struct mantenendo tutti i campi di ognuno, 
+        campi identici appaiono una volta sola nell'output.
+        Chiama in automatico get_or_create_struct per registrare l'output nel generatore.
+        Chiamato da GraphExplorer.join_visit .
+        """
+
+        joined_dict = {}
+        for f in first.fields:
+            joined_dict[f.name] = f.json_type
+        for f in second.fields:
+            joined_dict[f.name] = f.json_type
+
+        out = self.get_or_create_struct(
+            schema_dict= joined_dict,
+            name_hint= f"{first.struct_name}_unified_{second.struct_name}"
+        ) 
+
+        return out   

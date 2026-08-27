@@ -1,0 +1,28 @@
+{% if is_windowed %}
+auto {{ var_name }} = Table_Window_Join_Builder<{{ in_struct }}, {{ out_struct }}{% if key_struct %}, {{ key_struct }}{% endif %}>(
+    {{ join_func }}
+)
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+    .withTBWindow({{ win_size }}, {{ win_slide }})
+{% if key_lambda %}
+    .withKeyBy({{ key_lambda }})
+    .build_keyed();
+{% else %}
+    .build();
+{% endif %}
+{% else %}
+auto {{ var_name }} = Table_Interval_Join_Builder<{{ in_struct }}, {{ out_struct }}{% if key_struct %}, {{ key_struct }}{% endif %}>(
+    {{ join_func }},
+    {{ lower }},
+    {{ upper }}
+)
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+{% if key_lambda %}
+    .withKeyBy({{ key_lambda }})
+    .build_keyed();
+{% else %}
+    .build();
+{% endif %}
+{% endif %}

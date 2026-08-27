@@ -13,7 +13,7 @@ auto {{ var_name }} = Windowed_Group_Builder<{{ in_struct }}, {{ out_struct }}{%
     .withKeyBy({{ key_lambda }})
     .build_keyed();
 {% else %}
-    .build()    
+    .build();
 {% endif %}
     
 {% else %}

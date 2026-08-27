@@ -6,7 +6,14 @@ e della generazione del codice C++ nativo per WindFlow.
 from .parser import OpNode, ParsedGraph, JsonParser
 from .schema_gen import CppField, CppStruct, SchemaGenerator
 from .expr_translator import ExpressionTranslator
-from .utility import TYPE_MAP, OPERATOR_MAP
+from .utility import (
+    TYPE_MAP, 
+    OPERATOR_MAP, 
+    get_aggregate_default, 
+    parse_window, 
+    parse_duration_to_microseconds, 
+    parse_interval
+)
 from .lambda_gen import LambdaGenerator
 from .explorer import GraphExplorer
 
@@ -21,5 +28,9 @@ __all__ = [
     "TYPE_MAP",
     "OPERATOR_MAP",
     "LambdaGenerator",
-    "GraphExplorer"
+    "GraphExplorer",
+    "get_aggregate_default",
+    "parse_window",
+    "parse_duration_to_microseconds",
+    "parse_interval"
 ]
