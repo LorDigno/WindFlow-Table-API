@@ -4,4 +4,4 @@ std::vector<wf::MultiPipe*> {{ branches_var }} = {
     {%- endfor -%}
 };
 auto* {{ out_pipe }}_pointer = wf::merge_multipipes_func(&{{ topology_name }}, {{ branches_var }});
-auto {{ out_pipe }} = (*{{ out_pipe }}_pointer)
+auto& {{ out_pipe }} = (*{{ out_pipe }}_pointer)

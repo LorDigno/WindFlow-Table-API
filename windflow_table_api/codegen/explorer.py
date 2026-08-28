@@ -42,16 +42,18 @@ class GraphExplorer:
             lstrip_blocks=True
         )
 
-    def visit(self, root: OpNode, pipe: str = "pipe_0"):
+    def visit(self, root: OpNode, pipe: str = "pipe_0") -> CppStruct:
         """
         Metodo che visita i nodi ricorsivamente a partire dalla root.
         Viene svolta una visita posticipata così che sia rispettato l'oridnamento parziale degli operatori.
         Carica in self.builders i codici della creazione degli operatori.
         Carica in self.pipes i codici della creazione del PipeGraph da eseguire.
+        Ogni sotto-visita rende l'output_struct corrente.
         """
 
         current_pipe = pipe
         to_merge = []                   #nomi delle pipe da unificare
+        parent_structs = []
         for p in root.parents:
             #gestione delle pipes
             old_pipe = pipe
@@ -63,44 +65,44 @@ class GraphExplorer:
                 to_merge.append(old_pipe)
 
             #chiamata ricorsiva
-            self.visit(p, old_pipe)
+            parent_structs.append(self.visit(p, old_pipe))
 
         #corpo della visita, da implementare diversamente in base all'operatore
         #eseguito per la prima volta quando trova un from senza parents
         op_type = root.op_type
     
         if op_type == "FROM":
-            self._visit_from(root, current_pipe)
+            return self._visit_from(root, current_pipe)
         elif op_type == "WHERE":
-            self._visit_where(root, current_pipe)
+            return self._visit_where(root, current_pipe, parent_structs[0])
         elif op_type == "SELECT":
-            self._visit_select(root, current_pipe)
+            return self._visit_select(root, current_pipe, parent_structs[0])
         elif op_type in ("GROUP_BY", "WINDOW_GROUP_BY"):
-            self._visit_group(root, current_pipe)
+            return self._visit_group(root, current_pipe, parent_structs[0])
         elif op_type in ("DISTINCT"):
-            self._visit_distinct(root, current_pipe)    
+            return self._visit_distinct(root, current_pipe, parent_structs[0])    
         elif op_type in ("JOIN_INNER", "JOIN_INTERVAL", "JOIN_WINDOW"):
-            self._visit_join(root, current_pipe, to_merge)
+            return self._visit_join(root, current_pipe, to_merge, parent_structs[0], parent_structs[1])
         elif op_type in ("UNION", "UNION_ALL"):
-            self._visit_union(root, current_pipe, to_merge)    
+            return self._visit_union(root, current_pipe, to_merge, parent_structs[0])    
         elif op_type in ("INTERSECT", "INTERSECT_ALL"):
-            self._visit_intersect(root, current_pipe, to_merge)    
+            return self._visit_intersect(root, current_pipe, to_merge, parent_structs[0])   
+
+        raise RuntimeError(f"Operazione {op_type} sconosciuta.") 
 
     def _visit_from(self, node: OpNode, pipe: str):
         self.pipes[pipe] = f"auto {pipe} = topology.add_source(***)"
 
-    def _visit_where(self, node: OpNode, pipe: str):
-        #genero lo schema
-        #non richiede altro dato che la filter anche parallela non richiede hashing o keyBy
-        struct = self.sch_gen.get_or_create_struct(
-            schema_dict= node.raw_dict["schema_in"],
-            name_hint= node.node_id + "_struct",
+        return self.sch_gen.get_or_create_struct(
+            schema_dict= node.raw_dict["schema_out"],
+            name_hint= "source_" + node.node_id
         )
 
+    def _visit_where(self, node: OpNode, pipe: str, parent_struct:CppStruct) -> CppStruct:
         #generazione lambda
         cond: str = self.expr_tl.translate_expr(node.raw_dict["condition"])
         filt_func = LambdaGenerator.where_lambda(
-            in_struct= struct.struct_name,
+            in_struct= parent_struct.struct_name,
             condition= cond,
             in_var= "in"
         )
@@ -113,7 +115,7 @@ class GraphExplorer:
         builder = template.render(
             var_name= var_name,
             filt_func= filt_func,
-            in_struct= struct.struct_name,
+            in_struct= parent_struct.struct_name,
             op_name= node.node_id,
             par = self.parallelism
         )
@@ -121,14 +123,12 @@ class GraphExplorer:
 
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
+
+        return parent_struct
         
-    def _visit_select(self, node: OpNode, pipe: str):
-        #generazione schemi di input e output
+    def _visit_select(self, node: OpNode, pipe: str, parent_struct:CppStruct) -> CppStruct:
+        #generazione schema di output
         #non necessitano ne di keyby forzato ne di hashing
-        struct_in = self.sch_gen.get_or_create_struct(
-            schema_dict= node.raw_dict["schema_in"],
-            name_hint= node.node_id + "_struct_in",
-        )
         struct_out = self.sch_gen.get_or_create_struct(
             schema_dict= node.raw_dict["schema_out"],
             name_hint= node.node_id + "_struct_out",
@@ -146,7 +146,7 @@ class GraphExplorer:
         
         #generazione lambda
         map_func = LambdaGenerator.map_lambda(
-            in_struct= struct_in.struct_name,
+            in_struct= parent_struct.struct_name,
             out_struct= struct_out.struct_name,
             mappings= mappings
         )
@@ -158,7 +158,7 @@ class GraphExplorer:
         template = self._jinja_env.get_template("select_builder.jinja2")
         builder = template.render(
             var_name= var_name,
-            in_struct= struct_in.struct_name,
+            in_struct= parent_struct.struct_name,
             out_struct= struct_out.struct_name,
             map_func= map_func,
             op_name= node.node_id,
@@ -169,7 +169,9 @@ class GraphExplorer:
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
 
-    def _visit_group(self, node: OpNode, pipe: str):
+        return struct_out
+
+    def _visit_group(self, node: OpNode, pipe: str, parent_struct:CppStruct) -> CppStruct:
         is_windowed = (node.raw_dict["op_type"] == "WINDOW_GROUP_BY")
 
         #ricavo le aggregazioni
@@ -181,12 +183,6 @@ class GraphExplorer:
 
             #valore di dafault dell'accumulatore
             defaults[a["name"]] = get_aggregate_default(a["func"], a["data_type"])
-
-        #generazione schema input
-        struct_in = self.sch_gen.get_or_create_struct(
-            schema_dict= node.raw_dict["schema_in"],
-            name_hint= node.node_id + "_struct_in",
-        )
 
         #gestione del keyBy
         key_struct = None
@@ -204,19 +200,20 @@ class GraphExplorer:
             for k in iter:
                 keys[k] = input[k]
                 mappings.append((k, f"in.{k}"))                      
-        
-        key_struct = self.sch_gen.get_or_create_struct(
-            schema_dict=keys,
-            name_hint= node.node_id + "_key_struct",
-            needs_hash=True
-        )  
 
-        key_lambda = LambdaGenerator.map_lambda(
-            in_struct= struct_in.struct_name,
-            out_struct= key_struct.struct_name,
-            mappings= mappings,
-            input_var= "in"
-        )
+        if has_keys:
+            key_struct = self.sch_gen.get_or_create_struct(
+                schema_dict=keys,
+                name_hint= node.node_id + "_key_struct",
+                needs_hash=True
+            )  
+
+            key_lambda = LambdaGenerator.map_lambda(
+                in_struct= parent_struct.struct_name,
+                out_struct= key_struct.struct_name,
+                mappings= mappings,
+                input_var= "in"
+            )
 
         #generazione schema di output
         struct_out = self.sch_gen.get_or_create_struct(
@@ -229,7 +226,7 @@ class GraphExplorer:
 
         #genrazione della lambda
         lambda_func = LambdaGenerator.groupBy_lambda(
-            in_struct= struct_in.struct_name,
+            in_struct= parent_struct.struct_name,
             out_struct= struct_out.struct_name,
             keys= node.raw_dict["keys"],
             accumulations= accs,
@@ -249,7 +246,7 @@ class GraphExplorer:
         template = self._jinja_env.get_template("group_builder.jinja2")
         builder = template.render(
             var_name = var_name,
-            in_struct= struct_in.struct_name,
+            in_struct= parent_struct.struct_name,
             out_struct= struct_out.struct_name,
             lambda_func= lambda_func,
 
@@ -270,14 +267,11 @@ class GraphExplorer:
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
 
-    def _visit_distinct(self, node: OpNode, pipe: str):
-        #generazione schema 
-        #richiede l'hash per le hash_map
-        schema = self.sch_gen.get_or_create_struct(
-            schema_dict= node.raw_dict["schema_in"],
-            name_hint= node.node_id + "_struct_in",
-            needs_hash= True
-        )
+        return struct_out
+
+    def _visit_distinct(self, node: OpNode, pipe: str, parent_struct:CppStruct) -> CppStruct:
+        #richiede la hash sull'input per le hash_map
+        parent_struct.needs_hash = True
 
         key_lambda = None
         if self.parallelism > 1:
@@ -285,7 +279,7 @@ class GraphExplorer:
             #in questo caso si tratta di rendere l'intero struct ricevuto in input
 
             key_lambda = (
-                f"[](const {schema.struct_name}& in) -> {schema.struct_name}" + "{ return in; }"
+                f"[](const {parent_struct.struct_name}& in) -> {parent_struct.struct_name}" + "{ return in; }"
             )
 
         self.node_counter += 1
@@ -295,8 +289,8 @@ class GraphExplorer:
         template = self._jinja_env.get_template("distinct_builder.jinja2")
         builder = template.render(
             var_name= var_name,
-            in_struct= schema.struct_name,
-            key_struct= schema.struct_name,
+            in_struct= parent_struct.struct_name,
+            key_struct= parent_struct.struct_name,
             key_lambda= key_lambda, 
             op_name= node.node_id,
             par = self.parallelism
@@ -306,19 +300,17 @@ class GraphExplorer:
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
 
-    def _visit_join(self, node: OpNode, pipe: str, to_merge: List[str]):
+        return parent_struct
+
+    def _visit_join(
+        self, 
+        node: OpNode, 
+        pipe: str, 
+        to_merge: List[str],
+        left_parent_struct: CppStruct,
+        right_parent_struct: CppStruct
+    ) -> CppStruct:
         is_windowed = node.op_type == "JOIN_WINDOWED"
-
-        #schemi del left stream e right stream
-        left_struct = self.sch_gen.get_or_create_struct(
-            schema_dict= node.raw_dict["tab1_schema"],
-            name_hint= node.node_id + "_left_struct",
-        )
-
-        right_struct = self.sch_gen.get_or_create_struct(
-            schema_dict= node.raw_dict["tab2_schema"],
-            name_hint= node.node_id + "_right_struct",
-        )
 
         struct_out = self.sch_gen.get_or_create_struct(
             schema_dict= node.raw_dict["schema_out"],
@@ -326,16 +318,16 @@ class GraphExplorer:
         )
 
         #schema unificato
-        joined_struct = self.sch_gen.struct_join(left_struct, right_struct)
+        joined_struct = self.sch_gen.struct_join(left_parent_struct, right_parent_struct)
 
         #inserzione nodi di unificazione schema
         #left
         left_mappings = []
-        for f in left_struct.fields:
+        for f in left_parent_struct.fields:
             left_mappings.append((f.name, f"in.{f.name}"))
 
         self._emit_map(
-            in_struct= left_struct.struct_name,
+            in_struct= left_parent_struct.struct_name,
             out_struct= joined_struct.struct_name,
             mappings= left_mappings,
             pipe= to_merge[0],
@@ -344,11 +336,11 @@ class GraphExplorer:
 
         #right
         right_mappings = []
-        for f in right_struct.fields:
+        for f in right_parent_struct.fields:
             right_mappings.append((f.name, f"in.{f.name}"))
             
         self._emit_map(
-            in_struct= right_struct.struct_name,
+            in_struct= right_parent_struct.struct_name,
             out_struct= joined_struct.struct_name,
             mappings= right_mappings,
             pipe= to_merge[1],
@@ -381,7 +373,7 @@ class GraphExplorer:
         #join mappings
         mappings = []
         for f in struct_out.fields:
-            if f.name in [f.name for f in left_struct.fields]:
+            if f.name in [f.name for f in left_parent_struct.fields]:
                 mappings.append((f.name, f"left.{f.name}"))
             else:
                 mappings.append((f.name, f"right.{f.name}"))  
@@ -442,7 +434,15 @@ class GraphExplorer:
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
 
-    def _visit_union(self, node: OpNode, pipe: str, to_merge: List[str]):
+        return struct_out
+
+    def _visit_union(
+        self, 
+        node: OpNode, 
+        pipe: str, 
+        to_merge: List[str], 
+        parent_struct:CppStruct
+    ) -> CppStruct:
         distinct = (node.op_type == "UNION")
 
         template = self._jinja_env.get_template("merge_pipes.jinja2")
@@ -460,10 +460,19 @@ class GraphExplorer:
                 op_type= "DISTINCT",
                 raw_dict= {"schema_in": node.raw_dict["schema_out"]}
             )
-            self._visit_distinct(d_node, pipe)
+            self._visit_distinct(d_node, pipe, parent_struct)
 
-    def _visit_intersect(self, node: OpNode, pipe: str, to_merge: List[str]):
+        return parent_struct    
+
+    def _visit_intersect(
+        self, 
+        node: OpNode, 
+        pipe: str, 
+        to_merge: List[str], 
+        parent_struct:CppStruct
+    ) -> CppStruct:
         self.pipes[pipe] = "intersect"
+        return parent_struct
 
     def _emit_map(
         self,
