@@ -87,7 +87,7 @@ class GraphExplorer:
             self._visit_intersect(root, current_pipe, to_merge)    
 
     def _visit_from(self, node: OpNode, pipe: str):
-        self.pipes[pipe] = "from"
+        self.pipes[pipe] = f"auto {pipe} = topology.add_source(***)"
 
     def _visit_where(self, node: OpNode, pipe: str):
         #genero lo schema
@@ -443,7 +443,24 @@ class GraphExplorer:
         self.pipes[pipe] += f".add({var_name})"
 
     def _visit_union(self, node: OpNode, pipe: str, to_merge: List[str]):
-        self.pipes[pipe] = "union"
+        distinct = (node.op_type == "UNION")
+
+        template = self._jinja_env.get_template("merge_pipes.jinja2")
+        pipe_str = template.render(
+            out_pipe= pipe,
+            branches_var= f"{pipe}_branches",
+            branches= to_merge,
+            topology_name= "topology"
+        )
+        self.pipes[pipe] = pipe_str
+
+        if distinct:
+            d_node = OpNode(
+                node_id= node.node_id + "_union_distinct",
+                op_type= "DISTINCT",
+                raw_dict= {"schema_in": node.raw_dict["schema_out"]}
+            )
+            self._visit_distinct(d_node, pipe)
 
     def _visit_intersect(self, node: OpNode, pipe: str, to_merge: List[str]):
         self.pipes[pipe] = "intersect"

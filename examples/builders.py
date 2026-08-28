@@ -4,9 +4,9 @@ from pathlib import Path
 par = JsonParser(Path("./output"))
 sch = SchemaGenerator()
 etl = ExpressionTranslator()
-exp = GraphExplorer(sch, etl, Path("./output"), 1)
+exp = GraphExplorer(sch, etl, Path("./output"), 2)
 
-graph = par.parse_query("q1_q2_join")
+graph = par.parse_query("avg_temp_and_hum")
 exp.visit(graph.target_root)
 
 print("------ \t STRUCTS: \n")
