@@ -91,7 +91,7 @@ class GraphExplorer:
         raise RuntimeError(f"Operazione {op_type} sconosciuta.") 
 
     def _visit_from(self, node: OpNode, pipe: str):
-        self.pipes[pipe] = f"auto {pipe} = topology.add_source(***)"
+        self.pipes[pipe] = f"auto& {pipe} = topology.add_source(***)"
 
         return self.sch_gen.get_or_create_struct(
             schema_dict= node.raw_dict["schema_out"],

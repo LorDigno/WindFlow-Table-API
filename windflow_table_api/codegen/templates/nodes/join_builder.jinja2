@@ -4,7 +4,7 @@ auto {{ var_name }} = Table_Window_Join_Builder<{{ in_struct }}, {{ out_struct }
 )
     .withName("{{ op_name }}")
     .withParallelism({{ par }})
-    .withTBWindow({{ win_size }}, {{ win_slide }})
+    .withTBWindow({{ win_size }}ULL, {{ win_slide }}ULL)
 {% if key_lambda %}
     .withKeyBy({{ key_lambda }})
     .build_keyed();

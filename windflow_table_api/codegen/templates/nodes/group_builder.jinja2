@@ -5,9 +5,9 @@ auto {{ var_name }} = Windowed_Group_Builder<{{ in_struct }}, {{ out_struct }}{%
     .withName("{{ op_name }}")
     .withParallelism({{ par }})
 {% if win_type == 'TIME' %}
-    .withTBWindow({{ win_size }}, {{ win_slide }})
+    .withTBWindow({{ win_size }}ULL, {{ win_slide }}ULL)
 {% elif win_type == 'COUNT' %}
-    .withCBWindow({{ win_size }}, {{ win_slide }})
+    .withCBWindow({{ win_size }}ULL, {{ win_slide }}ULL)
 {% endif %}
 {% if needs_key %}
     .withKeyBy({{ key_lambda }})
