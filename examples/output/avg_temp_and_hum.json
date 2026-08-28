@@ -128,7 +128,7 @@
                 "parents": [
                     {
                         "op_type": "TAB_REF",
-                        "source_id": "gotta_put_a_union_in_there",
+                        "source_id": "gotta_put_an_intersect_in_there",
                         "schema_out": {
                             "sensor_id": "STRING",
                             "temperature": "DOUBLE",

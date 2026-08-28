@@ -471,7 +471,65 @@ class GraphExplorer:
         to_merge: List[str], 
         parent_struct:CppStruct
     ) -> CppStruct:
-        self.pipes[pipe] = "intersect"
+        is_all = (node.op_type == "INTERSECT_ALL")
+
+        #necessario per le hash_map
+        parent_struct.needs_hash = True
+        tagged_struct = f"Tagged_Tuple<{parent_struct.struct_name}>"
+        
+        #tagging del left stream
+        left_mappings = [
+            ("data", "in"),
+            ("tag", "0"),
+        ]
+        self._emit_map(
+            in_struct= parent_struct.struct_name,
+            out_struct= tagged_struct,
+            mappings= left_mappings,
+            pipe= to_merge[0],
+            name_hint= f"{node.node_id}_left_tagger"
+        )
+
+        #tagging del right stream
+        right_mappings = [
+            ("data", "in"),
+            ("tag", "1"),
+        ]
+        self._emit_map(
+            in_struct= parent_struct.struct_name,
+            out_struct= tagged_struct,
+            mappings= right_mappings,
+            pipe= to_merge[1],
+            name_hint= f"{node.node_id}_right_tagger"
+        )
+
+        self.node_counter += 1
+        var_name = f"intersect_{self.node_counter}_op"
+
+        #builder
+        template = self._jinja_env.get_template("intersect_builder.jinja2")
+        builder = template.render(
+            var_name= var_name,
+            in_struct = parent_struct.struct_name,
+            is_all= is_all,
+            op_name= node.node_id,
+            par = self.parallelism
+        )
+        self.builders.append(builder)
+
+        #eseguo il merge delle pipes
+        template = self._jinja_env.get_template("merge_pipes.jinja2")
+        pipe_str = template.render(
+            out_pipe= pipe,
+            branches_var= f"{pipe}_branches",
+            branches= to_merge,
+            topology_name= "topology"
+        )
+        self.pipes[pipe] = pipe_str
+
+        #aggiungo l'operatore d'intersect
+        self.pipes[pipe] += f".add({var_name})"
+
         return parent_struct
 
     def _emit_map(

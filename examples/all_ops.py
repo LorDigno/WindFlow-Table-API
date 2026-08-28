@@ -38,16 +38,19 @@ q3 = q1.join("sensor_id", other= q2, attachment= interval).select("sensor_id", "
 q3.name_draft("gotta_put_a_union_in_there")
 q4 = q3.union(source).select("sensor_id", "temperature", "humidity")
 
+q4.name_draft("gotta_put_an_intersect_in_there")
+q5 = q4.intersect(source).select("sensor_id", "temperature", "humidity")
+
 win = Window.createTBWindow(
     size= Duration(10, TimeTypes.DAYS),
     slide= Duration(5, TimeTypes.DAYS)
 )
 
-q4.name_draft("avg_temp_and_hum")
-q5 = q4.group_by("sensor_id", window= win).select(
+q5.name_draft("avg_temp_and_hum")
+q6 = q5.group_by("sensor_id", window= win).select(
                             "sensor_id", 
                             avg("temperature").alias("avg_temp"),
                             avg("humidity").alias("avg_hum")
                             )
 
-env.execute(q5, "./output", True)
+env.execute(q6, "./output", True)

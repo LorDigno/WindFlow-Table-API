@@ -1,0 +1,12 @@
+{% if is_all %}
+auto {{ var_name }} = Intersect_All_Builder<{{ in_struct }}>()
+{% else %}
+auto {{ var_name }} = Intersect_Builder<{{ in_struct }}>()
+{% endif %}
+    .withName("{{ op_name }}")
+    .withParallelism({{ par }})
+{% if par > 1 %}
+    .build_keyed();
+{% else %}
+    .build();
+{% endif %}
