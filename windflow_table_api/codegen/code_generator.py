@@ -1,5 +1,6 @@
 import argparse
 from pathlib import Path
+from jinja2 import Environment, FileSystemLoader
 from .parser import JsonParser, ParsedGraph, OpNode
 from .schema_gen import SchemaGenerator
 from .expr_translator import ExpressionTranslator
@@ -49,9 +50,34 @@ def main():
     e_tl = ExpressionTranslator()
 
     #esplorazione del grafo
-    explorer = GraphExplorer(s_gen, e_tl, args.output_dir)
+    explorer = GraphExplorer(s_gen, e_tl, args.json_dir, args.parallelism)
     explorer.visit(parsed_graph.target_root)
-      
+
+    #scrive l'header degli struct
+    s_gen.write_header_file(args.json_dir , args.query_id)
+
+    #setup di jinja
+    templates_dir = Path(__file__).parent / "templates" 
+    jinja_env = Environment(
+        loader=FileSystemLoader(templates_dir),
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
+
+    #generazione del main
+    template = jinja_env.get_template("main.cpp.jinja2")
+    main_string = template.render(
+        query_id= args.query_id,
+        builders= explorer.builders,
+        policy= args.time_policy if args.time_policy != "NO_POLICY" else None,
+        pipe_order= explorer.pipe_order,
+        pipes= explorer.pipes
+    )
+
+    #scrittura del file
+    file_path = args.json_dir / f"{args.query_id}_main.cpp"
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write(main_string) 
 
 if __name__ == "__main__":
     main()

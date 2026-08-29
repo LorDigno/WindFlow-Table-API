@@ -28,7 +28,8 @@ class GraphExplorer:
 
         #gestione delle pipe
         self.pipe_counter = 0
-        self.pipes: Dict[str, str] = {"pipe_1": ""}
+        self.pipes: Dict[str, str] = {}
+        self.pipe_order: List[str] = []
 
         #gestione dei nodi
         self.node_counter = 0
@@ -92,6 +93,8 @@ class GraphExplorer:
 
     def _visit_from(self, node: OpNode, pipe: str):
         self.pipes[pipe] = f"auto& {pipe} = topology.add_source(***)"
+        if  pipe not in self.pipe_order:
+            self.pipe_order.append(pipe)
 
         return self.sch_gen.get_or_create_struct(
             schema_dict= node.raw_dict["schema_out"],
@@ -430,6 +433,8 @@ class GraphExplorer:
             topology_name= "topology"
         )
         self.pipes[pipe] = pipe_str
+        if pipe not in self.pipe_order:
+            self.pipe_order.append(pipe)
 
         #aggiungo alla pipe l'operatore
         self.pipes[pipe] += f".add({var_name})"
@@ -453,6 +458,8 @@ class GraphExplorer:
             topology_name= "topology"
         )
         self.pipes[pipe] = pipe_str
+        if pipe not in self.pipe_order:
+            self.pipe_order.append(pipe)
 
         if distinct:
             d_node = OpNode(
@@ -529,6 +536,8 @@ class GraphExplorer:
 
         #aggiungo l'operatore d'intersect
         self.pipes[pipe] += f".add({var_name})"
+        if pipe not in self.pipe_order:
+            self.pipe_order.append(pipe)
 
         return parent_struct
 

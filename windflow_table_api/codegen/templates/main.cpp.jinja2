@@ -1,0 +1,38 @@
+#include <iostream>
+#include <string>
+#include <vector>
+#include <optional>
+#include <fstream>
+#include <sstream>
+#include <chrono>
+#include <windflow.hpp>
+#include <windflow_table_api.hpp>
+#include "{{ query_id }}_structs.hpp"
+
+int main(int argc, char* argv[]) {
+    //-----     OPERATOR BUILDERS   -----
+
+    {% for b in builders %}
+    {{ b }}
+
+    {% endfor %}
+    //-----     PIPES AND TOPOLOGY  ------
+    wf::PipeGraph topology(
+        "{{ query_id }}", 
+        wf::Execution_Mode_t::DEFAULT
+        {% if policy %}
+        , wf::Time_Policy_t::{{ policy }} 
+        {% endif %}
+    );
+
+    {% for name in pipe_order %}
+    {% if loop.last %}
+    {{ pipes[name] }}.add_sink(***);
+    {% else %}
+    {{ pipes[name] }};
+    {% endif %}
+
+    {% endfor %}
+    topology.run();
+    return 0;
+}

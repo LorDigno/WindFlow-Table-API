@@ -16,6 +16,7 @@ from .utility import (
 )
 from .lambda_gen import LambdaGenerator
 from .explorer import GraphExplorer
+from .code_generator import main
 
 __all__ = [
     "OpNode",
@@ -32,5 +33,6 @@ __all__ = [
     "get_aggregate_default",
     "parse_window",
     "parse_duration_to_microseconds",
-    "parse_interval"
+    "parse_interval",
+    "code_generator"
 ]

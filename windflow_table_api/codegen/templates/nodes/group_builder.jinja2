@@ -1,5 +1,5 @@
 {% if is_windowed %}
-auto {{ var_name }} = Windowed_Group_Builder<{{ in_struct }}, {{ out_struct }}{% if key_struct %}, {{ key_struct }}{% endif %}>(
+auto {{ var_name }} = Windowed_Group_Builder<{{ in_struct }}, {{ out_struct }}{% if needs_key and key_struct %}, {{ key_struct }}{% endif %}>(
     {{ lambda_func }}
 )
     .withName("{{ op_name }}")
