@@ -1,6 +1,8 @@
+from pathlib import Path
+import sys
 from windflow_table_api import *
 
-env = TableEnvironment(policy=TimePolicy.EVENT_TIME)
+env = TableEnvironment(par= 2, policy=TimePolicy.EVENT_TIME)
 
 sensor_schema = (SchemaBuilder()
                  .add_column("sensor_id", DataTypes.STRING)
@@ -9,40 +11,42 @@ sensor_schema = (SchemaBuilder()
                  .build()
                 )
 
-tab = env.table_from_file("sensor_stream_input.csv", 
-                          sensor_schema, 
-                          "sensor_source",
-                          TimeCol("timestamp", TimeTypes.MILLISECONDS)
-                          )
-
-cond = (
-    (col("humidity") > 20) & (col("temperature") > 20) & (col("temperature") < 30)
+source_config = InputFileConfiguration(
+    path = "input_stream.csv",
+    format= FileFormat.CSV,
+    schema= sensor_schema,
+    has_header= True,
+    time_col= TimeCol("timestamp", TimeFormats.ISO8601),
+    order= True
 )
 
-window = Window.createTBWindow(
-    Duration(10, TimeTypes.MINUTES),
-    Duration(5, TimeTypes.MINUTES)
-)
+tab = env.table_from_file(source_config, "sensor_stream_input.csv")
 
-interval = Interval(
-    Duration(-5, TimeTypes.MINUTES),
-    Duration(5, TimeTypes.MINUTES)
-)
+#definisco la condizione per il where
+cond = (col("temperature") < 10) & (col("humidity") < 20)
 
-tab.name_draft("sensor_q1")
+tab.name_draft("cold_and_dry")      #definisce l'id della query risultante
 q1 = (tab
-     .where(cond)
-     .group_by("sensor_id", window=window)
-     .select("sensor_id", avg("temperature").alias("avg_temp"), count().alias("conteggio"))
-    )   
+      .where(cond)
+      .distinct()
+      .select("sensor_id", "temperature", "humidity")
+)
 
-tab.name_draft("sensor_q2")
-q2 = (tab.select("sensor_id", "humidity", distinct=True))
+q1.name_draft("avg_cold_temperature")
+q2 = (q1
+      .select(avg("temperature").alias("avg_temp"))
+)
 
-q1.name_draft("q1_q2_join")
-q3 = (q1                                    
-      .join("sensor_id", other= q2, attachment=interval)                            
-      .select("sensor_id", "avg_temp", "humidity")      
-      )
+#crea i file JSON delle due query
+env.execute(q2, output_dir="./output", rexecute=True)
 
-env.execute(q3, "./output", rexecute=True)
+#la parte che segue verrà poi chiamata automaticamente da execute
+#è ancora in TODO quella parte
+
+sys.argv = ["code_generator.py", 
+            "avg_cold_temperature", 
+            "--json-dir", "./output", 
+            "--parallelism", str(env.par),
+            "--time-policy", env.policy.name
+]
+codegen.code_generator.main()

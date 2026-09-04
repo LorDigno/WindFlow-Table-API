@@ -36,7 +36,8 @@ from .expressions import (
 from .durations import (
     Duration,
     TimeCol,
-    TimeTypes
+    TimeTypes,
+    TimeFormats
 )
 
 # -------------------------------------------------------------------------
@@ -66,12 +67,12 @@ from .operators import (
 )
 
 # -------------------------------------------------------------------------
-# Drafting, Table e Environment
+# Drafting, Table, Environment e File
 # -------------------------------------------------------------------------
 from .draft import Draft
 from .table import Table, Query
 from .table_env import TableEnvironment, TimePolicy
-
+from .file_config import FileFormat, InputFileConfiguration
 
 __all__ = [
     # Data Types & Schema
@@ -99,6 +100,7 @@ __all__ = [
     "Duration",
     "TimeCol",
     "TimeTypes",
+    "TimeFormats",
     # Windows
     "Window",
     "WindowType",
@@ -120,5 +122,7 @@ __all__ = [
     "Table",
     "Query",
     "TableEnvironment",
-    "TimePolicy"
+    "TimePolicy",
+    "FileFormat",
+    "InputFileConfiguration"
 ]

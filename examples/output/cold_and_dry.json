@@ -31,47 +31,7 @@
         },
         "parents": [
             {
-                "op_type": "WHERE",
-                "condition": {
-                    "expr_type": "BINARY_OP",
-                    "op": "&&",
-                    "data_type": "BOOLEAN",
-                    "left": {
-                        "expr_type": "BINARY_OP",
-                        "op": "<",
-                        "data_type": "BOOLEAN",
-                        "left": {
-                            "expr_type": "COL_REF",
-                            "name": "temperature",
-                            "data_type": "DOUBLE"
-                        },
-                        "right": {
-                            "expr_type": "LITERAL",
-                            "value": 10,
-                            "data_type": "INT",
-                            "name": "10"
-                        },
-                        "name": "(temperature < 10)"
-                    },
-                    "right": {
-                        "expr_type": "BINARY_OP",
-                        "op": "<",
-                        "data_type": "BOOLEAN",
-                        "left": {
-                            "expr_type": "COL_REF",
-                            "name": "humidity",
-                            "data_type": "DOUBLE"
-                        },
-                        "right": {
-                            "expr_type": "LITERAL",
-                            "value": 20,
-                            "data_type": "INT",
-                            "name": "20"
-                        },
-                        "name": "(humidity < 20)"
-                    },
-                    "name": "((temperature < 10) && (humidity < 20))"
-                },
+                "op_type": "DISTINCT",
                 "schema_out": {
                     "sensor_id": "STRING",
                     "temperature": "DOUBLE",
@@ -84,15 +44,79 @@
                 },
                 "parents": [
                     {
-                        "op_type": "FROM",
-                        "source_id": "sensor_source",
+                        "op_type": "WHERE",
+                        "condition": {
+                            "expr_type": "BINARY_OP",
+                            "op": "&&",
+                            "data_type": "BOOLEAN",
+                            "left": {
+                                "expr_type": "BINARY_OP",
+                                "op": "<",
+                                "data_type": "BOOLEAN",
+                                "left": {
+                                    "expr_type": "COL_REF",
+                                    "name": "temperature",
+                                    "data_type": "DOUBLE"
+                                },
+                                "right": {
+                                    "expr_type": "LITERAL",
+                                    "value": 10,
+                                    "data_type": "INT",
+                                    "name": "10"
+                                },
+                                "name": "(temperature < 10)"
+                            },
+                            "right": {
+                                "expr_type": "BINARY_OP",
+                                "op": "<",
+                                "data_type": "BOOLEAN",
+                                "left": {
+                                    "expr_type": "COL_REF",
+                                    "name": "humidity",
+                                    "data_type": "DOUBLE"
+                                },
+                                "right": {
+                                    "expr_type": "LITERAL",
+                                    "value": 20,
+                                    "data_type": "INT",
+                                    "name": "20"
+                                },
+                                "name": "(humidity < 20)"
+                            },
+                            "name": "((temperature < 10) && (humidity < 20))"
+                        },
                         "schema_out": {
                             "sensor_id": "STRING",
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
                         },
-                        "file_path": "sensor_stream_input.csv",
-                        "time_col": null
+                        "schema_in": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE"
+                        },
+                        "parents": [
+                            {
+                                "op_type": "FROM",
+                                "source_id": "sensor_stream_input.csv",
+                                "schema_out": {
+                                    "sensor_id": "STRING",
+                                    "temperature": "DOUBLE",
+                                    "humidity": "DOUBLE"
+                                },
+                                "config": {
+                                    "filepath": "input_stream.csv",
+                                    "file_format": "CSV",
+                                    "header": true,
+                                    "time_col": {
+                                        "name": "timestamp",
+                                        "format": "ISO8601"
+                                    },
+                                    "order": true,
+                                    "delay": null
+                                }
+                            }
+                        ]
                     }
                 ]
             }

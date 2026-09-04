@@ -7,6 +7,7 @@ from .expressions import Expression, ColRefExpression, AggregateExpression
 from .durations import TimeCol
 from .windows import Window, Interval, WindowType
 from .datatypes import DataTypes
+from .file_config import InputFileConfiguration
 
 class Operator(ABC):
     """
@@ -74,14 +75,11 @@ class FromOp(Operator):
 
     def __init__(
         self, source_table_id: str, 
-        schema_out: Schema, 
-        time_col: Optional[TimeCol] = None,
-        file_path: Optional[str] = None
+        file_config: InputFileConfiguration
     ) -> None:
-        super().__init__(schema_out=schema_out, input_schema=SchemaBuilder().build(), parents=[])
-        self.source_table_id = source_table_id
-        self.time_col = time_col  
-        self.file_path = file_path     
+        super().__init__(schema_out=file_config.schema, input_schema=SchemaBuilder().build(), parents=[])
+        self.source_table_id = source_table_id    
+        self.config = file_config
 
     def get_op_type(self) -> str:
         return "FROM"
@@ -91,8 +89,7 @@ class FromOp(Operator):
             "op_type": self.get_op_type(),
             "source_id": self.source_table_id,
             "schema_out": self.schema_out.to_dict(),
-            "file_path": self.file_path,
-            "time_col": self.time_col.to_dict() if self.time_col else None
+            "config": self.config.to_dict()
         }
 
     def set_parents(self, parents: List[Operator]) -> None:

@@ -6,6 +6,7 @@ from .operators import *
 from .schema import Schema
 from .table import Table, Query
 from .windows import Interval, Window, WindowType
+from .file_config import InputFileConfiguration
 import json, os
 if TYPE_CHECKING:
     from .table_env import TableEnvironment
@@ -36,7 +37,7 @@ class TableEnvironment:
         ) -> None:
         self._table_counter: int = 0
         self._tables: Dict[str, Table] = {}
-        self._sources_config: Dict[str, Dict[str, Any]] = {}
+        self._sources_config: Dict[str, InputFileConfiguration] = {}
         self.par = par
         self.policy = policy
 
@@ -48,10 +49,8 @@ class TableEnvironment:
 
     def table_from_file(
             self, 
-            file_path: str, 
-            schema: Schema, 
-            name: Optional[str] = None,
-            time_col: Optional[TimeCol] = None
+            file_config: InputFileConfiguration,
+            name: Optional[str] = None
         ) -> Table:
         """
         Crea uno Data Stream sorgente a partire da un file.
@@ -59,12 +58,12 @@ class TableEnvironment:
         Deve avere "time_col" solo e soltanto se la politica temporale è EVENT_TIME.
         """
 
-        if self.policy == TimePolicy.EVENT_TIME and time_col is None:
+        if self.policy == TimePolicy.EVENT_TIME and file_config.time_col is None:
             raise RuntimeError(
                 f"Con politica EVENT_TIME è necessario inserire una TimeCol in ogni tabella sorgente."
             )
 
-        if self.policy != TimePolicy.EVENT_TIME and time_col is not None:
+        if self.policy != TimePolicy.EVENT_TIME and file_config.time_col is not None:
             raise RuntimeError(
                 f"Con politica {self.policy.value} è vietato inserire una TimeCol nelle tabelle sorgente."
             )
@@ -79,14 +78,10 @@ class TableEnvironment:
         else:
             table_id = self._generate_table_id("source_stream_file")
         
-        table = Table(schema=schema, table_id=table_id, env=self)
+        table = Table(schema=file_config.schema, table_id=table_id, env=self)
         self._tables[table_id] = table
 
-        self._sources_config[table_id] = {
-            "file_path": file_path,
-            "time_col": time_col,
-        }
-
+        self._sources_config[table_id] = file_config;
         return table
 
     # -------------------------------------------------------------------------
@@ -101,10 +96,13 @@ class TableEnvironment:
         
         return self._tables[name]
 
-    def get_source_config(self, source_id: str) -> Dict[str, Any]:
-        """Recupera la configurazione fisica della sorgente dal catalogo."""
+    def get_source_config(self, source_id: str) -> Optional[InputFileConfiguration]:
+        """
+        Recupera la configurazione fisica della sorgente dal catalogo.
+        Se non è presente rende None;
+        """
 
-        return self._sources_config.get(source_id, {})
+        return self._sources_config.get(source_id)
 
     def create_query(self, schema: Schema, parent_table: str, root_op: Operator,
                      name: Optional[str] = None) -> Query:
@@ -149,7 +147,7 @@ class TableEnvironment:
                 source_cfg = self._sources_config[op.source_table_id]
 
                 #controllo sulla politica temporale
-                time_col = source_cfg.get("time_col")
+                time_col = source_cfg.time_col
                 if self.policy == TimePolicy.EVENT_TIME and time_col is None:
                     raise RuntimeError(
                         f"Con politica EVENT_TIME è necessario inserire una TimeCol in ogni tabella sorgente."
@@ -162,9 +160,7 @@ class TableEnvironment:
                
                 from_op = FromOp(
                     source_table_id=op.source_table_id,
-                    schema_out=op.schema_out,
-                    time_col=time_col,
-                    file_path=source_cfg.get("file_path")
+                    file_config= source_cfg
                 )
                 return from_op.to_dict()
 

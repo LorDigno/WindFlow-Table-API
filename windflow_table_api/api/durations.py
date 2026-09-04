@@ -70,21 +70,27 @@ class Duration:
         if not isinstance(other, Duration): return False
         return (self.value == other.value) and (self.unit == other.unit)
 
+class TimeFormats(Enum):
+    """
+    Formati temporali di cui è supportato il parsing.
+    """
+    ISO8601 = "ISO8601"
+
 class TimeCol:
     """
     Rappresenta una colonna da cui estrarre il timestamp nella sorgente.
     """
 
-    def __init__(self, name: str, unit: TimeTypes):
+    def __init__(self, name: str, format: TimeFormats):
         self.name = name
-        self.unit = unit    
+        self.format = format    
 
     def __repr__(self) -> str:
-        return f"({self.name}, {self.unit.value})"
+        return f"({self.name}, {self.format.name})"
 
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
-            "unit": self.unit.value
+            "format": self.format.name
         }
    
