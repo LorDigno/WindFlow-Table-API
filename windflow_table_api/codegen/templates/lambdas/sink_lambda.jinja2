@@ -1,0 +1,3 @@
+[](const {{ in_struct }}& record, std::ostream& os) {
+{% for field in fields %} os << record.{{ field.name }}{% if not loop.last %} << ","{% endif %};{% endfor %}
+}

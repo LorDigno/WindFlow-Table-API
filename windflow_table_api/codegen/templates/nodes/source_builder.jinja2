@@ -1,0 +1,15 @@
+auto {{ var_name }} = Table_Source_Builder<{{ out_struct }}>( "{{ filepath }}",
+    {{ parser_func }}
+)
+    .withName("{{ op_name }}")
+{% if has_header %}
+    .withHeader()
+{% endif %}
+{% if event_time %}
+    {% if is_ordered %}
+    .withOrderedEventTime()
+    {% else %}
+    .withWatermarkDelay({{ delay }}ULL)
+    {% endif %}
+{% endif %}
+    .build();

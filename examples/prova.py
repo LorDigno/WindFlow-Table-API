@@ -12,7 +12,7 @@ sensor_schema = (SchemaBuilder()
                 )
 
 source_config = InputFileConfiguration(
-    path = "input_stream.csv",
+    path = "sensor_input_stream.csv",
     format= FileFormat.CSV,
     schema= sensor_schema,
     has_header= True,
@@ -34,7 +34,8 @@ q1 = (tab
 
 q1.name_draft("avg_cold_temperature")
 q2 = (q1
-      .select(avg("temperature").alias("avg_temp"))
+      .group_by("sensor_id")
+      .select("sensor_id" ,avg("temperature").alias("avg_temp"))
 )
 
 #crea i file JSON delle due query

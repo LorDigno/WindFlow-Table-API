@@ -5,7 +5,7 @@ from .parser import OpNode
 from .schema_gen import SchemaGenerator, CppStruct, CppField
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator    
-from .utility import get_aggregate_default, parse_window, parse_interval
+from .utility import get_aggregate_default, parse_window, parse_interval, parse_duration_to_microseconds
 
 class GraphExplorer:
     """
@@ -92,14 +92,56 @@ class GraphExplorer:
         raise RuntimeError(f"Operazione {op_type} sconosciuta.") 
 
     def _visit_from(self, node: OpNode, pipe: str):
-        self.pipes[pipe] = f"auto& {pipe} = topology.add_source(***)"
-        if  pipe not in self.pipe_order:
-            self.pipe_order.append(pipe)
+        #dati
+        config = node.raw_dict.get("config", {})
+        filepath = config.get("filepath", "stream_input.csv")
+        time_col_dict = config.get("time_col")
+        is_ordered = config.get("order", True)
+        has_header = config.get("has_header", True)
 
-        return self.sch_gen.get_or_create_struct(
+        delay = config.get("delay")
+        delay = parse_duration_to_microseconds(delay) if delay else None
+
+        #genero lo struct di output
+        struct_out = self.sch_gen.get_or_create_struct(
             schema_dict= node.raw_dict["schema_out"],
             name_hint= "source_" + node.node_id
         )
+
+        #funzione che esecue il parsing da dare al builder
+        parser_func = LambdaGenerator.parser_lambda(
+            struct_out= struct_out.struct_name,
+            time_col_dict= time_col_dict,
+            ordered_fields= [
+                {"name": col_name, "type": col_type}
+                for col_name, col_type in node.raw_dict["schema_out"].items()
+            ]
+        )
+
+        self.node_counter += 1
+        var_name = f"from_{self.node_counter}_op"
+
+        #genero il builder
+        builder_template = self._jinja_env.get_template("source_builder.jinja2")
+        builder_code = builder_template.render(
+            var_name=var_name,
+            out_struct=struct_out.struct_name,
+            filepath=filepath,
+            parser_func= parser_func,
+            op_name=node.node_id,
+            has_header=has_header,
+            event_time=time_col_dict is not None,
+            is_ordered=is_ordered,
+            delay=delay
+        )
+        self.builders.append(builder_code)
+
+        #aggiungo alla pipe
+        self.pipes[pipe] = f"auto& {pipe} = topology.add_source({var_name})"
+        if  pipe not in self.pipe_order:
+            self.pipe_order.append(pipe)
+
+        return struct_out
 
     def _visit_where(self, node: OpNode, pipe: str, parent_struct:CppStruct) -> CppStruct:
         #generazione lambda
@@ -576,3 +618,42 @@ class GraphExplorer:
         self.builders.append(builder)
 
         self.pipes[pipe] += f".add({var_name})"
+
+    def add_sink(
+        self,
+        final_struct: CppStruct,
+        filepath: str = "output.csv",
+        has_header: bool = True,
+        pipe: str = "pipe_0",
+        sink_name: str = "Table_Sink"
+    ) -> None:
+        """
+        Genera il Table_Sink_Builder tipizzato sull'ultimo struct del DAG,
+        lo registra in self.builders e chiude la catena della pipe specificata.
+        """
+        #preparazione dell'header
+        header_str = ", ".join(f.name for f in final_struct.fields) if has_header else None
+
+        #generazione della lambda
+        formatter_func = LambdaGenerator.sink_lambda(
+            final_struct.struct_name,
+            fields= [{"name": f.name} for f in final_struct.fields]
+        )
+
+        self.node_counter += 1
+        var_name = f"sink_{self.node_counter}_op"
+
+        #genero il builder
+        builder_template = self._jinja_env.get_template("sink_builder.jinja2")
+        builder_code = builder_template.render(
+            var_name=var_name,
+            in_struct=final_struct.struct_name,
+            filepath=filepath,
+            formatter_func=formatter_func,
+            header_str=header_str,
+            op_name= sink_name
+        )
+        self.builders.append(builder_code)
+
+        #aggiunta alla pipe        
+        self.pipes[pipe] += f".add_sink({var_name})"

@@ -26,11 +26,7 @@ int main(int argc, char* argv[]) {
     );
 
     {% for name in pipe_order %}
-    {% if loop.last %}
-    {{ pipes[name] }}.add_sink(***);
-    {% else %}
     {{ pipes[name] }};
-    {% endif %}
 
     {% endfor %}
     topology.run();

@@ -34,9 +34,33 @@ namespace std {
 }
 
 // ============================================================================
+// Struct: avg_cold_temperature_group_by_2_key_struct
+// ============================================================================
+struct avg_cold_temperature_group_by_2_key_struct {
+    std::string sensor_id;
+
+
+    bool operator==(const avg_cold_temperature_group_by_2_key_struct& other) const {
+        return sensor_id == other.sensor_id;
+    }
+};
+
+namespace std {
+    template<>
+    struct hash<avg_cold_temperature_group_by_2_key_struct> {
+        size_t operator()(const avg_cold_temperature_group_by_2_key_struct& k) const {
+            size_t h = 0;
+            h ^= std::hash<std::string>{}(k.sensor_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            return h;
+        }
+    };
+}
+
+// ============================================================================
 // Struct: avg_cold_temperature_group_by_2_struct_out
 // ============================================================================
 struct avg_cold_temperature_group_by_2_struct_out {
+    std::string sensor_id;
     int64_t COUNT_ = 0; 
     double SUM_temperature = 0.0; 
     double AVG_temperature = 0.0; 
@@ -49,6 +73,7 @@ struct avg_cold_temperature_group_by_2_struct_out {
 // Struct: avg_cold_temperature_select_1_struct_out
 // ============================================================================
 struct avg_cold_temperature_select_1_struct_out {
+    std::string sensor_id;
     double avg_temp;
 
 

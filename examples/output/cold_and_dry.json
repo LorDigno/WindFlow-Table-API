@@ -105,7 +105,7 @@
                                     "humidity": "DOUBLE"
                                 },
                                 "config": {
-                                    "filepath": "input_stream.csv",
+                                    "filepath": "sensor_input_stream.csv",
                                     "file_format": "CSV",
                                     "header": true,
                                     "time_col": {

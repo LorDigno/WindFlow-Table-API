@@ -1,4 +1,4 @@
-from typing import Dict, List, Tuple, Optional
+from typing import Dict, List, Tuple, Optional, Any, Tuple
 from jinja2 import Environment, FileSystemLoader
 from pathlib import Path
 
@@ -78,3 +78,28 @@ class LambdaGenerator:
             left_var= left_var,
             right_var= right_var
         )        
+
+    @staticmethod
+    def parser_lambda(
+        struct_out: str,
+        time_col_dict: Dict[str, Any],
+        ordered_fields: List[Dict[str, Any]]
+    ) -> str:
+        template = _ENV.get_template("parser_lambda.jinja2")
+        return template.render(
+            out_struct=struct_out,
+            time_col=time_col_dict,
+            fields=ordered_fields
+        )
+
+    @staticmethod
+    def sink_lambda(
+        in_struct: str,
+        fields
+    ) -> str:
+        template = _ENV.get_template("sink_lambda.jinja2")
+        return template.render(
+            in_struct=in_struct,
+            fields=fields
+        )
+    

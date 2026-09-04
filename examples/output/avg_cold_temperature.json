@@ -5,25 +5,35 @@
         "expressions": [
             {
                 "expr_type": "COL_REF",
+                "name": "sensor_id",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
                 "name": "AVG_temperature",
                 "data_type": "DOUBLE",
                 "alias": "avg_temp"
             }
         ],
         "schema_in": {
+            "sensor_id": "STRING",
             "COUNT_": "BIGINT",
             "SUM_temperature": "DOUBLE",
             "AVG_temperature": "DOUBLE"
         },
         "schema_out": {
+            "sensor_id": "STRING",
             "avg_temp": "DOUBLE"
         },
         "parents": [
             {
                 "op_type": "GROUP_BY",
-                "keys": [],
+                "keys": [
+                    "sensor_id"
+                ],
                 "window": null,
                 "schema_out": {
+                    "sensor_id": "STRING",
                     "COUNT_": "BIGINT",
                     "SUM_temperature": "DOUBLE",
                     "AVG_temperature": "DOUBLE"

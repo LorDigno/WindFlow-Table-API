@@ -1,0 +1,19 @@
+[](const std::string& line, {{ out_struct }}& record, uint64_t& timestamp) {
+    std::stringstream ss(line);
+    std::string token;
+
+{% if time_col %}
+    //timestamp
+    std::getline(ss, token, ',');
+    timestamp = parse_TIMESTAMP_{{ time_col.format }}(token);
+{% endif %}
+    //dati
+{% for field in fields %}
+    {% if field.type == 'STRING' %}
+    std::getline(ss, record.{{ field.name }}, ',');
+    {% else %}
+    std::getline(ss, token, ',');
+    record.{{ field.name }} = parse_{{ field.type }}(token);
+    {% endif %}
+{% endfor %}
+}
