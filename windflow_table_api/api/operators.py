@@ -8,6 +8,7 @@ from .durations import TimeCol
 from .windows import Window, Interval, WindowType
 from .datatypes import DataTypes
 from .file_config import InputFileConfiguration
+from windflow_table_api import OpType
 
 class Operator(ABC):
     """
@@ -48,7 +49,7 @@ class Operator(ABC):
         pass
 
     @abstractmethod
-    def get_op_type(self) -> str:
+    def get_op_type(self) -> OpType:
         """Restituisce l'identificativo univoco del tipo di operatore."""
         pass
 
@@ -81,21 +82,21 @@ class FromOp(Operator):
         self.source_table_id = source_table_id    
         self.config = file_config
 
-    def get_op_type(self) -> str:
-        return "FROM"
+    def get_op_type(self) -> OpType:
+        return OpType.FROM
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "source_id": self.source_table_id,
             "schema_out": self.schema_out.to_dict(),
             "config": self.config.to_dict()
         }
 
     def set_parents(self, parents: List[Operator]) -> None:
-            """Nega la possibilità di aggiunta."""
+        """Nega la possibilità di aggiunta."""
             
-            raise RuntimeError("Non si possono aggiungere parents al From")
+        raise RuntimeError("Non si possono aggiungere parents al From")
 
 class TableRefOp(Operator): 
     """
@@ -111,12 +112,12 @@ class TableRefOp(Operator):
         super().__init__(schema_out=schema_out, input_schema=SchemaBuilder().build(), parents=[])
         self.source_table_id = source_table_id     
 
-    def get_op_type(self) -> str:
-        return "TAB_REF"
+    def get_op_type(self) -> OpType:
+        return OpType.TABLE_REF
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "source_id": self.source_table_id,
             "schema_out": self.schema_out.to_dict()
         }
@@ -155,7 +156,7 @@ class UnaryOperator(Operator, ABC):
         """
 
         if len(parents) != 1:
-            raise RuntimeError("Non si possono aggiungere più parents ad un operatore unario")
+            raise RuntimeError(f"Non si possono avere {len(parents)} parents in un operatore unario")
         else:
             self._parents = parents
 
@@ -225,12 +226,12 @@ class SelectOp(UnaryOperator):
         super().__init__(schema_out=builder.build(), input_schema=input_schema)
         self.expressions = expressions
 
-    def get_op_type(self) -> str:
-        return "SELECT"
+    def get_op_type(self) -> OpType:
+        return OpType.SELECT
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "expressions": [expr.to_dict(self.input_schema) for expr in self.expressions],
             "schema_in": self.input_schema.to_dict(),
             "schema_out": self.schema_out.to_dict()
@@ -258,12 +259,12 @@ class WhereOp(UnaryOperator):
         super().__init__(schema_out=input_schema, input_schema=input_schema)
         self.condition = condition
 
-    def get_op_type(self) -> str:
-        return "WHERE"
+    def get_op_type(self) -> OpType:
+        return OpType.WHERE
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "condition": self.condition.to_dict(self.input_schema),
             "schema_out": self.schema_out.to_dict(),
             "schema_in": self.input_schema.to_dict()
@@ -297,14 +298,14 @@ class GroupByOp(UnaryOperator):
         self.window = window
         self.aggregations: List[AggregateExpression] = []
 
-    def get_op_type(self) -> str:
+    def get_op_type(self) -> OpType:
         if self.window is None:
-            return "GROUP_BY"
-        return "WINDOW_GROUP_BY"
+            return OpType.GROUP_BY
+        return OpType.WINDOW_GROUP_BY
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "keys": self.keys,
             "window": self.window.to_dict() if self.window else None,
             "schema_out": self.schema_out.to_dict(),   
@@ -323,12 +324,12 @@ class DistinctOp(UnaryOperator):
         ) -> None:
             super().__init__(schema_out=input_schema, input_schema=input_schema)
 
-    def get_op_type(self) -> str:
-        return "DISTINCT"
+    def get_op_type(self) -> OpType:
+        return OpType.DISTINCT
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "schema_out": self.schema_out.to_dict(),
             "schema_in": self.input_schema.to_dict()
         }
@@ -343,7 +344,7 @@ class JoinOp(BinaryOperator):
         keys: List[str],
         tab1_schema: Schema,
         tab2_schema: Schema,
-        attachment: Optional[Union[Window, Interval]]
+        attachment: Union[Window, Interval]
     ) -> None:
         if len(keys) < 1:
             raise  ValueError(
@@ -357,6 +358,7 @@ class JoinOp(BinaryOperator):
             )
         
         #interrompo se non hanno la chiave in comune con lo stesso tipo
+        builder = SchemaBuilder()
         for key in keys:
             if not tab1_schema.has_field(key):
                 raise RuntimeError(f"La tabella di sinistra non ha la key: {key}")
@@ -366,7 +368,7 @@ class JoinOp(BinaryOperator):
                 raise RuntimeError(f"Le due tabelle hanno tipi diversi per la key: {key}")
 
             #calcolo lo schema di output
-            builder = SchemaBuilder().add_column(key, tab1_schema.get_type_for(key))
+            builder.add_column(key, tab1_schema.get_type_for(key))
 
         #aggiungo gli attributi di tab1
         for f in tab1_schema.get_columns():
@@ -380,6 +382,12 @@ class JoinOp(BinaryOperator):
             current = tab2_schema.get_field(f)
             if current.name in keys:
                 continue
+            if tab1_schema.has_field(current.name):
+                raise ValueError(
+                    f"Collisione di nomi non consentita nella Join: il campo"
+                    f" '{current.name}' è presente in entrambe le tabelle ma non fa"
+                    " parte delle chiavi. Rinominarlo tramite .alias() prima del join."
+                )
             builder.add_column(current.name, current.data_type)         
 
         super().__init__(schema_out=builder.build(), input_schema=tab1_schema)
@@ -389,26 +397,20 @@ class JoinOp(BinaryOperator):
         self.tab2_schema = tab2_schema
         self.attachment = attachment
 
-    def get_op_type(self) -> str:
-        if self.attachment is None:
-            return "JOIN_INNER"
-        return f"JOIN_{self.attachment.__class__.__name__.upper()}"
+    def get_op_type(self) -> OpType:
+        if isinstance(self.attachment, Window):
+            return OpType.JOIN_WINDOW
+        return OpType.JOIN_INTERVAL
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "keys": self.keys,
-            "attachment": self.attachment.to_dict() if self.attachment else None,
+            "attachment": self.attachment.to_dict(),
             "tab1_schema": self.tab1_schema.to_dict(),
             "tab2_schema": self.tab2_schema.to_dict(),
             "schema_out": self.schema_out.to_dict()
         }
-
-class SetOpType(Enum):
-    UNION = "UNION"
-    UNION_ALL = "UNION_ALL"
-    INTERSECT = "INTERSECT"
-    INTERSECT_ALL = "INTERSECT_ALL"
 
 class SetOp(BinaryOperator):
     """
@@ -417,10 +419,12 @@ class SetOp(BinaryOperator):
 
     def __init__(
         self,
-        set_op_type:SetOpType,
+        set_op_type: OpType,
         tab1_schema: Schema,
         tab2_schema: Schema,
     ) -> None:
+        if not set_op_type.is_set_op:
+            raise ValueError(f"{set_op_type} non è un operatore insiemistico valido.")
         
         #controllo che gli schemi siano identici a scapito dell'ordine
         if not(tab1_schema == tab2_schema):
@@ -431,12 +435,12 @@ class SetOp(BinaryOperator):
         #salvo lo schema di tab2 per un'eventuale conversione nel C++
         self.tab2_schema = tab2_schema
 
-    def get_op_type(self) -> str:
-        return self.set_op_type.value
+    def get_op_type(self) -> OpType:
+        return self.set_op_type
 
     def to_dict(self) -> Dict[str, Any]:
         return {
-            "op_type": self.get_op_type(),
+            "op_type": self.get_op_type().value,
             "schema_out": self.schema_out.to_dict(),
             "tab1_schema": self.input_schema.to_dict(),
             "tab2_schema": self.tab2_schema.to_dict()

@@ -270,7 +270,7 @@ class Table:
         self,
         *on: str,
         other: Table,
-        attachment: Optional[Union[Interval, Window]] = None
+        attachment: Union[Interval, Window]
     ) -> Table:
         """
         Esegue una Join (Inner, Interval, Window) tra questa tabella e un'altra tabella target.
@@ -297,7 +297,7 @@ class Table:
 
         return self
 
-    def _apply_set_op(self, other: Table, op_type: SetOpType) -> Table:
+    def _apply_set_op(self, other: Table, op_type: OpType) -> Table:
         """
         Helper privato per la gestione unificata delle operazioni insiemistiche.
         """
@@ -322,7 +322,7 @@ class Table:
 
     def union_all(self, other: Table) -> Table:
         """Unisce due stream compatibili per schema senza togliere i duplicati."""
-        return self._apply_set_op(other, SetOpType.UNION_ALL)
+        return self._apply_set_op(other, OpType.UNION_ALL)
 
     def union(self, other: Table) -> Table:
         """
@@ -330,21 +330,21 @@ class Table:
         Equivalente a union_all seguita da distinct.
         Stato potenzialmente infinito in base al numero di tuple uniche.
         """            
-        return self._apply_set_op(other, SetOpType.UNION)
+        return self._apply_set_op(other, OpType.UNION)
 
     def intersect(self, other: Table) -> Table:
         """
         Calcola l'intersezione tra le tuple di due stream.
         Stato potenzialmente infinito in base al numero di tuple uniche.
         """
-        return self._apply_set_op(other, SetOpType.INTERSECT)
+        return self._apply_set_op(other, OpType.INTERSECT)
 
     def intersect_all(self, other: Table) -> Table:
         """
         Calcola l'intersezione tra le tuple di due stream con semantica da multinsieme.
         Stato potenzialmente infinito in base al numero di tuple uniche.
         """
-        return self._apply_set_op(other, SetOpType.INTERSECT_ALL)
+        return self._apply_set_op(other, OpType.INTERSECT_ALL)
 
     # -------------------------------------------------------------------------
     # Rappresentazione
