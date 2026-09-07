@@ -98,6 +98,7 @@ class GraphExplorer:
         time_col_dict = config.get("time_col")
         is_ordered = config.get("order", True)
         has_header = config.get("has_header", True)
+        split_size= config.get("split_size", 0)
 
         delay = config.get("delay")
         delay = parse_duration_to_microseconds(delay) if delay else None
@@ -132,7 +133,9 @@ class GraphExplorer:
             has_header=has_header,
             event_time=time_col_dict is not None,
             is_ordered=is_ordered,
-            delay=delay
+            delay=delay,
+            par= self.parallelism,
+            split_size= split_size
         )
         self.builders.append(builder_code)
 
@@ -651,7 +654,8 @@ class GraphExplorer:
             filepath=filepath,
             formatter_func=formatter_func,
             header_str=header_str,
-            op_name= sink_name
+            op_name= sink_name,
+            par= self.parallelism
         )
         self.builders.append(builder_code)
 

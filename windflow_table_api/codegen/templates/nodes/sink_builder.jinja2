@@ -2,8 +2,8 @@ auto {{ var_name }} = Table_Sink_Builder<{{ in_struct }}>("{{ filepath }}",
     {{ formatter_func }}
 )
     .withName("{{ op_name }}")
+    .withParallelism({{ par }})
 {% if header_str %}
     .withHeader("{{ header_str }}")
 {% endif %}
-    .withParallelism(1)
     .build();

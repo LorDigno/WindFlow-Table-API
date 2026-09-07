@@ -72,7 +72,7 @@ from .operators import (
 from .draft import Draft
 from .table import Table, Query
 from .table_env import TableEnvironment, TimePolicy
-from .file_config import FileFormat, InputFileConfiguration
+from .file_config import FileFormat, InputFileConfiguration, SplitSize
 
 __all__ = [
     # Data Types & Schema
@@ -124,5 +124,6 @@ __all__ = [
     "TableEnvironment",
     "TimePolicy",
     "FileFormat",
-    "InputFileConfiguration"
+    "InputFileConfiguration",
+    "SplitSize"
 ]

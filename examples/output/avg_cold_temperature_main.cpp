@@ -30,6 +30,7 @@ int main(int argc, char* argv[]) {
 )
     .withName("cold_and_dry_from_6")
     .withHeader()
+    .withParallelism(2, 0ULL)
     .withOrderedEventTime()
     .build();
 
@@ -95,11 +96,7 @@ int main(int argc, char* argv[]) {
 
     auto sink_7_op = Table_Sink_Builder<avg_cold_temperature_select_1_struct_out>("avg_cold_temperature_output.csv",
     [](const avg_cold_temperature_select_1_struct_out& record, std::ostream& os) {
- 
-    os << record.sensor_id << ",";
- 
-    os << record.avg_temp;
-}
+ os << record.sensor_id << ","; os << record.avg_temp;}
 )
     .withName("avg_cold_temperature_sink")
     .withHeader("sensor_id, avg_temp")

@@ -17,7 +17,7 @@ source_config = InputFileConfiguration(
     schema= sensor_schema,
     has_header= True,
     time_col= TimeCol("timestamp", TimeFormats.ISO8601),
-    order= True
+    order= True,
 )
 
 tab = env.table_from_file(source_config, "sensor_stream_input.csv")

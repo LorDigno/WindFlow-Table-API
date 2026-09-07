@@ -5,6 +5,9 @@ auto {{ var_name }} = Table_Source_Builder<{{ out_struct }}>( "{{ filepath }}",
 {% if has_header %}
     .withHeader()
 {% endif %}
+{% if par > 1%}
+    .withParallelism({{ par }}, {{ split_size }}ULL)
+{% endif %}
 {% if event_time %}
     {% if is_ordered %}
     .withOrderedEventTime()
