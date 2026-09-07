@@ -12,7 +12,7 @@
 int main(int argc, char* argv[]) {
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_cold_and_dry_from_6>( "sensor_input_stream.csv",
+    auto from_1_op = Table_Source_Builder<source_cold_and_dry_from_6>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
     [](const std::string& line, source_cold_and_dry_from_6& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -94,13 +94,13 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto sink_7_op = Table_Sink_Builder<avg_cold_temperature_select_1_struct_out>("avg_cold_temperature_output.csv",
+    auto sink_7_op = Table_Sink_Builder<avg_cold_temperature_select_1_struct_out>("avg_cold_temperature",
     [](const avg_cold_temperature_select_1_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.avg_temp;}
 )
     .withName("avg_cold_temperature_sink")
+    .withParallelism(2)
     .withHeader("sensor_id, avg_temp")
-    .withParallelism(1)
     .build();
 
     //-----     PIPES AND TOPOLOGY  ------

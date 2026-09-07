@@ -1,65 +1,38 @@
-import argparse
 from pathlib import Path
+from typing import Union
 from jinja2 import Environment, FileSystemLoader
 from .parser import JsonParser, ParsedGraph, OpNode
 from .schema_gen import SchemaGenerator
 from .expr_translator import ExpressionTranslator
 from .explorer import GraphExplorer
 
-def main():
-    cli_parser = argparse.ArgumentParser(
-        description="WindFlow Table API - Code Generator Entrypoint"
-    )
-
-    cli_parser.add_argument(
-        "query_id", 
-        type=str, 
-        help="ID della query target da parsare"
-    )
-
-    cli_parser.add_argument(
-        "--time-policy",
-        type=str,
-        default="NO_POLICY",
-        choices=["NO_POLICY", "INGRESS_TIME", "EVENT_TIME"],
-        help="Politica temporale (default: NO_POLICY)"
-    )
-
-    cli_parser.add_argument(
-        "-p", "--parallelism",
-        type=int,
-        default=1,
-        help="Grado di parallelismo di default per gli operatori (default: 1)"
-    )
-
-    cli_parser.add_argument(
-        "--json-dir",
-        type=Path,
-        default=Path("."),
-        help="Directory contenente i file JSON dell'AST (default: .)"
-    )
-
-    args = cli_parser.parse_args()
+def generate_code(
+    query_id: str,
+    time_policy: str = "NO_POLICY",
+    parallelism: int = 1,
+    json_dir: Union[Path, str] = Path("."),
+) -> None:
+    json_dir = Path(json_dir)
 
     #parsing del json
-    parser = JsonParser(json_dir=args.json_dir)
-    parsed_graph = parser.parse_query(args.query_id)
+    parser = JsonParser(json_dir=json_dir)
+    parsed_graph = parser.parse_query(query_id)
 
     #creazione degli oggetti di traduzione
     s_gen = SchemaGenerator()
     e_tl = ExpressionTranslator()
 
     #esplorazione del grafo
-    explorer = GraphExplorer(s_gen, e_tl, args.json_dir, args.parallelism)
+    explorer = GraphExplorer(s_gen, e_tl, json_dir, parallelism)
     final_struct = explorer.visit(parsed_graph.target_root)
     explorer.add_sink(
-        filepath= f"{args.query_id}_output.csv",
+        filepath= f"{query_id}",
         final_struct= final_struct,
-        sink_name= f"{args.query_id}_sink"
+        sink_name= f"{query_id}_sink"
     )
 
     #scrive l'header degli struct
-    s_gen.write_header_file(args.json_dir , args.query_id)
+    s_gen.write_header_file(json_dir , query_id)
 
     #setup di jinja
     templates_dir = Path(__file__).parent / "templates" 
@@ -72,18 +45,14 @@ def main():
     #generazione del main
     template = jinja_env.get_template("main.cpp.jinja2")
     main_string = template.render(
-        query_id= args.query_id,
+        query_id= query_id,
         builders= explorer.builders,
-        policy= args.time_policy if args.time_policy != "NO_POLICY" else None,
+        policy= time_policy if time_policy != "NO_POLICY" else None,
         pipe_order= explorer.pipe_order,
         pipes= explorer.pipes
     )
 
     #scrittura del file
-    file_path = args.json_dir / f"{args.query_id}_main.cpp"
+    file_path = json_dir / f"{query_id}_main.cpp"
     with open(file_path, "w", encoding="utf-8") as f:
-        f.write(main_string) 
-
-if __name__ == "__main__":
-    main()
-
+        f.write(main_string)

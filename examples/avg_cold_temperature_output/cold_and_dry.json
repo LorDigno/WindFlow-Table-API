@@ -105,7 +105,7 @@
                                     "humidity": "DOUBLE"
                                 },
                                 "config": {
-                                    "filepath": "sensor_input_stream.csv",
+                                    "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
                                     "file_format": "CSV",
                                     "header": true,
                                     "time_col": {
@@ -113,7 +113,8 @@
                                         "format": "ISO8601"
                                     },
                                     "order": true,
-                                    "delay": null
+                                    "delay": null,
+                                    "split_size": 0
                                 }
                             }
                         ]

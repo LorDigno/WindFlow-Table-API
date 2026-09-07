@@ -12,7 +12,7 @@ sensor_schema = (SchemaBuilder()
                 )
 
 source_config = InputFileConfiguration(
-    path = "sensor_input_stream.csv",
+    path = Path("../data_streams/sensor_input_stream.csv"),
     format= FileFormat.CSV,
     schema= sensor_schema,
     has_header= True,
@@ -39,15 +39,4 @@ q2 = (q1
 )
 
 #crea i file JSON delle due query
-env.execute(q2, output_dir="./output", rexecute=True)
-
-#la parte che segue verrà poi chiamata automaticamente da execute
-#è ancora in TODO quella parte
-
-sys.argv = ["code_generator.py", 
-            "avg_cold_temperature", 
-            "--json-dir", "./output", 
-            "--parallelism", str(env.par),
-            "--time-policy", env.policy.name
-]
-codegen.code_generator.main()
+env.execute(q2, output_dir="./avg_cold_temperature_output", rexecute=True)

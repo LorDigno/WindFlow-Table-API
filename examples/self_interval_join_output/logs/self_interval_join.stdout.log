@@ -1,0 +1,9 @@
+[32mWindFlow Status Message: PipeGraph [self_interval_join] is running with 16 threads[0m
+--> DEFAULT (out-of-order) mode [32menabled[0m
+--> EVENT_TIME policy [32menabled[0m
+--> Backpressure [31mdisabled[0m
+--> Non-blocking queues [32menabled[0m
+--> Pinning of threads [32menabled[0m
+[SINK] File self_interval_join_output0.csv completato e chiuso.
+[SINK] File self_interval_join_output1.csv completato e chiuso.
+[32mWindFlow Status Message: PipeGraph [self_interval_join] executed successfully[0m

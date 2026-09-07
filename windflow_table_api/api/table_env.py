@@ -1,4 +1,5 @@
 from __future__ import annotations
+from pathlib import Path
 from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Set
 from .draft import Draft
 from .expressions import Expression, col, count, sum  , AggFuncType
@@ -7,6 +8,9 @@ from .schema import Schema
 from .table import Table, Query
 from .windows import Interval, Window, WindowType
 from .file_config import InputFileConfiguration
+from windflow_table_api.runtime import Executor
+from windflow_table_api.codegen import generate_code
+from .job_handle import JobHandle
 import json, os
 if TYPE_CHECKING:
     from .table_env import TableEnvironment
@@ -223,7 +227,12 @@ class TableEnvironment:
             #ricorsione sugli operatori genitori
             self._collect_referenced_queries(p, collected)
 
-    def execute(self, query: Query, output_dir: str = ".", rexecute: bool = False) -> Any:
+    def execute(self, 
+        query: Query, 
+        output_dir: str = ".", 
+        rexecute: bool = False,
+        sync: bool = False
+    ) -> JobHandle:
         """
         Esegue i controlli dinamici iniziali sulla validità della query risalendo il grafo degli operatori,
         costruisce il JSON e invoca la generazione/compilazione C++.
@@ -245,12 +254,13 @@ class TableEnvironment:
             queries_to_generate.append(table)
         queries_to_generate.append(query)
 
-        #creo la directory di output se non esiste
-        os.makedirs(output_dir, exist_ok=True)
+        #creazione/individuazione directory d'output
+        out_path = Path(output_dir).resolve()
+        out_path.mkdir(parents=True, exist_ok=True)
 
         #generazione del JSON per ogni query in queries_to_generate
         for q in queries_to_generate:
-            file_path = os.path.join(output_dir, f"{q.table_id}.json")
+            file_path = os.path.join(out_path, f"{q.table_id}.json")
 
             #controllo che il file non ci sia già, in tal caso non c'è bisogno di riscriverlo
             if (not rexecute) and os.path.exists(file_path):
@@ -266,11 +276,27 @@ class TableEnvironment:
             #mapping di libreia dizionario -> json
             json_str = json.dumps(root, indent=4)
 
-            #scrittura del file
+            #scrittura del file json
             with open(file_path, "w", encoding="utf-8") as f:
                 f.write(json_str)
 
-        #TODO avviare l'esecuzione del codegen            
+        #chiamata alla generazione del codice
+        generate_code(
+            query_id=query.table_id,
+            time_policy=self.policy.name,
+            parallelism=self.par,
+            json_dir=out_path,
+        )
+
+        #compilazione ed esecuzione
+        executor = Executor(work_dir=out_path)
+        handle = executor.run_query(query.table_id)
+
+        #aspetto se si vuole sincrono
+        if sync:
+            handle.wait()
+
+        return handle            
 
     def __repr__(self) -> str:
         return f"TableEnvironment(registered_tables={len(self._tables)})"

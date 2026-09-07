@@ -18,7 +18,6 @@ class CppCompiler:
     def compile(self, query_id: str) -> Path:
         """Configura e compila solo l'eseguibile della query richiesta."""
 
-        
         conf_cmd = [
             "cmake",
             "-S",
@@ -55,3 +54,4 @@ class CppCompiler:
             raise FileNotFoundError(f"Binario generato non trovato in: {bin_path}")
 
         return bin_path
+    

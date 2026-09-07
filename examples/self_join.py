@@ -12,10 +12,10 @@ sensor_schema = (SchemaBuilder()
                 )
 
 source_config = InputFileConfiguration(
-    path = "sensor_real_stream.csv",
+    path = Path("../data_streams/sensor_real_stream.csv"),
     format= FileFormat.CSV,
     schema= sensor_schema,
-    split_size= SplitSize(300),
+    split_size= SplitSize.kilobytes(1),
     has_header= True,
     time_col= TimeCol("timestamp", TimeFormats.ISO8601),
     order= False,
@@ -43,14 +43,4 @@ q1 = (tab
       .select("sensor_id", "temperature", "hum")
 )
 
-env.execute(q1, rexecute=True, output_dir="./output")
-
-#avvio di codegen
-
-sys.argv = ["code_generator.py", 
-            "self_interval_join", 
-            "--json-dir", "./output", 
-            "--parallelism", str(env.par),
-            "--time-policy", env.policy.name
-]
-codegen.code_generator.main()
+env.execute(q1, rexecute=True, output_dir="./self_interval_join_output")

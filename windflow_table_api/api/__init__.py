@@ -73,6 +73,7 @@ from .draft import Draft
 from .table import Table, Query
 from .table_env import TableEnvironment, TimePolicy
 from .file_config import FileFormat, InputFileConfiguration, SplitSize
+from .job_handle import JobHandle
 
 __all__ = [
     # Data Types & Schema
@@ -125,5 +126,6 @@ __all__ = [
     "TimePolicy",
     "FileFormat",
     "InputFileConfiguration",
-    "SplitSize"
+    "SplitSize",
+    "JobHandle"
 ]

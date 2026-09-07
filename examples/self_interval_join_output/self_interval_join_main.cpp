@@ -12,7 +12,7 @@
 int main(int argc, char* argv[]) {
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_self_interval_join_from_3>( "sensor_real_stream.csv",
+    auto from_1_op = Table_Source_Builder<source_self_interval_join_from_3>( "/home/user/TableAPI/data_streams/sensor_real_stream.csv",
     [](const std::string& line, source_self_interval_join_from_3& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -30,11 +30,11 @@ int main(int argc, char* argv[]) {
 )
     .withName("self_interval_join_from_3")
     .withHeader()
-    .withParallelism(2, 300ULL)
+    .withParallelism(2, 1024ULL)
     .withWatermarkDelay(7200000000ULL)
     .build();
 
-    auto from_2_op = Table_Source_Builder<source_self_interval_join_from_3>( "sensor_real_stream.csv",
+    auto from_2_op = Table_Source_Builder<source_self_interval_join_from_3>( "/home/user/TableAPI/data_streams/sensor_real_stream.csv",
     [](const std::string& line, source_self_interval_join_from_3& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 )
     .withName("renaming_for_selfjoin_from_5")
     .withHeader()
-    .withParallelism(2, 300ULL)
+    .withParallelism(2, 1024ULL)
     .withWatermarkDelay(7200000000ULL)
     .build();
 
@@ -131,7 +131,7 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto sink_8_op = Table_Sink_Builder<self_interval_join_select_1_struct_out>("self_interval_join_output.csv",
+    auto sink_8_op = Table_Sink_Builder<self_interval_join_select_1_struct_out>("self_interval_join",
     [](const self_interval_join_select_1_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.temperature << ","; os << record.hum;}
 )

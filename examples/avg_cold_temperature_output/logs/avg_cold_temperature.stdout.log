@@ -1,0 +1,9 @@
+[32mWindFlow Status Message: PipeGraph [avg_cold_temperature] is running with 14 threads[0m
+--> DEFAULT (out-of-order) mode [32menabled[0m
+--> EVENT_TIME policy [32menabled[0m
+--> Backpressure [31mdisabled[0m
+--> Non-blocking queues [32menabled[0m
+--> Pinning of threads [32menabled[0m
+[SINK] File avg_cold_temperature_output1.csv completato e chiuso.
+[SINK] File avg_cold_temperature_output0.csv completato e chiuso.
+[32mWindFlow Status Message: PipeGraph [avg_cold_temperature] executed successfully[0m

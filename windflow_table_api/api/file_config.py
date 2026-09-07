@@ -3,6 +3,7 @@ from enum import Enum
 from typing import Optional, Dict, Any
 from .durations import TimeCol, Duration
 from .schema import Schema
+from pathlib import Path
 
 class SplitSize:
     """
@@ -36,7 +37,7 @@ class FileFormat(Enum):
     CSV = "csv"
 
 class InputFileConfiguration:
-    filepath: str
+    filepath: Path
     file_format: FileFormat
     schema: Schema
     has_header: bool
@@ -46,7 +47,7 @@ class InputFileConfiguration:
     split_size: int
 
     def __init__( self,
-        path: str,
+        path: Path,
         format: FileFormat,
         schema: Schema,
         has_header: bool,
@@ -55,6 +56,12 @@ class InputFileConfiguration:
         time_col: Optional[TimeCol] = None,
         delay: Optional[Duration] = None
     ):
+        resolved_path = path.resolve().absolute()
+        if not resolved_path.is_file():
+            raise FileNotFoundError(
+                f"[TABLE API] Il file di input non esiste: {resolved_path}"
+            )
+        
         if not order and delay is None:
             raise ValueError(
                 "Per sorgenti non ordinate (order=False) è obbligatorio specificare un 'delay' di watermark."
@@ -64,7 +71,7 @@ class InputFileConfiguration:
                 "Per sorgenti ordinate (order=True) non è consentito specificare un 'delay'."
             )
         
-        self.filepath = path
+        self.filepath = resolved_path
         self.file_format = format
         self.schema = schema
         self.has_header = has_header
@@ -75,7 +82,7 @@ class InputFileConfiguration:
 
     def to_dict(self) -> Dict[str, Any]:
         dict = {
-            "filepath": self.filepath,
+            "filepath": str(self.filepath),
             "file_format": self.file_format.name,
             "header": self.has_header,
             "time_col": self.time_col.to_dict() if self.time_col else None,
