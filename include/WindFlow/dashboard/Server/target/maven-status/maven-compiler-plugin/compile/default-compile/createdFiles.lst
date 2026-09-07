@@ -1,0 +1,14 @@
+com/server/CustomServer/ServerConfig.class
+com/server/CustomServer/ClientOperation.class
+com/server/ServerState/HistoricalData.class
+com/server/ServerState/ApplicationWF.class
+com/server/SpringServer/RequestController.class
+com/server/SpringServer/MyErrorController.class
+com/server/ServerState/ServerState.class
+com/server/CustomServer/WorkerWF.class
+com/server/ServerState/SpringRequest/SimpleApplicationWF.class
+com/server/CustomServer/ServerWF.class
+com/server/MainClass.class
+com/server/CustomServer/KeyAttach.class
+com/server/ServerState/SpringRequest/GeneralInformations.class
+com/server/ServerState/OperatorApp.class
