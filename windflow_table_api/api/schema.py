@@ -1,6 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Dict, List, Optional
-from .datatypes import DataTypes
+from ..datatypes import DataTypes
 if TYPE_CHECKING:
     from .expressions import Expression
 

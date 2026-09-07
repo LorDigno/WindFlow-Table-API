@@ -5,6 +5,7 @@ from .expressions import Expression, col
 from .operators import *
 from .schema import Schema
 from .windows import Interval, Window, WindowType
+from windflow_table_api import OpType
 if TYPE_CHECKING:
     from .table_env import TableEnvironment
 
@@ -180,16 +181,17 @@ class Table:
         """
 
         draft = self.get_draft()
+        current_cols = draft.current_schema.get_columns()
 
-        current_cols = []
-        for c in draft.current_schema.get_columns():
-            current_cols.append(c)    
-
-        cols_to_drop = []             
         for cn in column_names:
-            cols_to_drop.append(cn)
+            if not draft.current_schema.has_field(cn):
+                raise KeyError(
+                    f"Impossibile rimuovere la colonna '{cn}': "
+                    f"non è presente nello schema corrente {draft.current_schema}"
+                )
 
-        selections:List[Union[str, Expression]] = [c for c in current_cols if c not in cols_to_drop]
+        cols_to_drop = set(column_names)
+        selections = [c for c in current_cols if c not in cols_to_drop]
 
         if not selections:
             raise RuntimeError(
@@ -268,9 +270,9 @@ class Table:
     # -------------------------------------------------------------------------
     def join(
         self,
-        *on: str,
         other: Table,
-        attachment: Union[Interval, Window]
+        attachment: Union[Interval, Window],
+        *on: str,
     ) -> Table:
         """
         Esegue una Join (Inner, Interval, Window) tra questa tabella e un'altra tabella target.

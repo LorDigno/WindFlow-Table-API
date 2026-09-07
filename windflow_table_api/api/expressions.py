@@ -2,7 +2,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Union, Dict, List
-from .datatypes import DataTypes
+from ..datatypes import DataTypes
+from windflow_table_api import ExprType, AggFuncType
+import copy
 if TYPE_CHECKING:
     from .schema import Schema
 
@@ -29,10 +31,18 @@ class Expression(ABC):
         self._alias_name: Optional[str] = None
 
     def alias(self, alias_name: str) -> "Expression":
-        """Assegna un nuovo nome di output all'espressione."""
+        """
+        Crea una shallow-copy ed assegna un nuovo nome di output all'espressione.
+        """
 
-        self._alias_name = alias_name
-        return self
+        new_expr = copy.copy(self)
+        new_expr._alias_name = alias_name
+        return new_expr
+
+    @abstractmethod
+    def get_expr_type(self) -> ExprType:
+        """Restituisce il tipo logico dell'espressione."""
+        pass
 
     @abstractmethod
     def get_default_name(self) -> str:
@@ -135,6 +145,9 @@ class ColRefExpression(Expression):
         super().__init__()
         self.column_name = column_name
 
+    def get_expr_type(self) -> ExprType:
+        return ExprType.COL_REF
+
     def get_default_name(self) -> str:
         return self.column_name
 
@@ -147,7 +160,7 @@ class ColRefExpression(Expression):
 
     def to_dict(self, applied_schema:Schema) -> Dict[str, Any]:
         res = {
-            "expr_type": "COL_REF",
+            "expr_type": self.get_expr_type().value,
             "name": self.column_name,
             "data_type": self.get_type(applied_schema).name
         }
@@ -173,6 +186,9 @@ class LiteralExpression(Expression):
         self.value = value
         self.data_type = data_type if data_type is not None else _infer_literal_type(value)
 
+    def get_expr_type(self) -> ExprType:
+        return ExprType.LITERAL
+
     def get_default_name(self) -> str:
         return str(self.value)
 
@@ -185,7 +201,7 @@ class LiteralExpression(Expression):
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
         res = {
-            "expr_type": "LITERAL",
+            "expr_type": self.get_expr_type().value,
             "value": self.value,
             "data_type": self.data_type.name,
             "name": self.get_default_name()
@@ -213,8 +229,11 @@ class BinaryOpExpression(Expression):
         self.op = op
         self.right = right
 
+    def get_expr_type(self) -> ExprType:
+        return ExprType.BINARY_OP  
+
     def get_default_name(self) -> str:
-        return f"({self.left.get_name()} {self.op} {self.right.get_name()})"
+        return f"({self.left.get_name()}_{self.op}_{self.right.get_name()})"
 
     def get_type(self, schema: Schema) -> DataTypes:
         t_left = self.left.get_type(schema)
@@ -251,7 +270,7 @@ class BinaryOpExpression(Expression):
     
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
         res = {
-            "expr_type": "BINARY_OP",
+            "expr_type": self.get_expr_type().value,
             "op": self.op,
             "data_type": self.get_type(applied_schema).name,
             "left": self.left.to_dict(applied_schema),
@@ -277,7 +296,7 @@ class BinaryOpExpression(Expression):
             self.left.rewrite_grouped(), self.op, self.right.rewrite_grouped()
         )
         if self._alias_name:
-            res.alias(self._alias_name)
+            res = res.alias(self._alias_name)
         return res
 
 class UnaryOpExpression(Expression):
@@ -288,8 +307,11 @@ class UnaryOpExpression(Expression):
         self.op = op
         self.expr = expr
 
+    def get_expr_type(self) -> ExprType:
+        return ExprType.UNARY_OP    
+
     def get_default_name(self) -> str:
-            return f"s{self.op} ({self.expr.get_name()})"   
+            return f"{self.op}_({self.expr.get_name()})"   
 
     def get_type(self, schema: Schema) -> DataTypes:
         expr_t :DataTypes = self.expr.get_type(schema)
@@ -307,7 +329,7 @@ class UnaryOpExpression(Expression):
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
         res = {
-            "expr_type": "UNARY_OP",
+            "expr_type": self.get_expr_type().value,
             "op": self.op,
             "data_type": self.get_type(applied_schema).name,
             "expr": self.expr.to_dict(applied_schema),
@@ -320,33 +342,23 @@ class UnaryOpExpression(Expression):
     def rewrite_grouped(self) -> Expression:
         res = UnaryOpExpression(self.expr.rewrite_grouped(), self.op)
         if self._alias_name:
-            res.alias(self._alias_name)
+            res = res.alias(self._alias_name)
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
-        #essendo le aggregazioni non colonne per ora non le supportiamo in espressioni binarie
-        if isinstance(self.expr, AggregateExpression):
-            return False
-        
-        #valida solo se sono valide le sue sotto-espressioni
+        #valida solo se è valide le sotto-espressione
         return self.expr.validate_grouped(keys)
 
     def aggregation_dependencies(self) -> List[AggregateExpression]:
         return self.expr.aggregation_dependencies()
 
+    def __repr__(self) -> str:
+        alias_str = f" AS '{self._alias_name}'" if self._alias_name else ""
+        return f"{self.op.upper()}({self.expr!r}){alias_str}"
+
 # -------------------------------------------------------------------------
 # Aggregazioni
 # -------------------------------------------------------------------------
-
-class AggFuncType(Enum):
-    """Tipologie di funzioni di aggregazione supportate dalla Table API."""
-
-    SUM = "SUM"
-    AVG = "AVG"
-    COUNT = "COUNT"
-    MIN = "MIN"
-    MAX = "MAX"
-    #future funzioni statistiche?
 
 class AggregateExpression(Expression):
     """
@@ -363,18 +375,14 @@ class AggregateExpression(Expression):
         super().__init__()
         self.func_type = func_type
         self.target_expr = target_expr
-        self.is_distinct = False
 
-    def distinct(self) -> AggregateExpression:
-        """Contrassegna l'aggregazione per considerare solo valori distinti (es. SUM(DISTINCT x))."""
-
-        self.is_distinct = True
-        return self
+    def get_expr_type(self) -> ExprType:
+        return ExprType.AGGREGATE   
 
     def get_default_name(self) -> str:
-        dist_str = "DISTINCT" if self.is_distinct else ""
-        target_str = self.target_expr.get_name() if self.target_expr else ""
-        return f"{self.func_type.value}{dist_str}_{target_str}"
+        if self.target_expr is None:    #per il COUNT
+            return self.func_type.value  
+        return f"{self.func_type.value}_{self.target_expr.get_name()}"
 
     def get_type(self, schema: Schema) -> DataTypes:
         #COUNT rende un BIGINT perchè il numero di tuple è potenzialmente infinito
@@ -410,17 +418,15 @@ class AggregateExpression(Expression):
 
     def __repr__(self) -> str:
         alias_str = f" AS '{self._alias_name}'" if self._alias_name else ""
-        dist_str = "DISTINCT " if self.is_distinct else ""
         target_str = repr(self.target_expr) if self.target_expr else "*"
-        return f"{self.func_type.value}({dist_str}{target_str}){alias_str}"
+        return f"{self.func_type.value}({target_str}){alias_str}"
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
         res = {
-            "expr_type": "AGGREGATE",
+            "expr_type": self.get_expr_type().value,
             "func": self.func_type.value,
             "data_type": self.get_type(applied_schema).name,
             "target": self.target_expr.to_dict(applied_schema) if self.target_expr else None,
-            "is_distinct": self.is_distinct,
             "name": self.get_default_name()
         }
         if self._alias_name:
@@ -436,8 +442,6 @@ class AggregateExpression(Expression):
         if self.func_type == AggFuncType.AVG and self.target_expr:
             out.append(count())
             s = sum(self.target_expr)
-            if(self.is_distinct):
-                s.distinct()
             out.append(s)
         out.append(self)    
         return out
@@ -445,7 +449,7 @@ class AggregateExpression(Expression):
     def rewrite_grouped(self) -> Expression:
         res = ColRefExpression(self.get_default_name())
         if self._alias_name:
-            res.alias(self._alias_name)
+            res = res.alias(self._alias_name)
         return res
 
 # -------------------------------------------------------------------------
@@ -504,16 +508,10 @@ def max(expr: Union[str, Expression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.MAX, target)
 
-def count(expr: Optional[Union[str, Expression]] = None) -> AggregateExpression:
+def count() -> AggregateExpression:
     """
-    Calcola il numero di record (COUNT(*)) se expr è None, altrimenti COUNT(DISTINCT expr).
+    Calcola il numero di record (COUNT(*)).
     """
-
-    if isinstance(expr, Expression):
-        return AggregateExpression(AggFuncType.COUNT, expr).distinct()
-    
-    if isinstance(expr, str):
-        return AggregateExpression(AggFuncType.COUNT, col(expr)).distinct()
 
     return AggregateExpression(AggFuncType.COUNT, None)
 

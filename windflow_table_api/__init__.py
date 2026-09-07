@@ -1,19 +1,104 @@
-"""
-WindFlow Table API - Python DSL e Stream Processing Engine wrapper.
-"""
+"""WindFlow Table API - Python DSL e Code Generator per Streaming Analytics su WindFlow."""
 
-from .api import *
-from .api import __all__ as _api_all
+__version__ = "0.2.0"
 
-from .codegen import *
-from .codegen import __all__ as _codegen_all
+# =============================================================================
+# Tipi ed Enum Condivisi (Contratti trasversali tra API, Codegen e Runtime)
+# =============================================================================
+from .datatypes import DataTypes
+from .object_names import (
+    OpType,
+    AggFuncType,
+    ExprType,
+    WindowKind,
+    WindowType,
+)
+from .times import (
+    TimeFormats,
+    TimePolicy,
+    TimeUnits,
+)
 
+# =============================================================================
+# DSL e Componenti Principali (Accessibili con: from windflow_table_api import ...)
+# =============================================================================
+from .api.durations import Duration, TimeCol
+from .api.expressions import (
+    AggregateExpression,
+    BinaryOpExpression,
+    ColRefExpression,
+    Expression,
+    LiteralExpression,
+    UnaryOpExpression,
+    avg,
+    col,
+    count,
+    lit,
+    max,
+    min,
+    neg,
+    sum,
+)
+from .api.file_config import FileFormat, InputFileConfiguration, SplitSize
+from .api.schema import Field, Schema, SchemaBuilder
+from .api.table import Query, Table
+from .api.table_env import TableEnvironment
+from .api.windows import Interval, Window
+
+# =============================================================================
+# Sottomoduli Interni
+# =============================================================================
 from . import api
 from . import codegen
-from .object_names import OpType
+from . import runtime
 
-__all__ = _api_all + _codegen_all + [
-    "api", 
+__all__ = [
+    # Metadati
+    "__version__",
+    # Enum e Tipi condivisi
+    "OpType",
+    "ExprType",
+    "AggFuncType",
+    "DataTypes",
+    "TimeUnits",
+    "TimeFormats",
+    "TimePolicy",
+    "WindowType",
+    "WindowKind",
+    # DSL Environment & Tabelle
+    "TableEnvironment",
+    "Table",
+    "Query",
+    # Schemi
+    "Schema",
+    "SchemaBuilder",
+    "Field",
+    # Funzioni di espressione DSL
+    "col",
+    "lit",
+    "neg",
+    "sum",
+    "avg",
+    "min",
+    "max",
+    "count",
+    # Espressioni AST
+    "Expression",
+    "ColRefExpression",
+    "LiteralExpression",
+    "BinaryOpExpression",
+    "UnaryOpExpression",
+    "AggregateExpression",
+    # Finestre, Durate e Configurazione File
+    "Duration",
+    "TimeCol",
+    "Window",
+    "Interval",
+    "InputFileConfiguration",
+    "FileFormat",
+    "SplitSize",
+    # Package
+    "api",
     "codegen",
-    "OpType"
+    "runtime",
 ]

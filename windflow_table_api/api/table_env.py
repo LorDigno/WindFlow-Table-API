@@ -11,20 +11,10 @@ from .file_config import InputFileConfiguration
 from windflow_table_api.runtime import Executor
 from windflow_table_api.codegen import generate_code
 from .job_handle import JobHandle
+from windflow_table_api import TimePolicy
 import json, os
 if TYPE_CHECKING:
     from .table_env import TableEnvironment
-    
-class TimePolicy(Enum):
-    """
-    Politiche di gestione del tempo.
-    - NO_POLICY: politica di default, non si possono usare finestre temporali ed intervalli, non supporta TimeCol nelle tabelle sorgente.
-    - INGRESS_TIME: pone il timestamp pari all'attimo in cui la tupla viene processata, non supporta TimeCol nelle tabelle sorgente.
-    - EVENT_TIME: il timestamp è ricavato tramite la TimeCol obbligatoria della tabella sorgente.
-    """
-    INGRESS_TIME = "INGRESS_TIME"
-    EVENT_TIME = "EVENT_TIME"
-    NO_POLICY = "NO_POLICY"
 
 class TableEnvironment:
     """
@@ -136,74 +126,79 @@ class TableEnvironment:
         return query_table
 
     # -------------------------------------------------------------------------
-    # Esecuzione e Validazione Query
+    # Serializzazione e Validazione Query
     # -------------------------------------------------------------------------
-    def _serialize(self, op: Operator) -> Dict[str, Any]:
+    def _serialize_operator(self, op: Operator) -> Dict[str, Any]:
         """
-        Ricostruisce la struttura ricorsiva della query a partire dall'operatore radice.
-        Svolge controlli relativi alle politiche temporali.
-        Unifica e valida gli operatori di group_by e select.
+        Serializza (via to_dict) l'operatore e chiama ricorsicamente ai parents.
+        Gli operatori di TableRef che sono sorgenti vengono sostituiti con FromOp.
+        Presuppone che il grafo sia stato validato tramite _validate_dag.
         """
 
-        #le tabelle sorgenti si mettono direttamente come FromOp
-        if isinstance(op, TableRefOp):
-            if op.source_table_id in self._sources_config:
-                source_cfg = self._sources_config[op.source_table_id]
+        #sostituzione di TableRef -> From per le sorgenti
+        if isinstance(op, TableRefOp) and op.source_table_id in self._sources_config:
+            file_cfg = self._sources_config[op.source_table_id]
+            from_op = FromOp(source_table_id=op.source_table_id, file_config=file_cfg)
+            return from_op.to_dict()
 
-                #controllo sulla politica temporale
-                time_col = source_cfg.time_col
-                if self.policy == TimePolicy.EVENT_TIME and time_col is None:
-                    raise RuntimeError(
-                        f"Con politica EVENT_TIME è necessario inserire una TimeCol in ogni tabella sorgente."
-                    )
-                
-                if self.policy != TimePolicy.EVENT_TIME and time_col is not None:
-                    raise RuntimeError(
-                        f"Con politica {self.policy.value} è vietato inserire una TimeCol nelle tabelle sorgente."
-                    )
-               
-                from_op = FromOp(
-                    source_table_id=op.source_table_id,
-                    file_config= source_cfg
-                )
-                return from_op.to_dict()
-
-            if op.source_table_id not in self._tables:
-                raise RuntimeError(f"La tabella {op.source_table_id} non è presente nell'ambiente.")
-
-        #nei groupBy seguiti da select si mettono le aggregazioni nel JSON del groupBy
-        if ( isinstance(op, GroupByOp)
-            and op.window is not None
-            and op.window.window_type == WindowType.TIME
-            and self.policy == TimePolicy.NO_POLICY
-            ):
-            raise RuntimeError(
-                f"Con NO_POLICY non si possono usare costrutti temporali."
-                f" {op.window}"
-            )
-
-        #controllo la politica di tempo sull'attachment della join se presente 
-        if isinstance(op, JoinOp) and op.attachment is not None:
-            att = op.attachment
-
-            if (self.policy  == TimePolicy.NO_POLICY
-                and(
-                    isinstance(att, Interval) 
-                    or att.window_type == WindowType.TIME 
-                    )
-                ):
-                raise RuntimeError(
-                    f"Con politica temporale NO_POLICY non si possono usare costrutti temporali."
-                    f"{att}"
-                )
-            
-        node = op.to_dict()
-        #se l'operatore ha dei parents li serializziamo ricorsivamente
+        #ricava il dizionario di se e dei parents
+        node_dict = op.to_dict()
         if op.parents:
-            node["parents"] = [self._serialize(p) for p in op.parents]
-            
-        return node
+            node_dict["parents"] = [self._serialize_operator(p) for p in op.parents]
 
+        return node_dict
+
+    def _validate_operator_semantics(self, op: Operator) -> None:
+        """
+        Valida i vincoli di policy temporale e l'integrità del catalogo per il singolo nodo.
+        """
+
+        #controllo sulle policy temporali
+        if self.policy == TimePolicy.NO_POLICY:
+            if (
+                isinstance(op, GroupByOp)
+                and op.window
+                and op.window.window_type == WindowType.TIME
+            ):
+                raise ValueError(
+                    "Con TimePolicy.NO_POLICY non sono ammesse finestre temporali:"
+                    f" {op.window}"
+                )
+
+            if isinstance(op, JoinOp) and op.attachment is not None:
+                att = op.attachment
+                if (
+                    isinstance(att, Interval)
+                    or getattr(att, "window_type", None) == WindowType.TIME
+                ):
+                    raise ValueError(
+                        "Con TimePolicy.NO_POLICY non sono ammessi intervalli o finestre"
+                        f" temporali nella Join: {att}"
+                    )
+
+        #controllo della presenza delle tabelle
+        if isinstance(op, TableRefOp):
+            if (
+                op.source_table_id not in self._sources_config
+                and op.source_table_id not in self._tables
+            ):
+                raise KeyError(
+                    f"La tabella '{op.source_table_id}' referenziata nella query non è"
+                    " presente nell'ambiente."
+                )
+
+    def _validate_dag(self, root_op: Operator) -> None:
+        """
+        Attraversa l'albero ed esegue la validazione semantica su tutti gli operatori.
+        """
+
+        self._validate_operator_semantics(root_op)
+        for parent in root_op.parents:
+            self._validate_dag(parent)
+
+    # -------------------------------------------------------------------------
+    # Orchestrazione generale dell'esecuzione
+    # -------------------------------------------------------------------------   
     def _collect_referenced_queries(self, op: Operator, collected: Set[str]) -> None:
         """
         Attraversa il grafo degli operatori per trovare tutte le Query 

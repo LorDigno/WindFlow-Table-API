@@ -6,7 +6,7 @@ from .schema import Schema, SchemaBuilder, Field
 from .expressions import Expression, ColRefExpression, AggregateExpression
 from .durations import TimeCol
 from .windows import Window, Interval, WindowType
-from .datatypes import DataTypes
+from ..datatypes import DataTypes
 from .file_config import InputFileConfiguration
 from windflow_table_api import OpType
 

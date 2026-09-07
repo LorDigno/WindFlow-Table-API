@@ -2,13 +2,7 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, Optional, Union
 from .durations import Duration
-
-class WindowType(Enum):
-    """Tipologia di finestra supportata."""
-
-    TIME = "TIME"    
-    COUNT = "COUNT"  
-    #futura OVER window?
+from windflow_table_api import WindowType, WindowKind
 
 class Window:
     """
@@ -79,8 +73,8 @@ class Window:
         """Serializza la configurazione della finestra in un dizionario per il JSON."""
 
         return {
-            "type": "WINDOW_" + self.window_type.value,
-            "kind": "TUMBLE" if self.is_tumble else "SLIDING",
+            "type": self.window_type.name,
+            "kind": WindowKind.TUMBLE if self.is_tumble else WindowKind.SLIDING,
             "size": str(self.size) if isinstance(self.size, int) else self.size.to_dict(),
             "slide": str(self.slide) if isinstance(self.slide, int) else self.slide.to_dict(),
         }
@@ -100,17 +94,11 @@ class Interval:
         lower_bound: Duration,
         upper_bound: Duration
     ) -> None:
-
-        if lower_bound.unit != upper_bound.unit:
-            raise ValueError(
-                f"Gli intervalli devono avere durate della stessa unità temporale."
-                f"{lower_bound.unit} != {upper_bound.unit}"
-            )
-
-        if lower_bound.value >= upper_bound.value:
+    
+        if lower_bound >= upper_bound:
             raise ValueError(
                 f"Gli intervalli richiedono che lower_bound strettamente minore di upper_bound."
-                f"{lower_bound.value} >= {upper_bound.value}"
+                f"{lower_bound} >= {upper_bound}"
             )
         
         self.lower_bound = lower_bound
@@ -119,7 +107,6 @@ class Interval:
     def to_dict(self) -> Dict[str, Any]:
         """Serializza l'intervallo in un dizionario per il JSON."""
         return {
-            "type": "INTERVAL",
             "lower_bound": self.lower_bound.to_dict(),
             "upper_bound": self.upper_bound.to_dict()
         }

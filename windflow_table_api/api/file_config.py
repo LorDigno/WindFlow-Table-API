@@ -28,8 +28,6 @@ class SplitSize:
     def gigabytes(size: int):
         return SplitSize(size * 1024 * 1024 * 1024  )
 
-    
-
 class FileFormat(Enum):
     """
     Formati supportati di input.

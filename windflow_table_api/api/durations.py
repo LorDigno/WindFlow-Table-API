@@ -1,25 +1,16 @@
 from __future__ import annotations
+from windflow_table_api import TimeUnits, TimeFormats
 from enum import Enum
 from typing import Any, Dict
+from functools import total_ordering
 
-class TimeTypes(Enum):
-    """
-    Rappresenta le unità di tempo supportate dalla Table API.
-    """
-
-    SECONDS = "SECONDS"
-    MILLISECONDS = "MILLISECONDS"
-    MINUTES = "MINUTES"
-    MICROSECONDS = "MICROSECONDS"
-    HOURS = "HOURS"
-    DAYS = "DAYS"
-
+@total_ordering
 class Duration:
     """
     Rappresenta una durata temporale utilizzata per finestre ed intervalli.
     """
 
-    def __init__(self, value: int, unit: TimeTypes) -> None:
+    def __init__(self, value: int, unit: TimeUnits) -> None:
         if not isinstance(value, int):
             raise TypeError(f"Il valore della durata deve essere un intero, ricevuto: {type(value)}")
         self.value = value
@@ -30,29 +21,29 @@ class Duration:
     # -------------------------------------------------------------------------
     @staticmethod
     def microseconds(val: int) -> Duration:
-        return Duration(val, TimeTypes.MICROSECONDS)
+        return Duration(val, TimeUnits.MICROSECONDS)
 
     @staticmethod
     def milliseconds(val: int) -> Duration:
-        return Duration(val, TimeTypes.MILLISECONDS)
+        return Duration(val, TimeUnits.MILLISECONDS)
 
     @staticmethod
     def seconds(val: int) -> Duration:
-        return Duration(val, TimeTypes.SECONDS)
+        return Duration(val, TimeUnits.SECONDS)
 
     @staticmethod
     def minutes(val: int) -> Duration:
-        return Duration(val, TimeTypes.MINUTES)
+        return Duration(val, TimeUnits.MINUTES)
 
     @staticmethod
     def hours(val: int) -> Duration:
-        return Duration(val, TimeTypes.HOURS)
+        return Duration(val, TimeUnits.HOURS)
 
     @staticmethod
     def days(val: int) -> Duration:
-        return Duration(val, TimeTypes.DAYS)
+        return Duration(val, TimeUnits.DAYS)
 
-    # Supporto per il segno meno
+    #supporto per il segno meno
     def __neg__(self) -> Duration:
         return Duration(-self.value, self.unit)
 
@@ -66,15 +57,23 @@ class Duration:
     def __repr__(self) -> str:
         return f"{self.value}_{self.unit.value.lower()}"
 
-    def __eq__(self, other) -> bool:
-        if not isinstance(other, Duration): return False
-        return (self.value == other.value) and (self.unit == other.unit)
+    def to_microseconds(self) -> int:
+        """Restituisce la durata normalizzata in microsecondi per WindFlow."""
+        return self.unit.to_microseconds(self.value)
 
-class TimeFormats(Enum):
-    """
-    Formati temporali di cui è supportato il parsing.
-    """
-    ISO8601 = "ISO8601"
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, Duration):
+            return False
+        return self.to_microseconds() == other.to_microseconds()
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, Duration):
+            return False
+        return self.to_microseconds() < other.to_microseconds()
+
+    def __hash__(self) -> int:
+        """Consente l'uso di Duration in set e chiavi di dizionari."""
+        return hash(self.to_microseconds())
 
 class TimeCol:
     """
@@ -91,6 +90,6 @@ class TimeCol:
     def to_dict(self) -> Dict[str, Any]:
         return {
             "name": self.name,
-            "format": self.format.name
+            "format": self.format.value
         }
    

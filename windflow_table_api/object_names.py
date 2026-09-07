@@ -1,5 +1,7 @@
 from enum import Enum
 
+#---- OPERATORI
+
 class OpType(str, Enum):
     """
     Rappresenta tutti i tipi di operatori supportati nella Table API di WindFlow.
@@ -45,3 +47,37 @@ SET_OPERATIONS = frozenset({
         OpType.INTERSECT,
         OpType.INTERSECT_ALL,
     })
+
+#---- ESPRESSIONI
+
+class ExprType(str, Enum):
+  """Tipi di espressione supportati nella Table API."""
+
+  COL_REF = "COL_REF"
+  LITERAL = "LITERAL"
+  BINARY_OP = "BINARY_OP"
+  UNARY_OP = "UNARY_OP"
+  AGGREGATE = "AGGREGATE"
+
+class AggFuncType(str, Enum):
+  """Funzioni di aggregazione supportate."""
+
+  SUM = "SUM"
+  AVG = "AVG"
+  COUNT = "COUNT"
+  MIN = "MIN"
+  MAX = "MAX"
+
+#---- FINESTRE ED INTERVALLI
+
+class WindowType(str, Enum):
+    """Tipologia di attachment, finestra (CB o TB) o intervallo"""
+
+    TIME = "TIME"
+    COUNT = "COUNT"
+
+class WindowKind(str, Enum):
+    """Forma di avanzamento della finestra."""
+
+    TUMBLE = "TUMBLE"
+    SLIDING = "SLIDING"

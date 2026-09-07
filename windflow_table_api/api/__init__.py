@@ -1,131 +1,87 @@
-"""
-Modulo core dell'API Python di WindFlow Table API.
-Espone la totalità dei tipi di dato, schemi, espressioni, durate, finestre, operatori e l'ambiente.
-"""
+"""Sotto-package api: definisce il DSL logico, la gestione del Draft e il TableEnvironment."""
 
-# -------------------------------------------------------------------------
-# Tipi di dato e Schema
-# -------------------------------------------------------------------------
-from .datatypes import DataTypes
-from .schema import Field, Schema, SchemaBuilder
-
-# -------------------------------------------------------------------------
-# Espressioni e Funzioni Helper (expressions.py)
-# -------------------------------------------------------------------------
+from .draft import Draft
+from .durations import Duration, TimeCol
 from .expressions import (
-    Expression,
-    UnaryOpExpression,
+    AggregateExpression,
     BinaryOpExpression,
     ColRefExpression,
+    Expression,
     LiteralExpression,
-    col,
-    lit,
-    # Funzioni di aggregazione
-    sum,
+    UnaryOpExpression,
     avg,
-    min,
-    max,
+    col,
     count,
-    #helper per operatori
-    neg
+    lit,
+    max,
+    min,
+    neg,
+    sum,
 )
-
-# -------------------------------------------------------------------------
-# Durate e Riferimenti Temporali (durations.py)
-# -------------------------------------------------------------------------
-from .durations import (
-    Duration,
-    TimeCol,
-    TimeTypes,
-    TimeFormats
-)
-
-# -------------------------------------------------------------------------
-# Finestre Temporali e Intervalli (windows.py)
-# -------------------------------------------------------------------------
-from .windows import (
-    Window,
-    WindowType,
-    Interval,
-)
-
-# -------------------------------------------------------------------------
-# Operatori Logici (operators.py)
-# -------------------------------------------------------------------------
-from .operators import (
-    Operator,
-    UnaryOperator,
-    BinaryOperator,
-    WhereOp,
-    SelectOp,
-    DistinctOp,
-    GroupByOp,
-    JoinOp,
-    SetOp,
-    SetOpType,
-    TableRefOp,
-)
-
-# -------------------------------------------------------------------------
-# Drafting, Table, Environment e File
-# -------------------------------------------------------------------------
-from .draft import Draft
-from .table import Table, Query
-from .table_env import TableEnvironment, TimePolicy
 from .file_config import FileFormat, InputFileConfiguration, SplitSize
 from .job_handle import JobHandle
+from .operators import (
+    BinaryOperator,
+    DistinctOp,
+    FromOp,
+    GroupByOp,
+    JoinOp,
+    Operator,
+    SelectOp,
+    WhereOp,
+    SetOp,
+    TableRefOp,
+    UnaryOperator,
+)
+from .schema import Field, Schema, SchemaBuilder
+from .table import Query, Table
+from .table_env import TableEnvironment
+from .windows import Interval, Window
 
 __all__ = [
-    # Data Types & Schema
-    "DataTypes",
-    "Field",
+    # Core
+    "TableEnvironment",
+    "Table",
+    "Query",
+    "Draft",
+    "JobHandle",
+    # Schema
     "Schema",
     "SchemaBuilder",
-    # Expressions & AST Nodes
+    "Field",
+    # Nodi AST Operatori
+    "Operator",
+    "UnaryOperator",
+    "BinaryOperator",
+    "FromOp",
+    "TableRefOp",
+    "SelectOp",
+    "WhereOp",
+    "GroupByOp",
+    "DistinctOp",
+    "JoinOp",
+    "SetOp",
+    # Espressioni
     "Expression",
-    "UnaryOpExpression",
-    "BinaryOpExpression",
-    "LiteralExpression",
     "ColRefExpression",
+    "LiteralExpression",
+    "BinaryOpExpression",
+    "UnaryOpExpression",
+    "AggregateExpression",
     "col",
     "lit",
-    # Aggregations
+    "neg",
     "sum",
     "avg",
     "min",
     "max",
     "count",
-    # Expr.Operators Helpers
-    "neg",
-    # Durations & Time
+    # Finestre e I/O
     "Duration",
     "TimeCol",
-    "TimeTypes",
-    "TimeFormats",
-    # Windows
     "Window",
-    "WindowType",
     "Interval",
-    # Operators
-    "Operator",
-    "UnaryOperator",
-    "BinaryOperator",
-    "WhereOp",
-    "SelectOp",
-    "DistinctOp",
-    "GroupByOp",
-    "JoinOp",
-    "SetOp",
-    "SetOpType",
-    "TableRefOp",
-    # DSL & Environment
-    "Draft",
-    "Table",
-    "Query",
-    "TableEnvironment",
-    "TimePolicy",
-    "FileFormat",
     "InputFileConfiguration",
+    "FileFormat",
     "SplitSize",
-    "JobHandle"
 ]
