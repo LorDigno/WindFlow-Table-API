@@ -1,20 +1,16 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union, Set
-from .draft import Draft
-from .expressions import Expression, col, count, sum  , AggFuncType
+from typing import Any, Dict, List, Optional, Set
 from .operators import *
 from .schema import Schema
 from .table import Table, Query
-from .windows import Interval, Window, WindowType
+from .windows import Interval, WindowType
 from .file_config import InputFileConfiguration
 from windflow_table_api.runtime import Executor
 from windflow_table_api.codegen import generate_code
 from .job_handle import JobHandle
 from windflow_table_api import TimePolicy
-import json, os
-if TYPE_CHECKING:
-    from .table_env import TableEnvironment
+import json
 
 class TableEnvironment:
     """
@@ -75,7 +71,7 @@ class TableEnvironment:
         table = Table(schema=file_config.schema, table_id=table_id, env=self)
         self._tables[table_id] = table
 
-        self._sources_config[table_id] = file_config;
+        self._sources_config[table_id] = file_config
         return table
 
     # -------------------------------------------------------------------------
@@ -128,9 +124,10 @@ class TableEnvironment:
     # -------------------------------------------------------------------------
     # Serializzazione e Validazione Query
     # -------------------------------------------------------------------------
-    def _serialize_operator(self, op: Operator) -> Dict[str, Any]:
+
+    def _serialize_dag(self, op: Operator) -> Dict[str, Any]:
         """
-        Serializza (via to_dict) l'operatore e chiama ricorsicamente ai parents.
+        Serializza (via to_dict) l'operatore e chiama ricorsivamente ai parents.
         Gli operatori di TableRef che sono sorgenti vengono sostituiti con FromOp.
         Presuppone che il grafo sia stato validato tramite _validate_dag.
         """
@@ -144,7 +141,7 @@ class TableEnvironment:
         #ricava il dizionario di se e dei parents
         node_dict = op.to_dict()
         if op.parents:
-            node_dict["parents"] = [self._serialize_operator(p) for p in op.parents]
+            node_dict["parents"] = [self._serialize_dag(p) for p in op.parents]
 
         return node_dict
 
@@ -198,7 +195,8 @@ class TableEnvironment:
 
     # -------------------------------------------------------------------------
     # Orchestrazione generale dell'esecuzione
-    # -------------------------------------------------------------------------   
+    # -------------------------------------------------------------------------  
+     
     def _collect_referenced_queries(self, op: Operator, collected: Set[str]) -> None:
         """
         Attraversa il grafo degli operatori per trovare tutte le Query 
@@ -235,7 +233,8 @@ class TableEnvironment:
         di default è la dir corrente.
         Il parametro "rexecute" se impostato a True (di default è False) 
         fa rieseguire la serializzazione di file già presenti nella output_dir.
-        Questo potrebbe portare problemi se tale file sta venendo parsato per un'altra query avviata precedentemente. 
+        Questo potrebbe portare problemi se tale file sta venendo parsato per un'altra query avviata precedentemente.
+        Rende un oggetto JobHandle per il monitoraggio. 
         """
 
         #trovo tutte le query necessarie all'esecuzione di quella richiesta
@@ -255,25 +254,27 @@ class TableEnvironment:
 
         #generazione del JSON per ogni query in queries_to_generate
         for q in queries_to_generate:
-            file_path = os.path.join(out_path, f"{q.table_id}.json")
+            #validazione del grafo
+            self._validate_dag(q.root_operator)
+
+            file_path = out_path / f"{q.table_id}.json"
 
             #controllo che il file non ci sia già, in tal caso non c'è bisogno di riscriverlo
-            if (not rexecute) and os.path.exists(file_path):
+            if (not rexecute) and file_path.exists():
                 print(f"[TABLE API EXECUTE] '{file_path}' è già presente, non verrà ricalcolato.")
                 continue
 
             #creo l'albero rapresentante la Query con un dizionario
             root = {
                 "query_id": q.table_id,
-                "root": self._serialize(q.root_operator),
+                "root": self._serialize_dag(q.root_operator),
             }
 
             #mapping di libreia dizionario -> json
             json_str = json.dumps(root, indent=4)
 
             #scrittura del file json
-            with open(file_path, "w", encoding="utf-8") as f:
-                f.write(json_str)
+            file_path.write_text(json_str, encoding="utf-8")
 
         #chiamata alla generazione del codice
         generate_code(
