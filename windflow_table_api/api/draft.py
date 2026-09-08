@@ -115,14 +115,11 @@ class Draft:
         for agg in aggregations_map.values():
             group_schema_builder.add_expression(agg, old_schema, default_name=True)
 
-        prev_op._schema_out = group_schema_builder.build()
-        prev_op.aggregations = list(aggregations_map.values())
-
         #cambio il group
-        #prev_op.set_aggregations_and_schema(
-        #    group_schema_builder.build(),
-        #    list(aggregations_map.values)
-        #)
+        prev_op.set_aggregations_and_schema(
+            list(aggregations_map.values()),
+            group_schema_builder.build()
+        )
 
         #riscrittura delle selezioni
         return [e.rewrite_grouped() for e in selections]

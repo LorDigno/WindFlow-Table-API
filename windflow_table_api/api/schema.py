@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Iterator
 from ..datatypes import DataTypes
 if TYPE_CHECKING:
     from .expressions import Expression
@@ -56,7 +56,7 @@ class Schema:
         """
 
         if not self.has_field(column_name):
-            raise RuntimeError(f"Non esiste il campo {column_name} in {self}")
+            raise KeyError(f"Non esiste il campo {column_name} in {self}")
         
         return self._fields[column_name]
 
@@ -81,11 +81,23 @@ class Schema:
     def __eq__(self, other) -> bool:
         if not isinstance(other, Schema):
             return False
-
+        #non controlla l'ordine perché lo schema viene deduplicato a codegen
         return other.fields == self.fields
 
     def to_dict(self)-> Dict[str, str]:
         return {col_name: data_type.name for col_name, data_type in self.fields.items()}
+
+    def __contains__(self, column_name: object) -> bool:
+        return column_name in self._fields
+
+    def __getitem__(self, column_name: str) -> Field:
+        return self.get_field(column_name)
+
+    def __len__(self) -> int:
+        return len(self._fields)
+
+    def __iter__(self) -> Iterator[str]:
+        return iter(self._fields)
     
 class SchemaBuilder:
     """
@@ -112,7 +124,7 @@ class SchemaBuilder:
     def add_expression(
             self, expr: Expression, 
             input_schema: Schema, 
-            default_name: Optional[bool] = False
+            default_name: bool = False
         ) -> SchemaBuilder:
         """
         Aggiunge una colonna derivata direttamente da un'Expression:

@@ -38,7 +38,6 @@
                     "sensor_id"
                 ],
                 "attachment": {
-                    "type": "INTERVAL",
                     "lower_bound": {
                         "value": -30,
                         "unit": "MINUTES"

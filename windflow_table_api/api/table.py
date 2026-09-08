@@ -275,8 +275,8 @@ class Table:
     def join(
         self,
         other: Table,
-        attachment: Union[Interval, Window],
         *on: str,
+        attachment: Union[Interval, Window],
     ) -> Table:
         """
         Esegue una Join (Inner, Interval, Window) tra questa tabella e un'altra tabella target.

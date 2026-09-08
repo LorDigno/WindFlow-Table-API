@@ -39,7 +39,7 @@ interval = Interval(
 
 tab.name_draft("self_interval_join")
 q1 = (tab
-      .join("sensor_id", other=renamed_self, attachment=interval)
+      .join(renamed_self, "sensor_id", attachment=interval)
       .select("sensor_id", "temperature", "hum")
 )
 

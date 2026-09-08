@@ -303,8 +303,15 @@ class GroupByOp(UnaryOperator):
             return OpType.GROUP_BY
         return OpType.WINDOW_GROUP_BY
 
-    def set_aggregations_and_schema(self):
-        pass
+    def set_aggregations_and_schema(
+        self,
+        aggregations: List[AggregateExpression],
+        schema: Schema
+    ):
+        self._schema_out = schema
+        self.aggregations = aggregations
+
+        
 
     def to_dict(self) -> Dict[str, Any]:
         return {
