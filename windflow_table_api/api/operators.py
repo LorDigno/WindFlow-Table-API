@@ -303,6 +303,9 @@ class GroupByOp(UnaryOperator):
             return OpType.GROUP_BY
         return OpType.WINDOW_GROUP_BY
 
+    def set_aggregations_and_schema(self):
+        pass
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "op_type": self.get_op_type().value,

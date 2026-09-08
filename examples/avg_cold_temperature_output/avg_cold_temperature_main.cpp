@@ -67,9 +67,9 @@ int main(int argc, char* argv[]) {
     [](const source_cold_and_dry_from_6& in, avg_cold_temperature_group_by_2_struct_out& out) -> void {
     out.sensor_id = in.sensor_id;
 
-    out.COUNT_ += 1;
+    out.COUNT += 1;
     out.SUM_temperature += in.temperature;
-    out.AVG_temperature = out.SUM_temperature / out.COUNT_ ;
+    out.AVG_temperature = out.SUM_temperature / out.COUNT ;
 }
 )
     .withName("avg_cold_temperature_group_by_2")

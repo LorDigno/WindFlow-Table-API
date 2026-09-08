@@ -1,6 +1,5 @@
 from pathlib import Path
 import subprocess
-import time
 from typing import Optional
 
 
@@ -20,9 +19,9 @@ class JobHandle:
         return self.process.poll() is None
 
     def wait(self, timeout: Optional[float] = None) -> int:
-        """Attende la terminazione naturale del programma (es.
-
-        raggiungimento EOS).
+        """
+        Attende la terminazione naturale del programma (es. raggiungimento EOS).
+        Su sorgenti non READ_ONCE potrebbe bloccare il programma per un tempo indeterminato. 
         """
         return self.process.wait(timeout=timeout)
 
@@ -39,7 +38,7 @@ class JobHandle:
             self.process.wait()
 
     def get_out_logs(self, tail: int = 50) -> str:
-        """Legge le ultime righe dei log."""
+        """Legge le ultime righe dei log di stampa."""
         if not self.stdout_log.exists():
             return ""
         with open(self.stdout_log, "r", encoding="utf-8") as f:
@@ -47,7 +46,7 @@ class JobHandle:
         return "".join(lines[-tail:])
 
     def get_err_logs(self, tail: int = 50) -> str:
-        """Legge le ultime righe dei log."""
+        """Legge le ultime righe dei log di errore."""
         if not self.stderr_log.exists():
             return ""
         with open(self.stdout_log, "r", encoding="utf-8") as f:

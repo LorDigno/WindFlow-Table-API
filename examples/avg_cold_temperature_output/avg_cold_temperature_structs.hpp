@@ -61,7 +61,7 @@ namespace std {
 // ============================================================================
 struct avg_cold_temperature_group_by_2_struct_out {
     std::string sensor_id;
-    int64_t COUNT_ = 0; 
+    int64_t COUNT = 0; 
     double SUM_temperature = 0.0; 
     double AVG_temperature = 0.0; 
 

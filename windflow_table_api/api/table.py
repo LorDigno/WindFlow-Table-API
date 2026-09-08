@@ -124,13 +124,17 @@ class Table:
 
         #controllo di aggregazioni
         has_aggregates = any(len(e.aggregation_dependencies()) > 0 for e in selections)
-        if has_aggregates:
-            if not isinstance(draft.get_last_operator(), GroupByOp): 
-                #aggregazione globale, creo il GroupByOp senza chiavi e lo inserisco
-                group_op = GroupByOp(draft.current_schema, [])
-                draft.add_unary_operator(group_op)
+        is_grouped = isinstance(draft.get_last_operator(), GroupByOp)
 
-            selections = draft.handle_group(selections)    
+        #aggregazioni globali (senza chiave), va aggiunto un groupBy
+        if has_aggregates and not is_grouped:
+            group_op = GroupByOp(draft.current_schema, [])
+            draft.add_unary_operator(group_op)
+            is_grouped = True
+
+        #assegni le aggregazioni al groupBy se necessario
+        if is_grouped:
+            selections = draft.handle_group(selections)   
     
         select_op = SelectOp(selections, draft.current_schema)
         draft.add_unary_operator(select_op)

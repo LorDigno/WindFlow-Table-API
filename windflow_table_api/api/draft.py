@@ -22,13 +22,16 @@ class Draft:
             source_table_schema: Schema,
             custom_name: Optional[str] = None):
         """
-        Crea il Draft vuoto con nome se specificato tramite un precedente table.name_draft(nome).
+        Crea il Draft con nome se specificato tramite un precedente table.name_draft(nome).
+        Di base è presente solo l'operatore di TableRef alla madre.
         """
 
         self.source_table_id = source_table_id
         self.source_table_schema = source_table_schema
         self.custom_name = custom_name
-        self._operators: List[Operator] = []
+        self._operators: List[Operator] = [
+            TableRefOp(self.source_table_id, self.source_table_schema)
+        ]
 
     def add_unary_operator(self, operator: UnaryOperator) -> None:
         """Collega il nuovo operatore unario all'ultimo inserito nel Draft."""
@@ -58,11 +61,7 @@ class Draft:
     def get_last_operator(self) -> Operator:
         """
         Restituisce l'ultimo operatore attualmente presente nel Draft.
-        Se non ci sono operatori rende il TableRefOp alla tabella madre.
         """
-
-        if len(self._operators) == 0:
-            self._operators.append(TableRefOp(self.source_table_id, self.source_table_schema))
 
         return self._operators[-1]
 
@@ -75,7 +74,7 @@ class Draft:
 
         if (not isinstance(current_op, SelectOp)) and isinstance(prev_op, GroupByOp):
             raise RuntimeError(
-                f"Operazione non valida: non è possibile applicare '{current_op.get_op_type()}' dopo un GroupBy. "
+                f"Operazione non valida: non è possibile applicare '{current_op.get_op_type().value}' dopo un GroupBy. "
                 f"Dopo group_by() è obbligatorio invocare select() per definire proiezioni ed aggregazioni."
             )
 
@@ -119,10 +118,15 @@ class Draft:
         prev_op._schema_out = group_schema_builder.build()
         prev_op.aggregations = list(aggregations_map.values())
 
+        #cambio il group
+        #prev_op.set_aggregations_and_schema(
+        #    group_schema_builder.build(),
+        #    list(aggregations_map.values)
+        #)
+
         #riscrittura delle selezioni
         return [e.rewrite_grouped() for e in selections]
 
-        
     @property
     def current_schema(self) -> Schema:
         """

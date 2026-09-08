@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 from windflow_table_api import *
 
 env = TableEnvironment(par= 2, policy=TimePolicy.EVENT_TIME)
@@ -14,13 +13,13 @@ sensor_schema = (SchemaBuilder()
 source_config = InputFileConfiguration(
     path = Path("../data_streams/sensor_input_stream.csv"),
     format= FileFormat.CSV,
-    schema= sensor_schema,
+    schema= sensor_schema, 
     has_header= True,
     time_col= TimeCol("timestamp", TimeFormats.ISO8601),
     order= True,
 )
 
-tab = env.table_from_file(source_config, "sensor_stream_input.csv")
+tab = env.table_from_file(source_config, "sensor_stream_input")
 
 #definisco la condizione per il where
 cond = (col("temperature") < 10) & (col("humidity") < 20)

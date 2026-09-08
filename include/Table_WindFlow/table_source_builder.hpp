@@ -135,6 +135,8 @@ class Source_Functor {
                 return;
             }
 
+            std::cout << "[SRC" << ctx.getReplicaIndex() << "] File " << file_path << " aperto." << std::endl;
+
             //recupero il vector di split di questa replica
             auto it = splits_map.find(replica_id);
             if (it == splits_map.end()){

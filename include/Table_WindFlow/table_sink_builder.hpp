@@ -44,6 +44,8 @@ class Sink_Functor {
                 return;
             }
 
+            std::cout << "[SINK] File " << actual_filename << " aperto." << std::endl;
+
             if (!header.empty()) {
                 *out_file << header << "\n";
             }
@@ -58,7 +60,7 @@ class Sink_Functor {
         ) : filename(path),
             formatter_lambda(formatter),
             header(csv_header),
-            parallelism(parallelism) {}
+            parallelism(par) {}
 
         void operator()(std::optional<TupleT>& input, wf::RuntimeContext& ctx) {
             //inizializzo il file alla prima tupla
@@ -72,7 +74,7 @@ class Sink_Functor {
                     out_file->flush();
                     out_file->close();
                 }
-                std::cout << "[SINK] File " << actual_filename << " completato e chiuso." << std::endl;
+                std::cout << "[SINK" << ctx.getReplicaIndex() << "] File " << actual_filename << " completato e chiuso." << std::endl;
                 return;
             }
 
@@ -116,7 +118,7 @@ class Table_Sink_Builder {
         }
 
         auto build() {
-            Sink_Functor<TupleT> functor(filename, formatter_lambda, header);
+            Sink_Functor<TupleT> functor(filename, formatter_lambda, header, parallelism);
 
             return wf::Sink_Builder(functor)
                 .withName(op_name)

@@ -64,7 +64,7 @@
                                     "data_type": "INT",
                                     "name": "10"
                                 },
-                                "name": "(temperature < 10)"
+                                "name": "(temperature_<_10)"
                             },
                             "right": {
                                 "expr_type": "BINARY_OP",
@@ -81,9 +81,9 @@
                                     "data_type": "INT",
                                     "name": "20"
                                 },
-                                "name": "(humidity < 20)"
+                                "name": "(humidity_<_20)"
                             },
-                            "name": "((temperature < 10) && (humidity < 20))"
+                            "name": "((temperature_<_10)_&&_(humidity_<_20))"
                         },
                         "schema_out": {
                             "sensor_id": "STRING",
@@ -98,7 +98,7 @@
                         "parents": [
                             {
                                 "op_type": "FROM",
-                                "source_id": "sensor_stream_input.csv",
+                                "source_id": "sensor_stream_input",
                                 "schema_out": {
                                     "sensor_id": "STRING",
                                     "temperature": "DOUBLE",
