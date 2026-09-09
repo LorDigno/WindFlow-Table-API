@@ -3,6 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union, Type
 from abc import abstractmethod
 from windflow_table_api import OpType, WindowKind, WindowType
+from .explorer import VisitContext, VisitResult
 
 @dataclass
 class OpNode:
@@ -31,6 +32,13 @@ class OpNode:
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> OpNode:
         """
         Metodo che rende un'istanza della classe che lo chiama basata sul dizionario ricevuto.
+        """
+        pass
+
+    @abstractmethod
+    def visit(self, ctx: VisitContext) -> VisitResult:
+        """
+        Metodo che riempie il VisitResult in base al VisitContext e al tipo di nodo.
         """
         pass
 

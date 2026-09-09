@@ -36,6 +36,19 @@ class OpType(str, Enum):
     def __str__(self) -> str:
         return self.value
 
+    #comparato ad una stringa o un optype controlla il value
+    def __eq__(self, other) -> bool:
+        if isinstance(other, OpType):
+            return self.value == other.value
+        elif isinstance(other, str):
+            return self.value == other
+        
+        return False
+
+    #hashing corrispondente a quello del value
+    def __hash__(self) -> int:
+        return hash(self.value)
+       
     @property
     def is_set_op(self) -> bool:
         """Restituisce True se l'operatore appartiene alla famiglia insiemistica."""
@@ -81,3 +94,4 @@ class WindowKind(str, Enum):
 
     TUMBLE = "TUMBLE"
     SLIDING = "SLIDING"
+    

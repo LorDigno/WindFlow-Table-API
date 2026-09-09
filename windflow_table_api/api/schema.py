@@ -17,7 +17,7 @@ class Field:
 
     def __repr__(self) -> str:
         expr_str = f", expr={self.expression!r}" if self.expression else ""
-        return f"Field(name='{self.name}', type={self.data_type.name}{expr_str})"
+        return f"Field(name='{self.name}', type={self.data_type.value}{expr_str})"
 
 class Schema:
     """
@@ -75,7 +75,7 @@ class Schema:
         return f.expression
     
     def __repr__(self) -> str:
-        fields_str = ", ".join(f"'{k}': {v.data_type.name}" for k, v in self._fields.items())
+        fields_str = ", ".join(f"'{k}': {v.data_type.value}" for k, v in self._fields.items())
         return f"Schema({{{fields_str}}})"
 
     def __eq__(self, other) -> bool:
@@ -85,7 +85,7 @@ class Schema:
         return other.fields == self.fields
 
     def to_dict(self)-> Dict[str, str]:
-        return {col_name: data_type.name for col_name, data_type in self.fields.items()}
+        return {col_name: data_type.cpp_type for col_name, data_type in self.fields.items()}
 
     def __contains__(self, column_name: object) -> bool:
         return column_name in self._fields

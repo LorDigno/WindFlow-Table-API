@@ -1,21 +1,14 @@
-from pathlib import Path
-from typing import Any, Dict, List, Optional
-from jinja2 import Environment, FileSystemLoader
+from typing import Any, Dict
+from jinja2 import Environment
 from .utility import OPERATOR_MAP
+from windflow_table_api import ExprType
 
 
 class ExpressionTranslator:
     """Traduce le espressioni nel JSON in stringhe di codice C++."""
 
-    def __init__(self, templates_dir: Optional[Path] = None):
-        if templates_dir is None:
-            templates_dir = Path(__file__).parent / "templates" / "expressions"
-
-        self.jinja_env = Environment(
-            loader=FileSystemLoader(templates_dir),
-            trim_blocks=True,
-            lstrip_blocks=True,
-        )
+    def __init__(self, env: Environment):
+        self.jinja_env = env
 
     def translate_expr(
         self, expr_dict: Dict[str, Any], input_var: str = "in"
@@ -48,7 +41,7 @@ class ExpressionTranslator:
 
         col_name = expr_dict["name"]
 
-        template = self.jinja_env.get_template("col_ref.jinja2")
+        template = self.jinja_env.get_template("expressions/col_ref.jinja2")
         return template.render(
         input_var= input_var,
         col_name= col_name
@@ -103,7 +96,7 @@ class ExpressionTranslator:
         left_cpp = self.translate_expr(expr_dict["left"], input_var)
         right_cpp = self.translate_expr(expr_dict["right"], input_var)
 
-        template = self.jinja_env.get_template("bin_op.jinja2")
+        template = self.jinja_env.get_template("expressions/bin_op.jinja2")
         return template.render(
             left= left_cpp,
             op= cpp_op,
@@ -127,7 +120,7 @@ class ExpressionTranslator:
 
         inner_cpp = self.translate_expr(inner_expr, input_var)
 
-        template = self.jinja_env.get_template("un_op.jinja2")
+        template = self.jinja_env.get_template("expressions/un_op.jinja2")
         return template.render(
             op= cpp_op,
             inner= inner_cpp
@@ -164,7 +157,7 @@ class ExpressionTranslator:
 
         if not expr_dict.get("distinct") or target == None:
             #count semplice
-            template = self.jinja_env.get_template("count.jinja2")
+            template = self.jinja_env.get_template("aggregates/count.jinja2")
             return template.render(
                 field= expr_dict["name"],
                 out_var= output_var
@@ -184,7 +177,7 @@ class ExpressionTranslator:
 
             target_cpp = self.translate_expr(target, input_var)
 
-            template = self.jinja_env.get_template("sum.jinja2")
+            template = self.jinja_env.get_template("aggregates/sum.jinja2")
             return template.render(
                 field= expr_dict["name"],
                 out_var= output_var,
@@ -205,7 +198,7 @@ class ExpressionTranslator:
 
             target_cpp = self.translate_expr(target, input_var)
 
-            template = self.jinja_env.get_template("max.jinja2")
+            template = self.jinja_env.get_template("aggregates/max.jinja2")
             return template.render(
                 field= expr_dict["name"],
                 out_var= output_var,
@@ -226,7 +219,7 @@ class ExpressionTranslator:
 
             target_cpp = self.translate_expr(target, input_var)
 
-            template = self.jinja_env.get_template("min.jinja2")
+            template = self.jinja_env.get_template("aggregates/min.jinja2")
             return template.render(
                 field= expr_dict["name"],
                 out_var= output_var,
@@ -244,7 +237,7 @@ class ExpressionTranslator:
         if not expr_dict.get("distinct"):
             #avg semplice
 
-            template = self.jinja_env.get_template("avg.jinja2")
+            template = self.jinja_env.get_template("aggregates/avg.jinja2")
             return template.render(
                 field= expr_dict["name"],
                 out_var= output_var,

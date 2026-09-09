@@ -2,30 +2,8 @@ import json
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Set
 from dataclasses import dataclass, field
-from .utility import OP_TYPE
-
-@dataclass
-class OpNode:
-    """
-    Rappresentazione di un nodo operatore all'interno del grafo.
-    """
-
-    node_id: str
-    op_type: str
-    raw_dict: Dict[str, Any]
-    parents: List['OpNode'] = field(default_factory=list)
-    children: List['OpNode'] = field(default_factory=list)
-    schema_in: Optional[Dict[str, Any]] = None
-    schema_out: Optional[Dict[str, Any]] = None
-    #gli operatori binari che non hanno schema_in li ricavano dai genitori
-
-    def __hash__(self):
-        return hash(self.node_id)
-
-    def __eq__(self, other):
-        if isinstance(other, OpNode):
-            return self.node_id == other.node_id
-        return False
+from windflow_table_api import OpType
+from .operation_nodes import OpNodeFactory, OpNode
 
 @dataclass
 class ParsedGraph:
@@ -44,7 +22,6 @@ class JsonParser:
         self.json_dir = Path(json_dir)
         self.loaded_queries: Set[str] = set()
         self.root_nodes: Dict[str, OpNode] = {}
-        self.node_registry: Dict[str, OpNode] = {}
         self._node_counter = 0
 
     def _gen_node_id(self, query_id: str, op_type: str) -> str:
@@ -95,27 +72,19 @@ class JsonParser:
         op_type = op_dict.get("op_type", "UNKNOWN")
 
         #passi ad esplorare un'altra query
-        if op_type == OP_TYPE.TAB_REF.name:
+        if op_type == OpType.TABLE_REF:
             return self._handle_tab_ref(op_dict)
 
         #generazione dell'id del nodo
-        op_name = op_dict.get("op_name") or self._gen_node_id(query_id, op_type)
+        op_name = self._gen_node_id(query_id, op_type)
 
-        #creazione e registrazione del nodo
-        node = OpNode(
-            node_id=op_name,
-            op_type=op_type,
-            raw_dict=op_dict,
-            schema_in=op_dict.get("schema_in"),
-            schema_out=op_dict.get("schema_out")
-        )
-        self.node_registry[op_name] = node
+        #creazione del nodo
+        node = OpNodeFactory.create(node_id= op_name, op_dict= op_dict)
 
-        #esplorazione ricorsiva dei genitori
+        #esplorazione ricorsiva e collegamento dei genitori
         for p_dict in op_dict.get("parents", []):
             parent_node = self._build_node_recursive(query_id, p_dict)
             node.parents.append(parent_node)
-            parent_node.children.append(node)
 
         return node
 

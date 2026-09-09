@@ -5,7 +5,7 @@ __version__ = "0.2.0"
 # =============================================================================
 # Tipi ed Enum Condivisi (Contratti trasversali tra API, Codegen e Runtime)
 # =============================================================================
-from .datatypes import DataTypes
+from .datatypes import DataTypes, TYPE_TRANSLATION
 from .object_names import (
     OpType,
     AggFuncType,
@@ -60,6 +60,7 @@ __all__ = [
     "ExprType",
     "AggFuncType",
     "DataTypes",
+    "TYPE_TRANSLATION",
     "TimeUnits",
     "TimeFormats",
     "TimePolicy",

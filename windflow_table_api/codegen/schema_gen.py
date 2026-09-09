@@ -1,8 +1,9 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Set
-from jinja2 import Environment, FileSystemLoader
+from jinja2 import Environment
 from pathlib import Path
 from .utility import TYPE_MAP
+from windflow_table_api import DataTypes, TYPE_TRANSLATION
 
 @dataclass
 class CppField:
@@ -10,7 +11,6 @@ class CppField:
 
     name: str
     cpp_type: str
-    json_type: str
     default: Optional[str] = None
 
 @dataclass
@@ -45,21 +45,15 @@ class SchemaGenerator:
     Tutti gli struct generati ordinano alfabeticamente i campi per valutare al meglio l'equivalenza fra schemi.
     """
 
-    def __init__(self):
+    def __init__(self, env: Environment):
+        self._jinja_env = env
+
         #cache usata per non creare due volte schemi equivalenti fra loro
         self._struct_cache: Dict[Tuple[Tuple[str, str], ...], CppStruct] = {}
 
         #campi per la generatìzione dei nomi degli struct
         self._used_names: Set[str] = set()
-        self._struct_counter: int = 0
-
-        #setup di jinja
-        templates_dir = Path(__file__).parent / "templates"
-        self._jinja_env = Environment(
-            loader=FileSystemLoader(templates_dir),
-            trim_blocks=True,
-            lstrip_blocks=True
-        )
+        self._struct_counter: int = 0  
 
     def map_type(self, json_type: str) -> str:
         """
@@ -74,7 +68,7 @@ class SchemaGenerator:
 
     def get_or_create_struct(
         self, 
-        schema_dict: Dict[str, str], 
+        schema_dict: Dict[str, str],        #nome -> cpp_type preso dal json
         name_hint: str = "TupleStruct", 
         needs_hash: bool = False,
         needs_win: bool = False,
@@ -92,12 +86,11 @@ class SchemaGenerator:
 
         #aggiungiamo il win_id se necessario
         if needs_win and "win_id" not in schema_copy:
-            schema_copy["win_id"] = "UBIGINT"
+            schema_copy["win_id"] = DataTypes.UBIGINT.cpp_type
 
         #costruzione dei field
         cpp_fields: List[CppField] = []
-        for field_name, json_type in schema_copy.items():
-            cpp_type = self.map_type(json_type)
+        for field_name, cpp_type in schema_copy.items():
 
             default = None
             if defaults and field_name in defaults:
@@ -106,7 +99,7 @@ class SchemaGenerator:
                 default = "0"    
 
             cpp_fields.append(
-                CppField(name=field_name, cpp_type=cpp_type, json_type=json_type, default=default)
+                CppField(name=field_name, cpp_type=cpp_type, default=default)
             )
 
         #struct temporaneo per verificare la presenza di uno equivalente
@@ -202,9 +195,9 @@ class SchemaGenerator:
 
         joined_dict = {}
         for f in first.fields:
-            joined_dict[f.name] = f.json_type
+            joined_dict[f.name] = f.cpp_type
         for f in second.fields:
-            joined_dict[f.name] = f.json_type
+            joined_dict[f.name] = f.cpp_type
 
         out = self.get_or_create_struct(
             schema_dict= joined_dict,

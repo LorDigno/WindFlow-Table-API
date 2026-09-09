@@ -1,28 +1,41 @@
 from __future__ import annotations
 from enum import Enum
 
-class DataTypes(Enum):
+class DataTypes(str, Enum):
     """
     Rappresenta i tipi di dato supportati dalla Table API.
     Mappa i nomi logici della Table API sui reali tipi C++ nativi di WindFlow.
     """
 
-    STRING = ("STRING", "std::string")
-    INT = ("INT", "int32_t")
-    BIGINT = ("BIGINT", "int64_t")
-    FLOAT = ("FLOAT", "float")
-    DOUBLE = ("DOUBLE", "double")
-    BOOLEAN = ("BOOLEAN", "bool")
+    STRING = "STRING"
+    INT = "INT"
+    BIGINT = "BIGINT"
+    FLOAT = "FLOAT"
+    DOUBLE = "DOUBLE"
+    BOOLEAN = "BOOLEAN"
 
     #pensato a solo uso interno
-    UBIGINT = ("UBIGINT", "uint64_t")
+    UBIGINT =  "UBIGINT"
 
-    def __init__(self, logical_name: str, cpp_name: str):
-        self.logical_name = logical_name
-        self.cpp_name = cpp_name
+    @property
+    def cpp_type(self) -> str:
+        return TYPE_TRANSLATION[self]
 
     def __repr__(self) -> str:
-        return f"DataTypes.{self.name}"
+        return f"DataTypes.{self.value}"
+
+    #rende true se è uguale al value
+    def __eq__(self, other) -> bool:
+        if isinstance(other, DataTypes):
+            return other.value == self.value
+        elif isinstance(other, str):
+            return other == self.value
+
+        return False
+
+    #l'hash si basa sul value
+    def __hash__(self) -> int:
+      return hash(self.value)
 
     def is_number(self) -> bool:
         """Controlla se il tipo è numerico."""
@@ -44,13 +57,16 @@ class DataTypes(Enum):
         """
 
         if (not type1.is_number()) or (not type2.is_number()):
-            raise TypeError(f"I tipi {type1.name}, {type2.name} non sono comparabili come numeri.")
+            raise TypeError(f"I tipi {type1.value}, {type2.value} non sono comparabili come numeri.")
 
         return max(type1, type2, key=lambda t: _NUMERIC_PRIORITY[t])
 
 #manca UBIGINT perché è pensato per essere usato solo all'interno dell'API
 _NUMBERS = {
-    DataTypes.INT, DataTypes.BIGINT, DataTypes.FLOAT, DataTypes.DOUBLE
+    DataTypes.INT, 
+    DataTypes.BIGINT, 
+    DataTypes.FLOAT, 
+    DataTypes.DOUBLE
 }
           
 _NUMERIC_PRIORITY = {
@@ -58,4 +74,19 @@ _NUMERIC_PRIORITY = {
     DataTypes.BIGINT: 2,
     DataTypes.FLOAT: 3,
     DataTypes.DOUBLE: 4,
+}
+
+TYPE_TRANSLATION = {
+    #stringhe
+    DataTypes.STRING: "std::string",
+
+    #numeri
+    DataTypes.INT: "int32_t",
+    DataTypes.BIGINT: "int64_t",
+    DataTypes.FLOAT: "float",
+    DataTypes.DOUBLE: "double",
+    DataTypes.UBIGINT: "uint64_t",
+
+    #bool
+    DataTypes.BOOLEAN: "bool"
 }

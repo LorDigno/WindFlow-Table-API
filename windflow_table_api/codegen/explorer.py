@@ -1,11 +1,48 @@
 from pathlib import Path
 from typing import List, Dict, Tuple
 from jinja2 import Environment, FileSystemLoader
+from dataclasses import dataclass, field
 from .parser import OpNode
 from .schema_gen import SchemaGenerator, CppStruct, CppField
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator    
 from .utility import get_aggregate_default, parse_window, parse_interval, parse_duration_to_microseconds
+
+#---- Classi di input e output comuni alla visita di ogni specializzazione di OpNode
+
+@dataclass
+class VisitContext:
+    """Parametri passati dal chiamante al nodo durante la visita."""
+    #nome della pipe corrente
+    pipe: str
+
+    #struct già deduplicati passati dai parent come input per l'operazione corrente
+    parent_structs: List[CppStruct]     
+
+    #nome di variabili pipes che convergono nel nodo binario 
+    to_merge_pipes: List[str]    
+
+    #generatori di struct/espressioni/lambda necessari
+    sch_gen: SchemaGenerator
+    expr_tl: ExpressionTranslator
+    lambda_gen: LambdaGenerator
+
+    #operations_counter necessario alla creazione di variabili univoche
+    operations_counter: int      
+
+@dataclass
+class VisitResult:
+    """Informazioni restituite dalla visita di un nodo."""
+    out_struct: CppStruct
+
+    #stringa da accumulare alla pipe corrente
+    pipe_addition: str
+
+    #stringhe ricavate da jinja per i builder ricavati dal nodo (ordinati)
+    #attualmente un nodo può generare più operazioni (es intersect con map di tagging)
+    emitted_builders: List[str] = field(default_factory=list)
+
+#---- Esploratore che coordina la visita dei nodi 
 
 class GraphExplorer:
     """
@@ -15,14 +52,18 @@ class GraphExplorer:
 
     def __init__(
         self,
-        sch_gen: SchemaGenerator,
-        expr_tl: ExpressionTranslator,
+        jinja_env: Environment,
         output_dir: Path,
         parallelism: int = 1
     ):
+        """
+        Inizializza l'esploratore e i generatori sull'ambiente dato (aperto in condegen/templates/).
+        """
+        
         #parametri dell'ambiente
-        self.sch_gen = sch_gen
-        self.expr_tl = expr_tl
+        self.sch_gen = SchemaGenerator(jinja_env)
+        self.expr_tl = ExpressionTranslator(jinja_env)
+        self.lambda_gen = LambdaGenerator(jinja_env)
         self.output_dir = output_dir
         self.parallelism = parallelism
 
@@ -31,17 +72,13 @@ class GraphExplorer:
         self.pipes: Dict[str, str] = {}
         self.pipe_order: List[str] = []
 
-        #gestione dei nodi
-        self.node_counter = 0
+        #gestione delle operazioni prodotte
+        #all'incirca superfluo in base a come vengono generati i node id.
+        #   attualmente una sottoquery viene parsata una volta sola in OpNode e i TabRef non fanno altro che puntare alla sua root.
+        #   questo comporta che un OpNode può venir visitato più volte quindi serve un altro contatore per avere nomi di variabili univoci.
+        # (possibile utilità di questo sistema se mai verrà implementata una split di pipe in WF)
+        self.operations_counter = 0             
         self.builders: List[str] = []
-
-        #setup di jinja
-        templates_dir = Path(__file__).parent / "templates" / "nodes"
-        self._jinja_env = Environment(
-            loader=FileSystemLoader(templates_dir),
-            trim_blocks=True,
-            lstrip_blocks=True
-        )
 
     def visit(self, root: OpNode, pipe: str = "pipe_0") -> CppStruct:
         """
@@ -54,43 +91,52 @@ class GraphExplorer:
 
         current_pipe = pipe
         to_merge = []                   #nomi delle pipe da unificare
-        parent_structs = []
+        parent_structs = []             #nomi degli struct di output dei parents
         for p in root.parents:
-            #gestione delle pipes
+            #di base si assume che il parent sia nella stessa pipe
             old_pipe = pipe
    
-            #se ho più parents allora loro sono in pipes diverse
+            #se ho più parents allora loro sono in pipes diverse (c'è da fare una merge)
             if len(root.parents) > 1:
                 self.pipe_counter += 1
                 old_pipe = f"pipe_{self.pipe_counter}"
                 to_merge.append(old_pipe)
 
-            #chiamata ricorsiva
+            #chiamata ricorsiva, accumulo gli struct di output
             parent_structs.append(self.visit(p, old_pipe))
 
+        #creazione del contesto di visita
+        context = VisitContext(
+            pipe= current_pipe,
+            parent_structs= parent_structs,
+            to_merge_pipes= to_merge,
+            sch_gen= self.sch_gen,
+            expr_tl= self.expr_tl,
+            lambda_gen= self.lambda_gen,
+            operations_counter= self.operations_counter
+        )
+
         #corpo della visita, da implementare diversamente in base all'operatore
-        #eseguito per la prima volta quando trova un from senza parents
-        op_type = root.op_type
-    
-        if op_type == "FROM":
-            return self._visit_from(root, current_pipe)
-        elif op_type == "WHERE":
-            return self._visit_where(root, current_pipe, parent_structs[0])
-        elif op_type == "SELECT":
-            return self._visit_select(root, current_pipe, parent_structs[0])
-        elif op_type in ("GROUP_BY", "WINDOW_GROUP_BY"):
-            return self._visit_group(root, current_pipe, parent_structs[0])
-        elif op_type in ("DISTINCT"):
-            return self._visit_distinct(root, current_pipe, parent_structs[0])    
-        elif op_type in ("JOIN_INNER", "JOIN_INTERVAL", "JOIN_WINDOW"):
-            return self._visit_join(root, current_pipe, to_merge, parent_structs[0], parent_structs[1])
-        elif op_type in ("UNION", "UNION_ALL"):
-            return self._visit_union(root, current_pipe, to_merge, parent_structs[0])    
-        elif op_type in ("INTERSECT", "INTERSECT_ALL"):
-            return self._visit_intersect(root, current_pipe, to_merge, parent_structs[0])   
+        result: VisitResult = root.visit(context)
 
-        raise RuntimeError(f"Operazione {op_type} sconosciuta.") 
+        #se la pipe viene inizializzata (op binari o from) la aggiungo all'ordine
+        #concateno l'operazione corrente alla pipe
+        if not current_pipe in self.pipe_order:
+            self.pipe_order.append(current_pipe)
+            self.pipes[current_pipe] = ""
+        self.pipes[current_pipe] += result.pipe_addition
 
+        #registro tutti i buider necessari all'operazione in ordine
+        for b_string in result.emitted_builders:
+            self.builders.append(b_string)
+
+        #aggiorno il contatore in base a quante variabili sono state inizializzate 
+        self.operations_counter += len(result.emitted_builders)
+
+        return result.out_struct
+        
+#---- metodi pre refactoring di visita dei nodi 
+"""
     def _visit_from(self, node: OpNode, pipe: str):
         #dati
         config = node.raw_dict.get("config", {})
@@ -594,10 +640,9 @@ class GraphExplorer:
         pipe: str,
         name_hint: str,
     ):
-        """
+        
         Genera e inietta direttamente un operatore di adattamento nella pipe indicata.
         Utilizzata da visit_join e visit_intersect per l'unificazione/tagging degli struct.
-        """
 
         map_func = LambdaGenerator.map_lambda(
             in_struct=in_struct,
@@ -630,10 +675,10 @@ class GraphExplorer:
         pipe: str = "pipe_0",
         sink_name: str = "Table_Sink"
     ) -> None:
-        """
+        
         Genera il Table_Sink_Builder tipizzato sull'ultimo struct del DAG,
         lo registra in self.builders e chiude la catena della pipe specificata.
-        """
+        
         #preparazione dell'header
         header_str = ", ".join(f.name for f in final_struct.fields) if has_header else None
 
@@ -661,3 +706,4 @@ class GraphExplorer:
 
         #aggiunta alla pipe        
         self.pipes[pipe] += f".add_sink({var_name})"
+"""

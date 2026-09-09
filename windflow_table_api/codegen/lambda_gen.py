@@ -1,28 +1,23 @@
-from typing import Dict, List, Tuple, Optional, Any, Tuple
-from jinja2 import Environment, FileSystemLoader
-from pathlib import Path
-
-#inizializzazione dell'ambiente
-_TEMPLATES_DIR = Path(__file__).parent / "templates" / "lambdas"
-_ENV = Environment(
-    loader=FileSystemLoader(_TEMPLATES_DIR),
-    trim_blocks=True,
-    lstrip_blocks=True,
-)
+from typing import Dict, List, Tuple, Any, Tuple
+from jinja2 import Environment
 
 class LambdaGenerator:
     """
-    Offre vari metodi statici per renderizzare i template Jinja per i vari tipi di lambda.
+    Offre i metodi per renderizzare i template Jinja per i vari tipi di lambda.
+    L'ambiente di input si richiede che sia inizializzato a codegen/templates/ .
     """
 
-    @staticmethod
+    def __init__(self, env: Environment):
+        self._jinja_env = env
+
     def map_lambda(
+        self,
         in_struct: str,
         out_struct: str,
         mappings: List[Tuple[str, str]],
         input_var: str = "in"
     ) -> str:
-        template = _ENV.get_template("map_lambda.jinja2")
+        template = self._jinja_env.get_template( "lambdas/map_lambda.jinja2")
         return template.render(
             input_struct=in_struct,
             output_struct=out_struct,
@@ -30,21 +25,21 @@ class LambdaGenerator:
             input_var= input_var
         )
 
-    @staticmethod
     def where_lambda(
+        self,
         in_struct: str,
         condition: str,
         in_var: str = "in"
     ) -> str:
-        template = _ENV.get_template("where_lambda.jinja2")
+        template = self._jinja_env.get_template("lambdas/where_lambda.jinja2")
         return template.render(
             input_struct=in_struct,
             condition=condition,
             input_var= in_var
         )
 
-    @staticmethod
     def groupBy_lambda(
+        self,
         in_struct: str,
         out_struct: str,
         keys: List[str],
@@ -52,7 +47,7 @@ class LambdaGenerator:
         in_var: str = "in",
         out_var: str = "out"
     ) -> str:
-        template = _ENV.get_template("group_lambda.jinja2")
+        template = self._jinja_env.get_template("lambdas/group_lambda.jinja2")
         return template.render(
             input_struct=in_struct,
             output_struct= out_struct,
@@ -62,15 +57,15 @@ class LambdaGenerator:
             output_var= out_var
         )
 
-    @staticmethod
     def join_lambda(
+        self,
         input_struct: str,
         out_struct: str,
         mappings: List[Tuple[str, str]],
         left_var: str = "left",
         right_var: str = "right",
     ) -> str:
-        template = _ENV.get_template("join_lambda.jinja2")
+        template = self._jinja_env.get_template("lambdas/join_lambda.jinja2")
         return template.render(
             input_struct=input_struct,
             output_struct= out_struct,
@@ -79,25 +74,25 @@ class LambdaGenerator:
             right_var= right_var
         )        
 
-    @staticmethod
     def parser_lambda(
+        self,
         struct_out: str,
         time_col_dict: Dict[str, Any],
         ordered_fields: List[Dict[str, Any]]
     ) -> str:
-        template = _ENV.get_template("parser_lambda.jinja2")
+        template = self._jinja_env.get_template("lambdas/parser_lambda.jinja2")
         return template.render(
             out_struct=struct_out,
             time_col=time_col_dict,
             fields=ordered_fields
         )
 
-    @staticmethod
     def sink_lambda(
+        self,
         in_struct: str,
-        fields
+        fields: Dict[str, str]
     ) -> str:
-        template = _ENV.get_template("sink_lambda.jinja2")
+        template = self._jinja_env.get_template("lambdas/sink_lambda.jinja2")
         return template.render(
             in_struct=in_struct,
             fields=fields

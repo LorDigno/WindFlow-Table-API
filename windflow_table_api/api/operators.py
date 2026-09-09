@@ -311,8 +311,6 @@ class GroupByOp(UnaryOperator):
         self._schema_out = schema
         self.aggregations = aggregations
 
-        
-
     def to_dict(self) -> Dict[str, Any]:
         return {
             "op_type": self.get_op_type().value,
