@@ -253,7 +253,7 @@ class WhereOp(UnaryOperator):
         if cond_type != DataTypes.BOOLEAN:
             raise TypeError(
                 f"La condizione di filtraggio deve restituire un valore BOOLEAN, "
-                f"ma l'espressione fornita restituisce il tipo: {cond_type.name}"
+                f"ma l'espressione fornita restituisce il tipo: {cond_type.value}"
             )
 
         super().__init__(schema_out=input_schema, input_schema=input_schema)
@@ -440,7 +440,7 @@ class SetOp(BinaryOperator):
 
         super().__init__(schema_out=tab1_schema, input_schema=tab1_schema)
         self.set_op_type = set_op_type
-        #salvo lo schema di tab2 per un'eventuale conversione nel C++
+        #salvo anche lo schema di tab2 per un'eventuale conversione nel C++
         self.tab2_schema = tab2_schema
 
     def get_op_type(self) -> OpType:

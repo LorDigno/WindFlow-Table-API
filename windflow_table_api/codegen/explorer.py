@@ -1,46 +1,11 @@
 from pathlib import Path
-from typing import List, Dict, Tuple
-from jinja2 import Environment, FileSystemLoader
+from typing import List, Dict
+from jinja2 import Environment
 from dataclasses import dataclass, field
-from .parser import OpNode
-from .schema_gen import SchemaGenerator, CppStruct, CppField
+from .schema_gen import SchemaGenerator, CppStruct
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator    
-from .utility import get_aggregate_default, parse_window, parse_interval, parse_duration_to_microseconds
-
-#---- Classi di input e output comuni alla visita di ogni specializzazione di OpNode
-
-@dataclass
-class VisitContext:
-    """Parametri passati dal chiamante al nodo durante la visita."""
-    #nome della pipe corrente
-    pipe: str
-
-    #struct già deduplicati passati dai parent come input per l'operazione corrente
-    parent_structs: List[CppStruct]     
-
-    #nome di variabili pipes che convergono nel nodo binario 
-    to_merge_pipes: List[str]    
-
-    #generatori di struct/espressioni/lambda necessari
-    sch_gen: SchemaGenerator
-    expr_tl: ExpressionTranslator
-    lambda_gen: LambdaGenerator
-
-    #operations_counter necessario alla creazione di variabili univoche
-    operations_counter: int      
-
-@dataclass
-class VisitResult:
-    """Informazioni restituite dalla visita di un nodo."""
-    out_struct: CppStruct
-
-    #stringa da accumulare alla pipe corrente
-    pipe_addition: str
-
-    #stringhe ricavate da jinja per i builder ricavati dal nodo (ordinati)
-    #attualmente un nodo può generare più operazioni (es intersect con map di tagging)
-    emitted_builders: List[str] = field(default_factory=list)
+from .operation_nodes import OpNode, VisitContext, VisitResult
 
 #---- Esploratore che coordina la visita dei nodi 
 

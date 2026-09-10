@@ -74,7 +74,7 @@ class Window:
 
         return {
             "type": self.window_type.name,
-            "kind": WindowKind.TUMBLE if self.is_tumble else WindowKind.SLIDING,
+            "kind": WindowKind.TUMBLE.value if self.is_tumble else WindowKind.SLIDING.value,
             "size": str(self.size) if isinstance(self.size, int) else self.size.to_dict(),
             "slide": str(self.slide) if isinstance(self.slide, int) else self.slide.to_dict(),
         }

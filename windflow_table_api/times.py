@@ -1,6 +1,7 @@
 from enum import Enum
+from typing import Dict
 
-class TimeUnits(Enum):
+class TimeUnits(str, Enum):
     """
     Rappresenta le unità di tempo supportate dalla Table API.
     """
@@ -12,18 +13,34 @@ class TimeUnits(Enum):
     HOURS = "HOURS"
     DAYS = "DAYS"
 
-    def to_microseconds(self, value: int) -> int:
-        """Converte un valore espresso in questa unità nei microsecondi attesi dal runtime C++[cite: 2, 7]."""
-        return value * _TO_MICROSECONDS[self.value]
+    @staticmethod
+    def to_microseconds(value: int, unit:str) -> int:
+        """Converte un valore espresso in questa unità nei microsecondi attesi dal runtime C++."""
+        mult = _TO_MICROSECONDS.get(unit)
+        if not mult:
+            raise KeyError(
+                f"Unità di tempo {unit} sconosciuta."
+            )
+        return value * mult
 
-_TO_MICROSECONDS = {
-      "MICROSECONDS": 1,
-      "MILLISECONDS": 1_000,
-      "SECONDS": 1_000_000,
-      "MINUTES": 60_000_000,
-      "HOURS": 3_600_000_000,
-      "DAYS": 86_400_000_000,
-  }
+    def __eq__(self, other):
+        if isinstance(other, TimeUnits):
+            return self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+
+    def __hash__(self):
+        return hash(self.value)
+
+#fatto come stringa -> int così che si possa usare con i campi già serializzati
+_TO_MICROSECONDS:Dict[str, int] = {
+    TimeUnits.MICROSECONDS: 1,
+    TimeUnits.MILLISECONDS: 1_000,
+    TimeUnits.SECONDS: 1_000_000,
+    TimeUnits.MINUTES: 60_000_000,
+    TimeUnits.HOURS: 3_600_000_000,
+    TimeUnits.DAYS: 86_400_000_000,
+}
 
 class TimeFormats(Enum):
     """

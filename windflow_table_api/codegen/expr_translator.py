@@ -1,7 +1,7 @@
 from typing import Any, Dict
 from jinja2 import Environment
 from .utility import OPERATOR_MAP
-from windflow_table_api import ExprType
+from windflow_table_api import ExprType, DataTypes, AggFuncType
 
 
 class ExpressionTranslator:
@@ -43,8 +43,8 @@ class ExpressionTranslator:
 
         template = self.jinja_env.get_template("expressions/col_ref.jinja2")
         return template.render(
-        input_var= input_var,
-        col_name= col_name
+            input_var= input_var,
+            col_name= col_name
         )
 
     def _translate_literal(self, expr_dict: Dict[str, Any]) -> str:
@@ -61,22 +61,22 @@ class ExpressionTranslator:
         val = expr_dict["value"]
         data_type = expr_dict.get("data_type")
 
-        if data_type == "BOOLEAN" or isinstance(val, bool):
+        if data_type == DataTypes.BOOLEAN.cpp_type or isinstance(val, bool):
             return "true" if val else "false"
 
-        if data_type == "STRING" or isinstance(val, str):
+        if data_type == DataTypes.STRING.cpp_type or isinstance(val, str):
             return f'std::string("{val}")'
 
-        if data_type == "FLOAT":
+        if data_type == DataTypes.FLOAT.cpp_type:
             return f"{float(val)}f"
 
-        if data_type == "DOUBLE" or isinstance(val, float):
+        if data_type == DataTypes.DOUBLE.cpp_type:
             return str(float(val))
 
-        if data_type == "BIGINT":
+        if data_type == DataTypes.BIGINT.cpp_type:
             return f"{int(val)}LL"
 
-        if data_type == "INT" or isinstance(val, int):
+        if data_type == DataTypes.INT.cpp_type:
             return str(int(val))
 
         raise ValueError(f"Tipo di letterale {data_type} sconosciuto.")
@@ -140,15 +140,15 @@ class ExpressionTranslator:
 
         agg_type = expr_dict["func"]
 
-        if agg_type == "COUNT":
+        if agg_type == AggFuncType.COUNT:
             return self._translate_count(expr_dict, output_var)
-        elif agg_type == "SUM":
+        elif agg_type == AggFuncType.SUM:
             return self._translate_sum(expr_dict, input_var, output_var)
-        elif agg_type == "MAX":
+        elif agg_type == AggFuncType.MAX:
             return self._translate_max(expr_dict, input_var, output_var)
-        elif agg_type == "MIN":
+        elif agg_type == AggFuncType.MIN:
             return self._translate_min(expr_dict, input_var, output_var)
-        elif agg_type == "AVG":
+        elif agg_type == AggFuncType.AVG:
             return self._translate_avg(expr_dict, output_var)
         return ""
 

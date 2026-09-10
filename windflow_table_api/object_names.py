@@ -33,6 +33,9 @@ class OpType(str, Enum):
     INTERSECT = "INTERSECT"
     INTERSECT_ALL = "INTERSECT_ALL"
 
+    def __repr__(self) -> str:
+        return str(self)
+
     def __str__(self) -> str:
         return self.value
 
@@ -89,9 +92,28 @@ class WindowType(str, Enum):
     TIME = "TIME"
     COUNT = "COUNT"
 
+    def __eq__(self, other) -> bool:
+        if isinstance(other, WindowType):
+            return self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+        return False
+
+    def __hash__(self):
+        return hash(self.value)
+
 class WindowKind(str, Enum):
     """Forma di avanzamento della finestra."""
 
     TUMBLE = "TUMBLE"
     SLIDING = "SLIDING"
-    
+
+    def __eq__(self, other) -> bool:
+        if isinstance(other, WindowKind):
+            return self.value == other.value
+        if isinstance(other, str):
+            return self.value == other
+        return False
+
+    def __hash__(self):
+        return hash(self.value)

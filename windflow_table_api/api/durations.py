@@ -59,7 +59,7 @@ class Duration:
 
     def to_microseconds(self) -> int:
         """Restituisce la durata normalizzata in microsecondi per WindFlow."""
-        return self.unit.to_microseconds(self.value)
+        return TimeUnits.to_microseconds(self.value, self.unit)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Duration):
