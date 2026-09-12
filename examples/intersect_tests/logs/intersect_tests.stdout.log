@@ -1,0 +1,15 @@
+[32mWindFlow Status Message: PipeGraph [intersect_tests] is running with 18 threads[0m
+--> DEFAULT (out-of-order) mode [32menabled[0m
+--> EVENT_TIME policy [32menabled[0m
+--> Backpressure [31mdisabled[0m
+--> Non-blocking queues [32menabled[0m
+--> Pinning of threads [32menabled[0m
+[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SINK] File intersect_tests_output0.csv aperto.
+[SINK0] File intersect_tests_output0.csv completato e chiuso.
+[SINK] File intersect_tests_output1.csv aperto.
+[SINK1] File intersect_tests_output1.csv completato e chiuso.
+[32mWindFlow Status Message: PipeGraph [intersect_tests] executed successfully[0m

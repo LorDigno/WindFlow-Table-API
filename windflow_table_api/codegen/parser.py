@@ -24,6 +24,30 @@ class JsonParser:
         self.root_nodes: Dict[str, OpNode] = {}
         self._node_counter = 0
 
+    def create_ast(self, query_id:str):
+        """
+        Metodo che avvia il parsing ricorsivo delle query richieste, rende il ParsedGraph finale.
+        Aggiunge il SinkOpNode alla fine ddell'ultima query.
+        """
+
+        graph = self._parse_query(query_id)
+        root_node = graph.target_root
+
+        #aggiunta del sink finale
+        sink_dict = {
+            "schema_out": root_node.schema_out,
+            "filename":f"{query_id}",
+            "op_type":OpType.SINK}
+        sink_id = self._gen_node_id(query_id, OpType.SINK)
+        sink_node = OpNodeFactory.create(sink_id, sink_dict)
+        sink_node.parents = [root_node]
+
+        return ParsedGraph(
+            query_id= query_id,
+            target_root= sink_node
+        )
+
+
     def _gen_node_id(self, query_id: str, op_type: str) -> str:
         """
         Genera l'id di un nodo in base alla sua operazione, 
@@ -33,7 +57,7 @@ class JsonParser:
         self._node_counter += 1
         return f"{query_id}_{op_type.lower()}_{self._node_counter}"
 
-    def parse_query(self, query_id: str) -> ParsedGraph:
+    def _parse_query(self, query_id: str) -> ParsedGraph:
         """
         Punto d'ingresso principale: carica <query_id>.json, traversa i nodi
         e restituisce il grafo ordinato topologicamente.
@@ -60,7 +84,7 @@ class JsonParser:
 
         return ParsedGraph(
             query_id=query_id,
-            target_root= root_node
+            target_root=root_node
         )
 
     def _build_node_recursive(self, query_id: str, op_dict: Dict[str, Any]) -> OpNode:
@@ -102,7 +126,7 @@ class JsonParser:
 
         #se non si è già eleaborata si esplora e si rende il root
         if source_id not in self.loaded_queries:
-            sub_dag = self.parse_query(source_id)
+            sub_dag = self._parse_query(source_id)
             return sub_dag.target_root
 
         #se la query è già stata visitata rendo la sua root (ovvero l'ultimo nodo)

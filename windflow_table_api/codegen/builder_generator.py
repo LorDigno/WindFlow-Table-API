@@ -185,7 +185,7 @@ class BuilderGenerator:
         self,
         var_name: str,
         in_struct: str,
-        filepath: str,
+        filename: str,
         formatter_func: str,
         op_name: str,
         par: int = 1,
@@ -195,7 +195,7 @@ class BuilderGenerator:
         return template.render(
             var_name=var_name,
             in_struct=in_struct,
-            filepath=filepath,
+            filepath=filename,
             formatter_func=formatter_func,
             header_str=header_str,
             op_name=op_name,

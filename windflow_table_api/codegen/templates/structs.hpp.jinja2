@@ -25,9 +25,9 @@ struct {{ s.struct_name }} {
     {{ s.struct_name }}(uint64_t _id) 
         : win_id(_id) {}
 
-{% if s.key_struct %}
-    {{ s.struct_name }}(const {{ s.key_struct.struct_name }}& _key, uint64_t _id) 
-        :{% for k in s.key_struct.fields %} {{ k.name }}(_key.{{ k.name }}),{% endfor %} win_id(_id) {}
+{% if s.win_key_struct %}
+    {{ s.struct_name }}(const {{ s.win_key_struct.struct_name }}& _key, uint64_t _id) 
+        :{% for k in s.win_key_struct.fields %} {{ k.name }}(_key.{{ k.name }}),{% endfor %} win_id(_id) {}
 {% endif %}
 {% endif %}
 

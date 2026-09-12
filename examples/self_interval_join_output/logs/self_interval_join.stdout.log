@@ -4,12 +4,12 @@
 --> Backpressure [31mdisabled[0m
 --> Non-blocking queues [32menabled[0m
 --> Pinning of threads [32menabled[0m
-[SRC1] File /home/user/TableAPI/data_streams/sensor_real_stream.csv aperto.
+[SRC0] File /home/user/TableAPI/data_streams/sensor_real_stream.csv aperto.
 [SRC1] File /home/user/TableAPI/data_streams/sensor_real_stream.csv aperto.
 [SRC0] File /home/user/TableAPI/data_streams/sensor_real_stream.csv aperto.
-[SRC0] File /home/user/TableAPI/data_streams/sensor_real_stream.csv aperto.
+[SRC1] File /home/user/TableAPI/data_streams/sensor_real_stream.csv aperto.
+[SINK] File self_interval_join_output0.csv aperto.
 [SINK] File self_interval_join_output1.csv aperto.
 [SINK1] File self_interval_join_output1.csv completato e chiuso.
-[SINK] File self_interval_join_output0.csv aperto.
 [SINK0] File self_interval_join_output0.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [self_interval_join] executed successfully[0m

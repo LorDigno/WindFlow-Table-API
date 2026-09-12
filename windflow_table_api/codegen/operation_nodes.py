@@ -416,17 +416,72 @@ class FromOpNode(OpNode):
             emitted_builders= [builder_str]
         )
 
-"""
-Eventuale nodo per il Sink che attualmente non esiste
 @dataclass(kw_only=True)
 class SinkOpNode(OpNode):
-    #""
-    #Nodo foglia terminale per l'emissione dei record.
-    #""
+    """
+    Nodo foglia terminale per l'emissione dei record.
+    Crea il file {query_id}_output.scv nella cartella di build.
+    """
 
-    sink_target: str = ""
-    output_path: Optional[str] = None
-"""
+    op_type: OpType = OpType.SINK
+    filename: str
+
+    @classmethod
+    def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> OpNode:
+        filename = op_dict.get("filename")
+        if not filename:
+            raise KeyError(
+                f"Chiave 'filename' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+            )
+
+        schema_out = op_dict.get("schema_out")
+        if not schema_out:
+            raise KeyError(
+                f"Chiave 'schema_out' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+            )
+
+        return cls(
+            node_id= node_id,
+            schema_out = schema_out,
+            filename = filename,
+        )
+
+    def visit(self, ctx: VisitContext) -> VisitResult:
+        #struct da stampare
+        parent_struct = ctx.parent_structs[0]
+
+        #preparazione dell'header
+        header_str = ",".join(f.name for f in parent_struct.fields)
+
+        #generazione della lambda
+        formatter_func = ctx.lambda_gen.sink_lambda(
+            parent_struct.struct_name,
+            fields= parent_struct.fields
+        )
+
+        #nome di variabile
+        ctx.operations_counter += 1
+        var_name = f"sink_{ctx.operations_counter}_op"
+
+        #genero il builder
+        builder_str =ctx.build_gen.sink_builder(
+            var_name=var_name,
+            filename=self.filename,
+            in_struct= parent_struct.struct_name,
+            formatter_func= formatter_func,
+            op_name= self.node_id,
+            par= ctx.par,
+            header_str= header_str
+        )
+
+        #aggiunta alla pipe        
+        pipe_str = f".add_sink({var_name})"
+
+        return VisitResult(
+            out_struct= parent_struct,
+            pipe_additions= {ctx.pipe: pipe_str},
+            emitted_builders= [builder_str]
+        )
 
 #---- Operazioni Unarie
 
@@ -809,7 +864,13 @@ class WindowGroupOpNode(GroupByNode, WindowNode):
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> WindowGroupOpNode:
         #parsing dei vari attributi della finestra
-        window:Dict[str, Any] = op_dict.get("window", {})
+        window = op_dict.get("window")
+        if window is None:
+            raise KeyError(
+                f"Chiave 'window' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+            )   
+        win_args = cls.extract_window(window, op_dict) 
+
         win_args:Dict[str, Any] = cls.extract_window(window, op_dict)           
 
         base_args:Dict[str, Any] = cls.extract_group_commons(node_id, op_dict)
@@ -877,7 +938,7 @@ class JoinNode(BinaryNode, ABC):
     @classmethod
     def extract_join_commons(cls, node_id:str, op_dict: Dict[str, Any]) -> Dict[str, Any]:
         keys = op_dict.get("keys")
-        if keys is not None:
+        if keys is None:
             raise KeyError(
                 f"Chiave 'keys' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
             )
@@ -1023,7 +1084,11 @@ class WindowJoinOpNode(JoinNode, WindowNode):
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> WindowJoinOpNode:
         #estrazione parametri di finestra
-        window = op_dict.get("window", {})
+        window = op_dict.get("attachment")
+        if window is None:
+            raise KeyError(
+                f"Chiave 'attachment' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+            )   
         win_args = cls.extract_window(window, op_dict) 
 
         base_args = cls.extract_join_commons(node_id, op_dict)
@@ -1089,17 +1154,23 @@ class IntervalJoinOpNode(JoinNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> IntervalJoinOpNode:
-        lower = op_dict.get("lower")
+        interval = op_dict.get("attachment")
+        if interval is None:
+            raise KeyError(
+                f"Chiave 'attachment' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+            )   
+
+        lower = interval.get("lower_bound")
         if lower is None:
             raise KeyError(
-                f"Chiave 'lower' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+                f"Chiave 'lower_bound' mancante nell'intervallo del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
             )   
         lower = OpNode.parse_duration(lower, op_dict)
 
-        upper = op_dict.get("upper")
+        upper = interval.get("upper_bound")
         if upper is None:
             raise KeyError(
-                f"Chiave 'upper' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
+                f"Chiave 'upper_bound' mancante nell'intervallo del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
             )   
         upper = OpNode.parse_duration(upper, op_dict)   
 
@@ -1338,6 +1409,7 @@ class OpNodeFactory:
     #dato il nome dell'operazione da fare rende il tipo da istanziare
     _REGISTRY: Dict[OpType, Type[OpNode]] = {
         OpType.FROM: FromOpNode,
+        OpType.SINK: SinkOpNode,
         #operatori unari
         OpType.WHERE: WhereOpNode,
         OpType.SELECT: SelectOpNode,

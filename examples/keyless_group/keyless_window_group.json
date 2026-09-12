@@ -1,0 +1,79 @@
+{
+    "query_id": "keyless_window_group",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "COUNT",
+                "data_type": "BIGINT",
+                "alias": "conteggio"
+            }
+        ],
+        "schema_in": {
+            "COUNT": "BIGINT"
+        },
+        "schema_out": {
+            "conteggio": "BIGINT"
+        },
+        "parents": [
+            {
+                "op_type": "WINDOW_GROUP_BY",
+                "keys": [],
+                "window": {
+                    "type": "TIME",
+                    "kind": "SLIDING",
+                    "size": {
+                        "value": 10,
+                        "unit": "MINUTES"
+                    },
+                    "slide": {
+                        "value": 5,
+                        "unit": "MINUTES"
+                    }
+                },
+                "schema_out": {
+                    "COUNT": "BIGINT"
+                },
+                "schema_in": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE",
+                    "humidity": "DOUBLE"
+                },
+                "aggregations": [
+                    {
+                        "expr_type": "AGGREGATE",
+                        "func": "COUNT",
+                        "data_type": "BIGINT",
+                        "target": null,
+                        "name": "COUNT",
+                        "alias": "conteggio"
+                    }
+                ],
+                "parents": [
+                    {
+                        "op_type": "FROM",
+                        "source_id": "sensor_source",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE"
+                        },
+                        "config": {
+                            "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
+                            "file_format": "CSV",
+                            "header": true,
+                            "time_col": {
+                                "name": "timestamp",
+                                "format": "ISO8601"
+                            },
+                            "order": true,
+                            "delay": null,
+                            "split_size": 0
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

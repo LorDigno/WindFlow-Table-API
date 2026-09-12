@@ -3,13 +3,13 @@ auto {{ var_name }} = Windowed_Group_Builder<{{ in_struct }}, {{ out_struct }}{%
     {{ lambda_func }}
 )
     .withName("{{ op_name }}")
-    .withParallelism({{ par }})
 {% if win_time %}
     .withTBWindow({{ win_size }}ULL, {{ win_slide }}ULL)
 {% else  %}
     .withCBWindow({{ win_size }}ULL, {{ win_slide }}ULL)
 {% endif %}
 {% if needs_key %}
+    .withParallelism({{ par }})
     .withKeyBy({{ key_lambda }})
     .build_keyed();
 {% else %}
@@ -20,8 +20,8 @@ auto {{ var_name }} = Global_Group_Builder<{{ in_struct }}, {{ out_struct }}{% i
     {{ lambda_func }}
 )
     .withName("{{ op_name }}")
-    .withParallelism({{ par }})
 {% if needs_key %}
+    .withParallelism({{ par }})
     .withKeyBy({{ key_lambda }})
     .build_keyed();
 {% else %}

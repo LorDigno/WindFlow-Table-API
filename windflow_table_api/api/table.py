@@ -246,10 +246,7 @@ class Table:
         Se si passa una finestra si ha semantica Windowed.
         Stato potenzialmente infinito in base al numero di valori unici per le chiavi.
         """
-
-        if not keys:
-            raise ValueError("È necessario specificare almeno una colonna come chiave di raggruppamento in group_by().")
-
+        
         draft = self.get_draft()
         group_op = GroupByOp(draft.current_schema, list(keys), window)
         draft.add_unary_operator(group_op)

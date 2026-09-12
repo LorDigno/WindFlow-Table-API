@@ -65,39 +65,39 @@ int main(int argc, char* argv[]) {
     return out;
 }
     )
-    .withName("renaming_for_selfjoin_select_4")
+    .withName("select_3_op")
     .withParallelism(2)
     .build();
 
-    auto map_4_op = Select_Builder<source_self_interval_join_from_3, self_interval_join_join_interval_2_struct_out>(
-        [](const source_self_interval_join_from_3& in) -> self_interval_join_join_interval_2_struct_out {
-    self_interval_join_join_interval_2_struct_out out;
+    auto left_unifier_4_op = Select_Builder<source_self_interval_join_from_3, source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out>(
+        [](const source_self_interval_join_from_3& in) -> source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
+    source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temperature = in.temperature;
     out.humidity = in.humidity;
     return out;
 }
     )
-    .withName("self_interval_join_join_interval_2_left_unifier")
+    .withName("left_unifier_4_op")
     .withParallelism(2)
     .build();
 
-    auto map_5_op = Select_Builder<renaming_for_selfjoin_select_4_struct_out, self_interval_join_join_interval_2_struct_out>(
-        [](const renaming_for_selfjoin_select_4_struct_out& in) -> self_interval_join_join_interval_2_struct_out {
-    self_interval_join_join_interval_2_struct_out out;
+    auto right_unifier_5_op = Select_Builder<renaming_for_selfjoin_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out>(
+        [](const renaming_for_selfjoin_select_4_struct_out& in) -> source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
+    source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temp = in.temp;
     out.hum = in.hum;
     return out;
 }
     )
-    .withName("self_interval_join_join_interval_2_right_unifier")
+    .withName("right_unifier_5_op")
     .withParallelism(2)
     .build();
 
-    auto join_6_op = Table_Interval_Join_Builder<self_interval_join_join_interval_2_struct_out, self_interval_join_join_interval_2_struct_out, self_interval_join_join_interval_2_key_struct>(
-    [](const self_interval_join_join_interval_2_struct_out& left, const self_interval_join_join_interval_2_struct_out& right) -> self_interval_join_join_interval_2_struct_out {
-    self_interval_join_join_interval_2_struct_out out;
+    auto join_6_op = Table_Interval_Join_Builder<source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out, self_interval_join_join_interval_2_key_struct>(
+    [](const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& left, const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& right) -> source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
+    source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out out;
     out.sensor_id = left.sensor_id;
     out.temperature = left.temperature;
     out.humidity = left.humidity;
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
 )
     .withName("self_interval_join_join_interval_2")
     .withParallelism(2)
-    .withKeyBy([](const self_interval_join_join_interval_2_struct_out& in) -> self_interval_join_join_interval_2_key_struct {
+    .withKeyBy([](const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& in) -> self_interval_join_join_interval_2_key_struct {
     self_interval_join_join_interval_2_key_struct out;
     out.sensor_id = in.sensor_id;
     return out;
@@ -118,8 +118,8 @@ int main(int argc, char* argv[]) {
     .build_keyed();
 
 
-    auto select_7_op = Select_Builder<self_interval_join_join_interval_2_struct_out, self_interval_join_select_1_struct_out>(
-        [](const self_interval_join_join_interval_2_struct_out& in) -> self_interval_join_select_1_struct_out {
+    auto select_7_op = Select_Builder<source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out, self_interval_join_select_1_struct_out>(
+        [](const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& in) -> self_interval_join_select_1_struct_out {
     self_interval_join_select_1_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temperature = in.temperature;
@@ -127,7 +127,7 @@ int main(int argc, char* argv[]) {
     return out;
 }
     )
-    .withName("self_interval_join_select_1")
+    .withName("select_7_op")
     .withParallelism(2)
     .build();
 
@@ -135,9 +135,9 @@ int main(int argc, char* argv[]) {
     [](const self_interval_join_select_1_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.temperature << ","; os << record.hum;}
 )
-    .withName("self_interval_join_sink")
+    .withName("self_interval_join_sink_6")
     .withParallelism(2)
-    .withHeader("sensor_id, temperature, hum")
+    .withHeader("sensor_id,temperature,hum")
     .build();
 
     //-----     PIPES AND TOPOLOGY  ------
@@ -147,9 +147,9 @@ int main(int argc, char* argv[]) {
         , wf::Time_Policy_t::EVENT_TIME 
     );
 
-    auto& pipe_1 = topology.add_source(from_1_op).add(map_4_op);
+    auto& pipe_1 = topology.add_source(from_1_op).add(left_unifier_4_op);
 
-    auto& pipe_2 = topology.add_source(from_2_op).add(select_3_op).add(map_5_op);
+    auto& pipe_2 = topology.add_source(from_2_op).add(select_3_op).add(right_unifier_5_op);
 
     std::vector<wf::MultiPipe*> pipe_0_branches = {&pipe_1, &pipe_2};
 auto* pipe_0_pointer = wf::merge_multipipes_func(&topology, pipe_0_branches);

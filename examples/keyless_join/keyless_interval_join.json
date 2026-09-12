@@ -1,0 +1,102 @@
+{
+    "query_id": "keyless_interval_join",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "sensor_id",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "hum",
+                "data_type": "DOUBLE"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "temperature",
+                "data_type": "DOUBLE"
+            }
+        ],
+        "schema_in": {
+            "sensor_id": "STRING",
+            "temperature": "DOUBLE",
+            "humidity": "DOUBLE",
+            "sens": "STRING",
+            "temp": "DOUBLE",
+            "hum": "DOUBLE"
+        },
+        "schema_out": {
+            "sensor_id": "STRING",
+            "hum": "DOUBLE",
+            "temperature": "DOUBLE"
+        },
+        "parents": [
+            {
+                "op_type": "JOIN_INTERVAL",
+                "keys": [],
+                "attachment": {
+                    "lower_bound": {
+                        "value": -5,
+                        "unit": "MINUTES"
+                    },
+                    "upper_bound": {
+                        "value": 5,
+                        "unit": "MINUTES"
+                    }
+                },
+                "tab1_schema": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE",
+                    "humidity": "DOUBLE"
+                },
+                "tab2_schema": {
+                    "sens": "STRING",
+                    "temp": "DOUBLE",
+                    "hum": "DOUBLE"
+                },
+                "schema_out": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE",
+                    "humidity": "DOUBLE",
+                    "sens": "STRING",
+                    "temp": "DOUBLE",
+                    "hum": "DOUBLE"
+                },
+                "parents": [
+                    {
+                        "op_type": "FROM",
+                        "source_id": "sensor_source",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE"
+                        },
+                        "config": {
+                            "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
+                            "file_format": "CSV",
+                            "header": true,
+                            "time_col": {
+                                "name": "timestamp",
+                                "format": "ISO8601"
+                            },
+                            "order": true,
+                            "delay": null,
+                            "split_size": 0
+                        }
+                    },
+                    {
+                        "op_type": "TAB_REF",
+                        "source_id": "rerenamed_src",
+                        "schema_out": {
+                            "sens": "STRING",
+                            "temp": "DOUBLE",
+                            "hum": "DOUBLE"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

@@ -1,0 +1,86 @@
+{
+    "query_id": "union_tests",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "sensor_id",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "temperature",
+                "data_type": "DOUBLE"
+            }
+        ],
+        "schema_in": {
+            "sensor_id": "STRING",
+            "temperature": "DOUBLE"
+        },
+        "schema_out": {
+            "sensor_id": "STRING",
+            "temperature": "DOUBLE"
+        },
+        "parents": [
+            {
+                "op_type": "UNION_ALL",
+                "schema_out": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE"
+                },
+                "tab1_schema": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE"
+                },
+                "tab2_schema": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE"
+                },
+                "parents": [
+                    {
+                        "op_type": "UNION",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE"
+                        },
+                        "tab1_schema": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE"
+                        },
+                        "tab2_schema": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE"
+                        },
+                        "parents": [
+                            {
+                                "op_type": "TAB_REF",
+                                "source_id": "sensor_source_query_5",
+                                "schema_out": {
+                                    "sensor_id": "STRING",
+                                    "temperature": "DOUBLE"
+                                }
+                            },
+                            {
+                                "op_type": "TAB_REF",
+                                "source_id": "sensor_source_query_6",
+                                "schema_out": {
+                                    "sensor_id": "STRING",
+                                    "temperature": "DOUBLE"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "op_type": "TAB_REF",
+                        "source_id": "sensor_source_query_7",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE"
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

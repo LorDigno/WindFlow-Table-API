@@ -16,7 +16,7 @@ def generate_code(
 
     #parsing del json
     parser = JsonParser(json_dir=json_dir)
-    parsed_graph = parser.parse_query(query_id)
+    parsed_graph = parser.create_ast(query_id)
 
     #setup di jinja
     templates_dir = Path(__file__).parent / "templates" 
@@ -28,12 +28,7 @@ def generate_code(
 
     #esplorazione del grafo
     explorer = GraphExplorer( jinja_env, json_dir, parallelism)
-    final_struct = explorer.visit(parsed_graph.target_root)
-    explorer.add_sink(
-        filepath= f"{query_id}",
-        final_struct= final_struct,
-        sink_name= f"{query_id}_sink"
-    )
+    explorer.visit(parsed_graph.target_root)
 
     #scrive l'header degli struct
     explorer.sch_gen.write_header_file(json_dir , query_id)

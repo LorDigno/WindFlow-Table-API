@@ -9,6 +9,7 @@ class CppField:
     """Rappresenta un singolo campo all'interno dello struct C++."""
 
     name: str
+    json_type: str
     cpp_type: str
     default: Optional[str] = None
 
@@ -85,7 +86,7 @@ class SchemaGenerator:
 
         #aggiungiamo il win_id se necessario
         if needs_win and "win_id" not in schema_copy:
-            schema_copy["win_id"] = DataTypes.UBIGINT.cpp_type
+            schema_copy["win_id"] = DataTypes.UBIGINT
 
         #costruzione dei field
         cpp_fields: List[CppField] = []
@@ -98,11 +99,19 @@ class SchemaGenerator:
                 default = "0"    
 
             cpp_fields.append(
-                CppField(name=field_name, cpp_type=self.map_type(json_type), default=default)
+                CppField(
+                    name=field_name, 
+                    json_type= json_type,
+                    cpp_type=self.map_type(json_type), 
+                    default=default
+                )
             )
 
         #struct temporaneo per verificare la presenza di uno equivalente
-        temp_struct = CppStruct(struct_name="", fields=cpp_fields, needs_hash=needs_hash)
+        temp_struct = CppStruct(
+            struct_name="", 
+            fields=cpp_fields
+        )
         signature = temp_struct.canonical_signature
 
         #controllo dell'equivalenza
@@ -194,9 +203,9 @@ class SchemaGenerator:
 
         joined_dict = {}
         for f in first.fields:
-            joined_dict[f.name] = f.cpp_type
+            joined_dict[f.name] = f.json_type
         for f in second.fields:
-            joined_dict[f.name] = f.cpp_type
+            joined_dict[f.name] = f.json_type
 
         out = self.get_or_create_struct(
             schema_dict= joined_dict,

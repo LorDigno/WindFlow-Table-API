@@ -1,0 +1,58 @@
+{
+    "query_id": "renamed_src",
+    "root": {
+        "op_type": "SELECT",
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "name": "sensor_id",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "temperature",
+                "data_type": "DOUBLE",
+                "alias": "temp"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "humidity",
+                "data_type": "DOUBLE",
+                "alias": "hum"
+            }
+        ],
+        "schema_in": {
+            "sensor_id": "STRING",
+            "temperature": "DOUBLE",
+            "humidity": "DOUBLE"
+        },
+        "schema_out": {
+            "sensor_id": "STRING",
+            "temp": "DOUBLE",
+            "hum": "DOUBLE"
+        },
+        "parents": [
+            {
+                "op_type": "FROM",
+                "source_id": "sensor_source",
+                "schema_out": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE",
+                    "humidity": "DOUBLE"
+                },
+                "config": {
+                    "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
+                    "file_format": "CSV",
+                    "header": true,
+                    "time_col": {
+                        "name": "timestamp",
+                        "format": "ISO8601"
+                    },
+                    "order": true,
+                    "delay": null,
+                    "split_size": 0
+                }
+            }
+        ]
+    }
+}

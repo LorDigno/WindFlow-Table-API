@@ -1,0 +1,102 @@
+#ifndef WINDOW_TESTS_STRUCTS_HPP
+#define WINDOW_TESTS_STRUCTS_HPP
+
+#include <string>
+#include <cstdint>
+#include <functional>
+#include <limits>
+
+// ============================================================================
+// Struct: source_window_tests_from_4
+// ============================================================================
+struct source_window_tests_from_4 {
+    std::string sensor_id;
+    double temperature;
+    double humidity;
+
+
+};
+
+
+// ============================================================================
+// Struct: renamed_src_select_5_struct_out
+// ============================================================================
+struct renamed_src_select_5_struct_out {
+    std::string sensor_id;
+    double temp;
+    double hum;
+
+
+};
+
+
+// ============================================================================
+// Struct: source_window_tests_from_4_unified_renamed_src_select_5_struct_out
+// ============================================================================
+struct source_window_tests_from_4_unified_renamed_src_select_5_struct_out {
+    std::string sensor_id;
+    double temperature;
+    double humidity;
+    double temp;
+    double hum;
+
+
+};
+
+
+// ============================================================================
+// Struct: window_tests_join_window_3_key_struct
+// ============================================================================
+struct window_tests_join_window_3_key_struct {
+    std::string sensor_id;
+
+
+    bool operator==(const window_tests_join_window_3_key_struct& other) const {
+        return sensor_id == other.sensor_id;
+    }
+};
+
+namespace std {
+    template<>
+    struct hash<window_tests_join_window_3_key_struct> {
+        size_t operator()(const window_tests_join_window_3_key_struct& k) const {
+            size_t h = 0;
+            h ^= std::hash<std::string>{}(k.sensor_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
+            return h;
+        }
+    };
+}
+
+// ============================================================================
+// Struct: window_tests_window_group_by_2_struct_out
+// ============================================================================
+struct window_tests_window_group_by_2_struct_out {
+    std::string sensor_id;
+    int64_t COUNT = 0; 
+    double SUM_temperature = 0.0; 
+    double AVG_temperature = 0.0; 
+    uint64_t win_id = 0; 
+
+    window_tests_window_group_by_2_struct_out() = default;
+
+    window_tests_window_group_by_2_struct_out(uint64_t _id) 
+        : win_id(_id) {}
+
+    window_tests_window_group_by_2_struct_out(const window_tests_join_window_3_key_struct& _key, uint64_t _id) 
+        : sensor_id(_key.sensor_id), win_id(_id) {}
+
+};
+
+
+// ============================================================================
+// Struct: window_tests_select_1_struct_out
+// ============================================================================
+struct window_tests_select_1_struct_out {
+    std::string sensor_id;
+    double media;
+
+
+};
+
+
+#endif // WINDOW_TESTS_STRUCTS_HPP

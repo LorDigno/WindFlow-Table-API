@@ -1,0 +1,13 @@
+[32mWindFlow Status Message: PipeGraph [unary_simple_test] is running with 12 threads[0m
+--> DEFAULT (out-of-order) mode [32menabled[0m
+--> EVENT_TIME policy [32menabled[0m
+--> Backpressure [31mdisabled[0m
+--> Non-blocking queues [32menabled[0m
+--> Pinning of threads [32menabled[0m
+[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SINK] File unary_simple_test_output1.csv aperto.
+[SINK1] File unary_simple_test_output1.csv completato e chiuso.
+[SINK] File unary_simple_test_output0.csv aperto.
+[SINK0] File unary_simple_test_output0.csv completato e chiuso.
+[32mWindFlow Status Message: PipeGraph [unary_simple_test] executed successfully[0m

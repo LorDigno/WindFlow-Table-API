@@ -4,8 +4,8 @@ auto {{ var_name }} = Intersect_All_Builder<{{ in_struct }}>()
 auto {{ var_name }} = Intersect_Builder<{{ in_struct }}>()
 {% endif %}
     .withName("{{ op_name }}")
-    .withParallelism({{ par }})
 {% if par > 1 %}
+    .withParallelism({{ par }})
     .build_keyed();
 {% else %}
     .build();
