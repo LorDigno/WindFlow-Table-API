@@ -300,7 +300,7 @@ class GroupByOp(UnaryOperator):
 
     def get_op_type(self) -> OpType:
         if self.window is None:
-            return OpType.GROUP_BY
+            return OpType.GLOBAL_GROUP_BY
         return OpType.WINDOW_GROUP_BY
 
     def set_aggregations_and_schema(
@@ -353,12 +353,7 @@ class JoinOp(BinaryOperator):
         tab1_schema: Schema,
         tab2_schema: Schema,
         attachment: Union[Window, Interval]
-    ) -> None:
-        if len(keys) < 1:
-            raise  ValueError(
-                f"L'operazione di join è supportata solo su con almeno una chiave."
-            )
-                
+    ) -> None:                
         if isinstance(attachment, Window) and attachment.window_type == WindowType.COUNT:
             raise TypeError(
                 f"L'operazione di window_join è supportata solo su finestre temporali! "

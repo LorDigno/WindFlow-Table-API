@@ -24,7 +24,7 @@ class CppStruct:
     fields: List[CppField]
     needs_hash: bool = False
     needs_win: bool = False
-    key_struct: Optional['CppStruct'] = None
+    win_key_struct: Optional['CppStruct'] = None
     
     @property
     def canonical_signature(self) -> Tuple[Tuple[str, str], ...]:
@@ -72,7 +72,7 @@ class SchemaGenerator:
         name_hint: str = "TupleStruct", 
         needs_hash: bool = False,
         needs_win: bool = False,
-        key_struct: Optional[CppStruct] = None,
+        win_key_struct: Optional[CppStruct] = None,
         defaults: Optional[Dict[str, str]] = None
     ) -> CppStruct:
         """
@@ -116,7 +116,7 @@ class SchemaGenerator:
             #aggiunge la necessità della chiave e della finestra
             if needs_win and not cached_struct.needs_win:    
                 cached_struct.needs_win = True
-                cached_struct.key_struct = key_struct
+                cached_struct.win_key_struct = win_key_struct
 
             return cached_struct    
 
@@ -127,7 +127,7 @@ class SchemaGenerator:
             fields=cpp_fields, 
             needs_hash=needs_hash,
             needs_win=needs_win,
-            key_struct=key_struct
+            win_key_struct=win_key_struct
         )
         
         self._struct_cache[signature] = real_struct

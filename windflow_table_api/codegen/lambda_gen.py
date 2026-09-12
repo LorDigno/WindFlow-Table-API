@@ -1,5 +1,6 @@
-from typing import Dict, List, Tuple, Any, Tuple
+from typing import Dict, List, Tuple, Any, Tuple, Optional
 from jinja2 import Environment
+from .schema_gen import CppField
 
 class LambdaGenerator:
     """
@@ -77,22 +78,25 @@ class LambdaGenerator:
     def parser_lambda(
         self,
         struct_out: str,
-        time_col_dict: Dict[str, Any],
-        ordered_fields: List[Dict[str, Any]]
+        ordered_fields: List[Dict[str, Any]],
+        time_col_name: Optional[str] = None,
+        time_format: Optional[str] = None,
     ) -> str:
         template = self._jinja_env.get_template("lambdas/parser_lambda.jinja2")
         return template.render(
             out_struct=struct_out,
-            time_col=time_col_dict,
+            time_col_name= time_col_name,
+            time_col_format= time_format,
             fields=ordered_fields
         )
 
     def sink_lambda(
         self,
         in_struct: str,
-        fields: Dict[str, str]
+        fields: List[CppField]
     ) -> str:
         template = self._jinja_env.get_template("lambdas/sink_lambda.jinja2")
+
         return template.render(
             in_struct=in_struct,
             fields=fields

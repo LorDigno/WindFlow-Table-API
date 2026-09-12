@@ -6,6 +6,7 @@ from .schema_gen import SchemaGenerator, CppStruct
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator    
 from .operation_nodes import OpNode, VisitContext, VisitResult
+from .builder_generator import BuilderGenerator
 
 #---- Esploratore che coordina la visita dei nodi 
 
@@ -24,11 +25,14 @@ class GraphExplorer:
         """
         Inizializza l'esploratore e i generatori sull'ambiente dato (aperto in condegen/templates/).
         """
-        
-        #parametri dell'ambiente
+
+        #genratori via templating
         self.sch_gen = SchemaGenerator(jinja_env)
         self.expr_tl = ExpressionTranslator(jinja_env)
         self.lambda_gen = LambdaGenerator(jinja_env)
+        self.build_gen = BuilderGenerator(jinja_env)
+
+        #parametri dell'ambiente
         self.output_dir = output_dir
         self.parallelism = parallelism
 
@@ -78,7 +82,9 @@ class GraphExplorer:
             sch_gen= self.sch_gen,
             expr_tl= self.expr_tl,
             lambda_gen= self.lambda_gen,
-            operations_counter= self.operations_counter
+            build_gen= self.build_gen,
+            operations_counter= self.operations_counter,
+            par= self.parallelism
         )
 
         #corpo della visita, da implementare diversamente in base all'operatore
@@ -89,7 +95,8 @@ class GraphExplorer:
         if not current_pipe in self.pipe_order:
             self.pipe_order.append(current_pipe)
             self.pipes[current_pipe] = ""
-        self.pipes[current_pipe] += result.pipe_addition
+        for pipe_name in result.pipe_additions:
+            self.pipes[pipe_name] += result.pipe_additions[pipe_name]
 
         #registro tutti i buider necessari all'operazione in ordine
         for b_string in result.emitted_builders:
@@ -100,8 +107,8 @@ class GraphExplorer:
 
         return result.out_struct
         
-#---- metodi pre refactoring di visita dei nodi 
-"""
+    #---- metodi pre refactoring di visita dei nodi 
+    """
     def _visit_from(self, node: OpNode, pipe: str):
         #dati
         config = node.raw_dict.get("config", {})
@@ -631,6 +638,7 @@ class GraphExplorer:
         self.builders.append(builder)
 
         self.pipes[pipe] += f".add({var_name})"
+    """
 
     def add_sink(
         self,
@@ -640,25 +648,25 @@ class GraphExplorer:
         pipe: str = "pipe_0",
         sink_name: str = "Table_Sink"
     ) -> None:
-        
+        """
         Genera il Table_Sink_Builder tipizzato sull'ultimo struct del DAG,
         lo registra in self.builders e chiude la catena della pipe specificata.
+        """
         
         #preparazione dell'header
         header_str = ", ".join(f.name for f in final_struct.fields) if has_header else None
 
         #generazione della lambda
-        formatter_func = LambdaGenerator.sink_lambda(
+        formatter_func = self.lambda_gen.sink_lambda(
             final_struct.struct_name,
-            fields= [{"name": f.name} for f in final_struct.fields]
+            fields= final_struct.fields
         )
 
         self.node_counter += 1
         var_name = f"sink_{self.node_counter}_op"
 
         #genero il builder
-        builder_template = self._jinja_env.get_template("sink_builder.jinja2")
-        builder_code = builder_template.render(
+        builder_code = self.build_gen.sink_builder(
             var_name=var_name,
             in_struct=final_struct.struct_name,
             filepath=filepath,
@@ -671,4 +679,4 @@ class GraphExplorer:
 
         #aggiunta alla pipe        
         self.pipes[pipe] += f".add_sink({var_name})"
-"""
+        

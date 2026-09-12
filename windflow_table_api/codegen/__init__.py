@@ -18,6 +18,7 @@ from .utility import (
 from .lambda_gen import LambdaGenerator
 from .explorer import GraphExplorer, VisitContext, VisitResult
 from .code_generator import generate_code
+from .builder_generator import BuilderGenerator
 
 __all__ = [
     "OpNode",
@@ -31,6 +32,7 @@ __all__ = [
     "TYPE_MAP",
     "OPERATOR_MAP",
     "LambdaGenerator",
+    "BuilderGenerator",
     "GraphExplorer",
     "VisitContext",
     "VisitResult",

@@ -20,7 +20,7 @@ class OpType(str, Enum):
     DISTINCT = "DISTINCT"
 
     #raggruppamennti
-    GROUP_BY = "GROUP_BY" #globale
+    GLOBAL_GROUP_BY = "GLOBAL_GROUP_BY"
     WINDOW_GROUP_BY = "WINDOW_GROUP_BY"
 
     #congiunzioni   
