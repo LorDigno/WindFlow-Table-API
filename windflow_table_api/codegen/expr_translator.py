@@ -61,22 +61,22 @@ class ExpressionTranslator:
         val = expr_dict["value"]
         data_type = expr_dict.get("data_type")
 
-        if data_type == DataTypes.BOOLEAN.cpp_type or isinstance(val, bool):
+        if data_type == DataTypes.BOOLEAN or isinstance(val, bool):
             return "true" if val else "false"
 
-        if data_type == DataTypes.STRING.cpp_type or isinstance(val, str):
+        if data_type == DataTypes.STRING or isinstance(val, str):
             return f'std::string("{val}")'
 
-        if data_type == DataTypes.FLOAT.cpp_type:
+        if data_type == DataTypes.FLOAT:
             return f"{float(val)}f"
 
-        if data_type == DataTypes.DOUBLE.cpp_type:
+        if data_type == DataTypes.DOUBLE:
             return str(float(val))
 
-        if data_type == DataTypes.BIGINT.cpp_type:
+        if data_type == DataTypes.BIGINT:
             return f"{int(val)}LL"
 
-        if data_type == DataTypes.INT.cpp_type:
+        if data_type == DataTypes.INT:
             return str(int(val))
 
         raise ValueError(f"Tipo di letterale {data_type} sconosciuto.")

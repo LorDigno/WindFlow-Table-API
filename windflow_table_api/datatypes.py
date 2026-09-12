@@ -1,5 +1,6 @@
 from __future__ import annotations
 from enum import Enum
+from typing import Dict
 
 class DataTypes(str, Enum):
     """
@@ -76,7 +77,7 @@ _NUMERIC_PRIORITY = {
     DataTypes.DOUBLE: 4,
 }
 
-TYPE_TRANSLATION = {
+TYPE_TRANSLATION: Dict[str, str] = {
     #stringhe
     DataTypes.STRING: "std::string",
 

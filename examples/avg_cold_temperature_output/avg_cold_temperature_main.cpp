@@ -46,7 +46,7 @@ int main(int argc, char* argv[]) {
     auto distinct_3_op = Distinct_Builder<source_cold_and_dry_from_6, source_cold_and_dry_from_6>()
     .withName("cold_and_dry_distinct_4")
     .withParallelism(2)     
-    .withKeyBy([](const source_cold_and_dry_from_6& in) -> source_cold_and_dry_from_6{ return in; })
+    .withKeyBy([](const source_cold_and_dry_from_6& in) -> source_cold_and_dry_from_6 { return in; })
     .build_keyed();
 
 
@@ -59,12 +59,12 @@ int main(int argc, char* argv[]) {
     return out;
 }
     )
-    .withName("cold_and_dry_select_3")
+    .withName("select_4_op")
     .withParallelism(2)
     .build();
 
-    auto group_5_op = Global_Group_Builder<source_cold_and_dry_from_6, avg_cold_temperature_group_by_2_struct_out, avg_cold_temperature_group_by_2_key_struct>(
-    [](const source_cold_and_dry_from_6& in, avg_cold_temperature_group_by_2_struct_out& out) -> void {
+    auto global_group_5_op = Global_Group_Builder<source_cold_and_dry_from_6, avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_global_group_by_2_key_struct>(
+    [](const source_cold_and_dry_from_6& in, avg_cold_temperature_global_group_by_2_struct_out& out) -> void {
     out.sensor_id = in.sensor_id;
 
     out.COUNT += 1;
@@ -72,25 +72,25 @@ int main(int argc, char* argv[]) {
     out.AVG_temperature = out.SUM_temperature / out.COUNT ;
 }
 )
-    .withName("avg_cold_temperature_group_by_2")
+    .withName("avg_cold_temperature_global_group_by_2")
     .withParallelism(2)
-    .withKeyBy([](const source_cold_and_dry_from_6& in) -> avg_cold_temperature_group_by_2_key_struct {
-    avg_cold_temperature_group_by_2_key_struct out;
+    .withKeyBy([](const source_cold_and_dry_from_6& in) -> avg_cold_temperature_global_group_by_2_key_struct {
+    avg_cold_temperature_global_group_by_2_key_struct out;
     out.sensor_id = in.sensor_id;
     return out;
 })
     .build_keyed();
 
 
-    auto select_6_op = Select_Builder<avg_cold_temperature_group_by_2_struct_out, avg_cold_temperature_select_1_struct_out>(
-        [](const avg_cold_temperature_group_by_2_struct_out& in) -> avg_cold_temperature_select_1_struct_out {
+    auto select_6_op = Select_Builder<avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_select_1_struct_out>(
+        [](const avg_cold_temperature_global_group_by_2_struct_out& in) -> avg_cold_temperature_select_1_struct_out {
     avg_cold_temperature_select_1_struct_out out;
     out.sensor_id = in.sensor_id;
     out.avg_temp = in.AVG_temperature;
     return out;
 }
     )
-    .withName("avg_cold_temperature_select_1")
+    .withName("select_6_op")
     .withParallelism(2)
     .build();
 
@@ -110,7 +110,7 @@ int main(int argc, char* argv[]) {
         , wf::Time_Policy_t::EVENT_TIME 
     );
 
-    auto& pipe_0 = topology.add_source(from_1_op).add(where_2_op).add(distinct_3_op).add(select_4_op).add(group_5_op).add(select_6_op).add_sink(sink_7_op);
+    auto& pipe_0 = topology.add_source(from_1_op).add(where_2_op).add(distinct_3_op).add(select_4_op).add(global_group_5_op).add(select_6_op).add_sink(sink_7_op);
 
     topology.run();
     return 0;

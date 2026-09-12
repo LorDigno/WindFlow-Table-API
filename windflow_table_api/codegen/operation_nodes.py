@@ -2,7 +2,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union, Type, Tuple
 from abc import abstractmethod, ABC
-from windflow_table_api import OpType, WindowKind, WindowType, TimeUnits, FileFormat, TimeFormats
+from ..object_names import WindowType, WindowKind, OpType
+from ..times import TimeFormats, TimeUnits
 from .schema_gen import SchemaGenerator, CppStruct, CppField
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator

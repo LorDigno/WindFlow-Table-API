@@ -1,16 +1,6 @@
 from typing import Dict, Any, Tuple
 from enum import Enum
-
-#mappa dei tipi logici coi rispettivi tipi C++
-TYPE_MAP: Dict[str, str] = {
-        "INT": "int32_t",
-        "BIGINT": "int64_t",
-        "UBIGINT": "uint64_t",         #usato per i window id, non esposto all'utente
-        "FLOAT": "float",
-        "DOUBLE": "double",
-        "STRING": "std::string",
-        "BOOLEAN": "bool",
-    }
+from ..datatypes import TYPE_TRANSLATION
 
 #mappa degli operatori logici/aritmetici tra JSON e C++
 OPERATOR_MAP: Dict[str, str] = {
@@ -56,11 +46,11 @@ def get_aggregate_default(func_type: str, json_type: str) -> str:
     """
     Restituisce la stringa del valore di default C++ per un dato aggregato.
     """
-    
-    cpp_type = TYPE_MAP[json_type]
+
+    cpp_type = TYPE_TRANSLATION[json_type]
 
     if func_type == "SUM":
-        if json_type in ("DOUBLE", "FLOAT"):
+        if cpp_type in ("double", "float"):
             return "0.0"
         return "0"
 

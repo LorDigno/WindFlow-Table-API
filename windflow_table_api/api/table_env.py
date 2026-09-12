@@ -6,8 +6,6 @@ from .schema import Schema
 from .table import Table, Query
 from .windows import Interval, WindowType
 from .file_config import InputFileConfiguration
-from windflow_table_api.runtime import Executor
-from windflow_table_api.codegen import generate_code
 from .job_handle import JobHandle
 from windflow_table_api import TimePolicy
 import json
@@ -236,6 +234,9 @@ class TableEnvironment:
         Questo potrebbe portare problemi se tale file sta venendo parsato per un'altra query avviata precedentemente.
         Rende un oggetto JobHandle per il monitoraggio. 
         """
+        #lazy import per evitare import circolari
+        from windflow_table_api.runtime import Executor
+        from windflow_table_api.codegen import generate_code
 
         #trovo tutte le query necessarie all'esecuzione di quella richiesta
         referenced_ids: Set[str] = set()

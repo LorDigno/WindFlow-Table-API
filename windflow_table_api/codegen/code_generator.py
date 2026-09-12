@@ -18,12 +18,16 @@ def generate_code(
     parser = JsonParser(json_dir=json_dir)
     parsed_graph = parser.parse_query(query_id)
 
-    #creazione degli oggetti di traduzione
-    s_gen = SchemaGenerator()
-    e_tl = ExpressionTranslator()
+    #setup di jinja
+    templates_dir = Path(__file__).parent / "templates" 
+    jinja_env = Environment(
+        loader=FileSystemLoader(templates_dir),
+        trim_blocks=True,
+        lstrip_blocks=True
+    )
 
     #esplorazione del grafo
-    explorer = GraphExplorer(s_gen, e_tl, json_dir, parallelism)
+    explorer = GraphExplorer( jinja_env, json_dir, parallelism)
     final_struct = explorer.visit(parsed_graph.target_root)
     explorer.add_sink(
         filepath= f"{query_id}",
@@ -32,15 +36,7 @@ def generate_code(
     )
 
     #scrive l'header degli struct
-    s_gen.write_header_file(json_dir , query_id)
-
-    #setup di jinja
-    templates_dir = Path(__file__).parent / "templates" 
-    jinja_env = Environment(
-        loader=FileSystemLoader(templates_dir),
-        trim_blocks=True,
-        lstrip_blocks=True
-    )
+    explorer.sch_gen.write_header_file(json_dir , query_id)
 
     #generazione del main
     template = jinja_env.get_template("main.cpp.jinja2")

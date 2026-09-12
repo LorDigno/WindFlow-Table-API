@@ -662,8 +662,8 @@ class GraphExplorer:
             fields= final_struct.fields
         )
 
-        self.node_counter += 1
-        var_name = f"sink_{self.node_counter}_op"
+        self.operations_counter += 1
+        var_name = f"sink_{self.operations_counter}_op"
 
         #genero il builder
         builder_code = self.build_gen.sink_builder(

@@ -162,7 +162,7 @@ class ColRefExpression(Expression):
         res = {
             "expr_type": self.get_expr_type().value,
             "name": self.column_name,
-            "data_type": self.get_type(applied_schema).name
+            "data_type": self.get_type(applied_schema).value
         }
         if self._alias_name:
             res["alias"] = self._alias_name
@@ -203,7 +203,7 @@ class LiteralExpression(Expression):
         res = {
             "expr_type": self.get_expr_type().value,
             "value": self.value,
-            "data_type": self.data_type.name,
+            "data_type": self.data_type.value,
             "name": self.get_default_name()
         }
         if self._alias_name:
@@ -272,7 +272,7 @@ class BinaryOpExpression(Expression):
         res = {
             "expr_type": self.get_expr_type().value,
             "op": self.op,
-            "data_type": self.get_type(applied_schema).name,
+            "data_type": self.get_type(applied_schema).value,
             "left": self.left.to_dict(applied_schema),
             "right": self.right.to_dict(applied_schema),
             "name": self.get_default_name()
@@ -331,7 +331,7 @@ class UnaryOpExpression(Expression):
         res = {
             "expr_type": self.get_expr_type().value,
             "op": self.op,
-            "data_type": self.get_type(applied_schema).name,
+            "data_type": self.get_type(applied_schema).value,
             "expr": self.expr.to_dict(applied_schema),
             "name": self.get_default_name()
         }
@@ -400,7 +400,7 @@ class AggregateExpression(Expression):
             if not input_type.is_number():
                 raise TypeError(
                     f"L'aggregazione {self.func_type.value} richiede un tipo numerico, "
-                    f"ricevuto: {input_type.name}"
+                    f"ricevuto: {input_type.value}"
                 )
             return DataTypes.DOUBLE
 
@@ -409,7 +409,7 @@ class AggregateExpression(Expression):
             if not input_type.is_number():
                 raise TypeError(
                     f"L'aggregazione {self.func_type.value} richiede un tipo numerico, "
-                    f"ricevuto: {input_type.name}"
+                    f"ricevuto: {input_type.value}"
                 )
             return input_type
 
@@ -425,7 +425,7 @@ class AggregateExpression(Expression):
         res = {
             "expr_type": self.get_expr_type().value,
             "func": self.func_type.value,
-            "data_type": self.get_type(applied_schema).name,
+            "data_type": self.get_type(applied_schema).value,
             "target": self.target_expr.to_dict(applied_schema) if self.target_expr else None,
             "name": self.get_default_name()
         }

@@ -85,7 +85,7 @@ class Schema:
         return other.fields == self.fields
 
     def to_dict(self)-> Dict[str, str]:
-        return {col_name: data_type.cpp_type for col_name, data_type in self.fields.items()}
+        return {col_name: data_type.name for col_name, data_type in self.fields.items()}
 
     def __contains__(self, column_name: object) -> bool:
         return column_name in self._fields

@@ -27,7 +27,7 @@
         },
         "parents": [
             {
-                "op_type": "GROUP_BY",
+                "op_type": "GLOBAL_GROUP_BY",
                 "keys": [
                     "sensor_id"
                 ],
