@@ -82,6 +82,15 @@ class OpNode(ABC):
         """
         pass
 
+    def _require(cls, op_dict: Dict[str, Any], key: str) -> Any:
+            val = op_dict.get(key)
+            if val is None:
+                raise KeyError(
+                    f"Chiave '{key}' mancante nel nodo:\n{op_dict}\n"
+                    f"Per la creazione di {getattr(cls, 'op_type', cls.__name__)}."
+                )
+            return val
+
     @staticmethod
     def parse_duration(duration, op_dict) -> int:
         """
