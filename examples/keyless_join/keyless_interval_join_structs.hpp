@@ -50,8 +50,9 @@ struct source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct
 // ============================================================================
 struct keyless_interval_join_select_1_struct_out {
     std::string sensor_id;
-    double hum;
     double temperature;
+    std::string sens;
+    double hum;
 
 
 };

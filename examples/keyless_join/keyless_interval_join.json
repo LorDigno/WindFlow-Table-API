@@ -10,12 +10,17 @@
             },
             {
                 "expr_type": "COL_REF",
-                "name": "hum",
+                "name": "temperature",
                 "data_type": "DOUBLE"
             },
             {
                 "expr_type": "COL_REF",
-                "name": "temperature",
+                "name": "sens",
+                "data_type": "STRING"
+            },
+            {
+                "expr_type": "COL_REF",
+                "name": "hum",
                 "data_type": "DOUBLE"
             }
         ],
@@ -29,8 +34,9 @@
         },
         "schema_out": {
             "sensor_id": "STRING",
-            "hum": "DOUBLE",
-            "temperature": "DOUBLE"
+            "temperature": "DOUBLE",
+            "sens": "STRING",
+            "hum": "DOUBLE"
         },
         "parents": [
             {

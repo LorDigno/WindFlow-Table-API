@@ -238,6 +238,9 @@ class TableEnvironment:
         from windflow_table_api.runtime import Executor
         from windflow_table_api.codegen import generate_code
 
+        #log
+        print(f"[ENV] Starting JsonGeneration for {query.table_id}")
+
         #trovo tutte le query necessarie all'esecuzione di quella richiesta
         referenced_ids: Set[str] = set()
         self._collect_referenced_queries(query.root_operator, referenced_ids)
@@ -277,6 +280,9 @@ class TableEnvironment:
             #scrittura del file json
             file_path.write_text(json_str, encoding="utf-8")
 
+        #log
+        print(f"[ENV] Done JsonGeneration for {query.table_id}, launching generate_code")
+
         #chiamata alla generazione del codice
         generate_code(
             query_id=query.table_id,
@@ -285,9 +291,15 @@ class TableEnvironment:
             json_dir=out_path,
         )
 
+        #log
+        print(f"[ENV] Done generate_code for {query.table_id}, launching Executor")
+
         #compilazione ed esecuzione
         executor = Executor(work_dir=out_path)
         handle = executor.run_query(query.table_id)
+
+        #log
+        print(f"[ENV] Execution started for {query.table_id}")
 
         #aspetto se si vuole sincrono
         if sync:

@@ -77,9 +77,9 @@ q5 = (src
 
 #test insiemistici
 q3.name_draft("union_tests")
-q6 = (q3
-    .union(q4)
-    .union_all(q5)
+q6 = (q3                    #hot
+    .union(q4)              #warm ma deduplica gli hot
+    .union_all(q5)          #aggiunge i cold
     .select("sensor_id", "temperature")
     #ci devono essere tutte le cold e una sola copia di tutte quelle da warm in su
 )
@@ -111,7 +111,7 @@ rerenamed_src = src.rename_columns(
 src.name_draft("keyless_interval_join")
 q8 = (src
     .join(rerenamed_src, attachment=interval)
-    .select("sensor_id", "hum", "temperature")
+    .select("sensor_id", "temperature", "sens", "hum")
 )
 env.execute(q8, rexecute=True, output_dir="./keyless_join")
 

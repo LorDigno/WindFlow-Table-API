@@ -117,8 +117,9 @@ int main(int argc, char* argv[]) {
         [](const source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out& in) -> keyless_interval_join_select_1_struct_out {
     keyless_interval_join_select_1_struct_out out;
     out.sensor_id = in.sensor_id;
-    out.hum = in.hum;
     out.temperature = in.temperature;
+    out.sens = in.sens;
+    out.hum = in.hum;
     return out;
 }
     )
@@ -128,11 +129,11 @@ int main(int argc, char* argv[]) {
 
     auto sink_8_op = Table_Sink_Builder<keyless_interval_join_select_1_struct_out>("keyless_interval_join",
     [](const keyless_interval_join_select_1_struct_out& record, std::ostream& os) {
- os << record.sensor_id << ","; os << record.hum << ","; os << record.temperature;}
+ os << record.sensor_id << ","; os << record.temperature << ","; os << record.sens << ","; os << record.hum;}
 )
     .withName("keyless_interval_join_sink_6")
     .withParallelism(2)
-    .withHeader("sensor_id,hum,temperature")
+    .withHeader("sensor_id,temperature,sens,hum")
     .build();
 
     //-----     PIPES AND TOPOLOGY  ------

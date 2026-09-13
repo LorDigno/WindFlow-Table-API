@@ -4,12 +4,12 @@
 --> Backpressure [31mdisabled[0m
 --> Non-blocking queues [32menabled[0m
 --> Pinning of threads [32menabled[0m
-[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
-[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
+[SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SINK] File window_tests_output1.csv aperto.
-[SINK1] File window_tests_output1.csv completato e chiuso.
 [SINK] File window_tests_output0.csv aperto.
+[SINK1] File window_tests_output1.csv completato e chiuso.
 [SINK0] File window_tests_output0.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [window_tests] executed successfully[0m
