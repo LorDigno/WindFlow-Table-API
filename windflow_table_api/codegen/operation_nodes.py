@@ -1449,3 +1449,4 @@ class OpNodeFactory:
 
         #delega il parsing al metodo apposito della classe
         return target_cls.from_dict(node_id=node_id, op_dict=op_dict)
+    
