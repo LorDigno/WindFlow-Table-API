@@ -135,6 +135,7 @@ class OpNode(ABC):
         return {
             "node_id": node_id,
             "schema_out": schema_out,
+            "op_type": op_type,
             "raw_dict": op_dict
         }
 
@@ -1147,7 +1148,7 @@ class UnionOpNode(BinaryNode):
 
         return cls(
             **base_args,
-            is_all=is_all,
+            is_all=is_all
         )
 
     def visit(self, ctx: VisitContext) -> VisitResult:

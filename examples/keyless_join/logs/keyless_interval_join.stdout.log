@@ -6,10 +6,10 @@
 --> Pinning of threads [32menabled[0m
 [SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
-[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
-[SINK] File keyless_interval_join_output0.csv aperto.
+[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SINK] File keyless_interval_join_output1.csv aperto.
 [SINK1] File keyless_interval_join_output1.csv completato e chiuso.
+[SINK] File keyless_interval_join_output0.csv aperto.
 [SINK0] File keyless_interval_join_output0.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [keyless_interval_join] executed successfully[0m
