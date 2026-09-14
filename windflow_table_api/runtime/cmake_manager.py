@@ -36,27 +36,28 @@ class CMakeManager:
         # Genera le inclusioni nel file CMakeLists.txt
         inc_str = "\n    ".join(f'"{d}"' for d in self.include_dirs)
 
-        base_content = f"""cmake_minimum_required(VERSION 3.16)
-            project(WindFlowGeneratedQueries CXX)
+        base_content = f"""
+cmake_minimum_required(VERSION 3.16)
+project(WindFlowGeneratedQueries CXX)
 
-            set(CMAKE_CXX_STANDARD 17)
-            set(CMAKE_CXX_STANDARD_REQUIRED ON)
-            set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
 
-            find_package(Threads REQUIRED)
+find_package(Threads REQUIRED)
 
-            include_directories(
-                {inc_str}
-            )
+include_directories(
+    {inc_str}
+)
             """
         self.cmake_path.write_text(base_content, encoding="utf-8")
 
     def _append_target(self, query_id: str) -> None:
         """Aggiunge la regola di compilazione e linking per la query specifica."""
         target_block = f"""
-            # --- Target per Query: {query_id} ---
-            add_executable({query_id} {query_id}_main.cpp)
-            target_link_libraries({query_id} PRIVATE Threads::Threads pthread)
-            """
+# --- Target per Query: {query_id} ---
+add_executable({query_id} {query_id}_main.cpp)
+target_link_libraries({query_id} PRIVATE Threads::Threads pthread)
+"""
         with open(self.cmake_path, "a", encoding="utf-8") as f:
             f.write(target_block)    

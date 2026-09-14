@@ -370,7 +370,7 @@ class AggregateExpression(Expression):
     def __init__(
         self,
         func_type: AggFuncType,
-        target_expr: Optional[Expression] = None
+        target_expr: Optional[ColRefExpression] = None
     ) -> None:
         super().__init__()
         self.func_type = func_type
@@ -466,7 +466,7 @@ def lit(value: Any, data_type: Optional[DataTypes] = None) -> LiteralExpression:
 
     return LiteralExpression(value, data_type)
 
-def sum(expr: Union[str, Expression]) -> AggregateExpression:
+def sum(expr: Union[str, ColRefExpression]) -> AggregateExpression:
     """Calcola la somma dei valori della colonna o espressione target."""
 
     if isinstance(expr, str):
@@ -476,7 +476,7 @@ def sum(expr: Union[str, Expression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.SUM, target)
 
-def avg(expr: Union[str, Expression]) -> AggregateExpression:
+def avg(expr: Union[str, ColRefExpression]) -> AggregateExpression:
     """
     Calcola la media aritmetica dei valori della colonna o espressione target, restituisce DOUBLE.
     """
@@ -488,7 +488,7 @@ def avg(expr: Union[str, Expression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.AVG, target)
 
-def min(expr: Union[str, Expression]) -> AggregateExpression:
+def min(expr: Union[str, ColRefExpression]) -> AggregateExpression:
     """Calcola il valore minimo della colonna o espressione target."""
 
     if isinstance(expr, str):
@@ -498,7 +498,7 @@ def min(expr: Union[str, Expression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.MIN, target)
 
-def max(expr: Union[str, Expression]) -> AggregateExpression:
+def max(expr: Union[str, ColRefExpression]) -> AggregateExpression:
     """Calcola il valore massimo della colonna o espressione target."""
 
     if isinstance(expr, str):
