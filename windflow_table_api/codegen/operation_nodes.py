@@ -82,34 +82,61 @@ class OpNode(ABC):
         """
         pass
 
-    def _require(cls, op_dict: Dict[str, Any], key: str) -> Any:
-            val = op_dict.get(key)
-            if val is None:
+    @staticmethod
+    def require(
+        op_dict:Dict[str, Any], 
+        key:str, 
+        op_type:OpType,
+        expected_type: Any = Any, 
+        optional:bool = False
+        ) -> Any:
+        """
+        Metodo usato per estrarre dal JSON gli attributi dei dizionari con sollevamento di un errore la chiave è assente.
+        Richiede il tipo atteso per il typehinting.
+        """
+        value = op_dict.get(key)
+
+        if value is None:
+            if not optional:
                 raise KeyError(
-                    f"Chiave '{key}' mancante nel nodo:\n{op_dict}\n"
-                    f"Per la creazione di {getattr(cls, 'op_type', cls.__name__)}."
+                    f"Chiave '{key}' mancante nel nodo {op_type.value}:\n{op_dict}"
                 )
-            return val
+            return None  # type: ignore[return-value]
+
+        if expected_type is not Any and not isinstance(value, expected_type):
+            raise TypeError(
+                f"Il campo '{key}' in {op_type.value} deve essere di tipo "
+                f"{expected_type.__name__}, trovato: {type(value).__name__} ({value!r})."
+            )
+        
+        return value
 
     @staticmethod
-    def parse_duration(duration, op_dict) -> int:
+    def parse_duration(duration, op_type:OpType) -> int:
         """
         Metodo comune a tutti i nodi usato per eseguire il parsing delle Duration serializzate in microsecondi.
         """
 
-        value:int = duration.get("value")
-        if not value:
-            raise KeyError(
-                f"Chiave 'value' mancante nella duration del nodo:\n{op_dict}."
-            )
-
-        unit:str = duration.get("unit")
-        if not unit:
-            raise KeyError(
-                f"Chiave 'unit' mancante nella duration del nodo:\n{op_dict}."
-            ) 
+        value:int = OpNode.require(duration, "value", op_type, int)
+        unit:str = OpNode.require(duration, "unit", op_type,  str)
 
         return TimeUnits.to_microseconds(value, unit)            
+
+    @classmethod
+    def extract_basic_commons(
+        cls, 
+        node_id:str, 
+        op_dict:Dict[str, Any],
+        op_type: OpType
+    ) -> Dict[str, Any]:
+
+        schema_out: Dict[str, Any] = OpNode.require(op_dict, "schema_out", op_type, dict)
+
+        return {
+            "node_id": node_id,
+            "schema_out": schema_out,
+            "raw_dict": op_dict
+        }
 
     def get_map_builder(
         self,
@@ -159,25 +186,17 @@ class UnaryNode(OpNode, ABC):
     def extract_unary_commons(
         cls, 
         node_id:str, 
-        op_dict:Dict[str, Any]
+        op_dict:Dict[str, Any],
+        op_type: OpType
     ) -> Dict[str, Any]:
-        schema_in = op_dict.get("schema_in")
-        if not schema_in:
-            raise KeyError(
-                f"Chiave 'schema_in' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        
+        schema_in = OpNode.require(op_dict, "schema_in", op_type, dict)
 
-        schema_out = op_dict.get("schema_out")
-        if not schema_out:
-            raise KeyError(
-                f"Chiave 'schema_out' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        base_args = cls.extract_basic_commons(node_id, op_dict, op_type)
 
         return {
-            "node_id": node_id,
+            **base_args,
             "schema_in": schema_in,
-            "schema_out": schema_out,
-            "raw_dict": op_dict,
         }
 
 @dataclass(kw_only=True)
@@ -186,74 +205,42 @@ class BinaryNode(OpNode, ABC):
     right_schema: Dict[str, str]
 
     @classmethod
-    def extract_binary_commons(cls, node_id: str, op_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_binary_commons(cls, node_id: str, op_dict: Dict[str, Any], op_type:OpType) -> Dict[str, Any]:
         #schemi delle due tabelle di input
-        left_schema = op_dict.get("tab1_schema")
-        if not left_schema:
-            raise KeyError(
-                f"Chiave 'tab1_schema' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )                
+        left_schema = OpNode.require(op_dict, "tab1_schema", op_type, dict)    
+        right_schema = OpNode.require(op_dict, "tab2_schema", op_type, dict)
 
-        right_schema = op_dict.get("tab2_schema")
-        if not right_schema:
-            raise KeyError(
-                f"Chiave 'tab2_schema' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
-
-        #schema delle tabelle di output
-        schema_out = op_dict.get("schema_out")
-        if not schema_out:
-            raise KeyError(
-                f"Chiave 'schema_out' mancante nel nodo:\n{op_dict}\nPer la creazione di {OpType}."
-            ) 
+        base_args = cls.extract_basic_commons(node_id, op_dict, op_type)
 
         return {
-            "node_id": node_id,
+            **base_args,
             "left_schema": left_schema,
             "right_schema": right_schema,
-            "schema_out": schema_out,
-            "raw_dict": op_dict
         }
 
 @dataclass(kw_only=True)
-class WindowNode(OpNode, ABC):
+class WindowNode(ABC):
     window_type: str
     window_kind: str
     window_size: int
     window_slide: int
 
     @classmethod
-    def extract_window(cls, window: Dict[str, Any], op_dict: Dict[str, Any]) -> Dict[str, Any]:
+    def extract_window(cls, window: Dict[str, Any], op_type:OpType) -> Dict[str, Any]:
         """
         Estrae gli attributi della finestra, se temporale parsa le Duration in microsecondi.
         """
-        w_type = window.get("type")
-        if not w_type:
-            raise KeyError(
-                f"Chiave 'type' mancante nella finestra del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        w_type = OpNode.require(window, "type", op_type, str)
 
-        kind = window.get("kind")
-        if not kind:
-            raise KeyError(
-                f"Chiave 'kind' mancante nella finestra del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        kind = OpNode.require(window, "kind", op_type, str)
 
-        size = window.get("size")
-        if not size:
-            raise KeyError(
-                f"Chiave 'size' mancante nella finestra del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        size = OpNode.require(window, "size", op_type, Union[int, dict])
         if w_type == WindowType.TIME:
-            size = OpNode.parse_duration(size, op_dict) 
+            size = OpNode.parse_duration(size, op_type) 
 
-        slide = window.get("slide")
-        if not slide:
-            raise KeyError(
-                f"Chiave 'slide' mancante nella finestra del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        slide = OpNode.require(window, "slide", op_type, Union[int, dict])
         if w_type == WindowType.TIME:
-            slide = OpNode.parse_duration(slide, op_dict) 
+            slide = OpNode.parse_duration(slide, op_type) 
 
         return {
             "window_type": w_type,
@@ -289,82 +276,39 @@ class FromOpNode(OpNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> FromOpNode:
-        source_id = op_dict.get("source_id")
-        if not source_id:
-            raise KeyError(
-                f"Chiave 'source_id' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
-
-        schema_out = op_dict.get("schema_out")
-        if not schema_out:
-            raise KeyError(
-                f"Chiave 'schema_out' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        source_id = OpNode.require(op_dict, "source_id", cls.op_type, str)
 
         #ottengo la configurazione del file
-        config = op_dict.get("config")
-        if not config:
-            raise KeyError(
-                f"Chiave 'config' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        config = OpNode.require(op_dict, "config", cls.op_type, dict)
 
         #parsing degli attributi di configurazione
-        filepath = config.get("filepath")
-        if not filepath:
-            raise KeyError(
-                f"Chiave 'filepath' mancante nella config del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        filepath = OpNode.require(config, "filepath", cls.op_type, str)
 
-        header = config.get("header")
-        if header is None:
-            raise KeyError(
-                f"Chiave 'header' mancante nella config del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        header = OpNode.require(config, "header", cls.op_type, bool)
 
-        delay = config.get("delay")
+        delay = OpNode.require(config, "delay", cls.op_type, optional=True)
         if delay is not None:
-            delay = OpNode.parse_duration(delay, op_dict)
+            delay = OpNode.parse_duration(delay, cls.op_type)
             
-        file_format = config.get("file_format")
-        if file_format is None:
-            raise KeyError(
-                f"Chiave 'file_format' mancante nella config del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        file_format = OpNode.require(config, "file_format", cls.op_type, str)
 
-        split_size = config.get("split_size")
-        if split_size is None:
-            raise KeyError(
-                f"Chiave 'split_size' mancante nella config del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        split_size = OpNode.require(config, "split_size", cls.op_type, int)
 
-        order = config.get("order")
-        if order is None:
-            raise KeyError(
-                f"Chiave 'order' mancante nella config del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        order = OpNode.require(config, "order", cls.op_type, bool)
 
         #gestione della TimeCol
         time_col_name = None
         time_format = None
-        time_col_dict = config.get("time_col")
+        time_col_dict = OpNode.require(config, "time_col", cls.op_type, optional=True)
         if time_col_dict is not None:
             #estraggo i campi
-            time_col_name = time_col_dict.get("name")
-            if time_col_name is None:
-                raise KeyError(
-                    f"Chiave 'name' mancante nella TimeCol del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-                )
+            time_col_name = OpNode.require(time_col_dict, "name", cls.op_type, str)
+            time_format = OpNode.require(time_col_dict, "format", cls.op_type, str)
 
-            time_format = time_col_dict.get("format")
-            if time_format is None:
-                raise KeyError(
-                    f"Chiave 'format' mancante nella TimeCol del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-                )
+        base_args = OpNode.extract_basic_commons(node_id, op_dict, cls.op_type)
 
         return cls(
-            node_id= node_id,
-            schema_out= schema_out,
-            raw_dict= op_dict,
+            **base_args,
 
             source_table_id= source_id,
             filepath= filepath,
@@ -437,21 +381,12 @@ class SinkOpNode(OpNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> OpNode:
-        filename = op_dict.get("filename")
-        if not filename:
-            raise KeyError(
-                f"Chiave 'filename' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        filename = OpNode.require(op_dict, "filename", cls.op_type, str)
 
-        schema_out = op_dict.get("schema_out")
-        if not schema_out:
-            raise KeyError(
-                f"Chiave 'schema_out' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        base_args = OpNode.extract_basic_commons(node_id, op_dict, cls.op_type)
 
         return cls(
-            node_id= node_id,
-            schema_out = schema_out,
+            **base_args,
             filename = filename,
         )
 
@@ -503,13 +438,9 @@ class WhereOpNode(UnaryNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> WhereOpNode:
-        condition = op_dict.get("condition")
-        if not condition:
-            raise KeyError(
-                f"Chiave 'condition' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        condition = OpNode.require(op_dict, "condition", cls.op_type, dict)
 
-        base_args = cls.extract_unary_commons(node_id, op_dict)
+        base_args = cls.extract_unary_commons(node_id, op_dict, cls.op_type)
 
         return cls(
             **base_args,
@@ -558,13 +489,9 @@ class SelectOpNode(UnaryNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> SelectOpNode:
-        expressions = op_dict.get("expressions")
-        if not expressions:
-            raise KeyError(
-                f"Chiave 'expressions' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        expressions = OpNode.require(op_dict, "expressions", cls.op_type, list)
 
-        base_args = cls.extract_unary_commons(node_id, op_dict)
+        base_args = cls.extract_unary_commons(node_id, op_dict, cls.op_type)
 
         return cls(
             **base_args,
@@ -630,7 +557,7 @@ class DistinctOpNode(UnaryNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> DistinctOpNode:
-        base_args = cls.extract_unary_commons(node_id, op_dict)
+        base_args = cls.extract_unary_commons(node_id, op_dict, cls.op_type)
         return cls(
             **base_args
         )
@@ -685,19 +612,11 @@ class GroupByNode(UnaryNode, ABC):
 
     @classmethod
     def extract_group_commons(cls, node_id:str, op_dict:Dict[str, Any]) -> Dict[str, Any]:
-        keys = op_dict.get("keys")
-        if keys is None:
-            raise KeyError(
-                f"Chiave 'keys' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        keys = OpNode.require(op_dict, "keys", cls.op_type, list)
 
-        aggregations = op_dict.get("aggregations")
-        if aggregations is None:
-            raise KeyError(
-                f"Chiave 'aggregations' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        aggregations = OpNode.require(op_dict, "aggregations", cls.op_type, list)
 
-        base_args = cls.extract_unary_commons(node_id, op_dict) 
+        base_args = cls.extract_unary_commons(node_id, op_dict, cls.op_type) 
 
         return {
             **base_args,
@@ -873,16 +792,10 @@ class WindowGroupOpNode(GroupByNode, WindowNode):
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> WindowGroupOpNode:
         #parsing dei vari attributi della finestra
-        window = op_dict.get("window")
-        if window is None:
-            raise KeyError(
-                f"Chiave 'window' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )   
-        win_args = cls.extract_window(window, op_dict) 
+        window = OpNode.require(op_dict, "window", cls.op_type, dict)
+        win_args = cls.extract_window(window, cls.op_type)   
 
-        win_args:Dict[str, Any] = cls.extract_window(window, op_dict)           
-
-        base_args:Dict[str, Any] = cls.extract_group_commons(node_id, op_dict)
+        base_args = cls.extract_group_commons(node_id, op_dict)
 
         return cls(
             **base_args,
@@ -946,13 +859,9 @@ class JoinNode(BinaryNode, ABC):
 
     @classmethod
     def extract_join_commons(cls, node_id:str, op_dict: Dict[str, Any]) -> Dict[str, Any]:
-        keys = op_dict.get("keys")
-        if keys is None:
-            raise KeyError(
-                f"Chiave 'keys' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )
+        keys = OpNode.require(op_dict, "keys", cls.op_type, list)
 
-        base_args = cls.extract_binary_commons(node_id, op_dict)
+        base_args = cls.extract_binary_commons(node_id, op_dict, cls.op_type)
 
         return {
             **base_args,
@@ -1067,8 +976,9 @@ class JoinNode(BinaryNode, ABC):
 
         #join mappings
         join_mappings = []
+        left_field_names = {f.name for f in left_parent_struct.fields}
         for f in struct_out.fields:
-            if f.name in [f.name for f in left_parent_struct.fields]:
+            if f.name in left_field_names:
                 join_mappings.append((f.name, f"left.{f.name}"))
             else:
                 join_mappings.append((f.name, f"right.{f.name}")) 
@@ -1093,12 +1003,8 @@ class WindowJoinOpNode(JoinNode, WindowNode):
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> WindowJoinOpNode:
         #estrazione parametri di finestra
-        window = op_dict.get("attachment")
-        if window is None:
-            raise KeyError(
-                f"Chiave 'attachment' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )   
-        win_args = cls.extract_window(window, op_dict) 
+        window = OpNode.require(op_dict, "attachment", cls.op_type, dict)
+        win_args = cls.extract_window(window, cls.op_type) 
 
         base_args = cls.extract_join_commons(node_id, op_dict)
 
@@ -1163,25 +1069,13 @@ class IntervalJoinOpNode(JoinNode):
 
     @classmethod
     def from_dict(cls, node_id: str, op_dict: Dict[str, Any]) -> IntervalJoinOpNode:
-        interval = op_dict.get("attachment")
-        if interval is None:
-            raise KeyError(
-                f"Chiave 'attachment' mancante nel nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )   
+        interval = OpNode.require(op_dict, "attachment", cls.op_type, dict)
 
-        lower = interval.get("lower_bound")
-        if lower is None:
-            raise KeyError(
-                f"Chiave 'lower_bound' mancante nell'intervallo del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )   
-        lower = OpNode.parse_duration(lower, op_dict)
+        lower = OpNode.require(interval, "lower_bound", cls.op_type, dict)
+        lower = OpNode.parse_duration(lower, cls.op_type)
 
-        upper = interval.get("upper_bound")
-        if upper is None:
-            raise KeyError(
-                f"Chiave 'upper_bound' mancante nell'intervallo del nodo:\n{op_dict}\nPer la creazione di {cls.op_type}."
-            )   
-        upper = OpNode.parse_duration(upper, op_dict)   
+        upper = OpNode.require(interval, "upper_bound", cls.op_type, dict)
+        upper = OpNode.parse_duration(upper, cls.op_type)   
 
         base_args = cls.extract_join_commons(node_id, op_dict)
 
@@ -1247,11 +1141,12 @@ class UnionOpNode(BinaryNode):
         raw_op_type = op_dict.get("op_type")
         is_all = raw_op_type == OpType.UNION_ALL
 
-        base_args = cls.extract_binary_commons(node_id, op_dict)
+        op_type = OpType.UNION_ALL if is_all else OpType.UNION
+
+        base_args = cls.extract_binary_commons(node_id, op_dict, op_type)
 
         return cls(
             **base_args,
-            op_type=OpType.UNION_ALL if is_all else OpType.UNION,
             is_all=is_all,
         )
 
@@ -1305,11 +1200,12 @@ class IntersectOpNode(BinaryNode):
         raw_op_type = op_dict.get("op_type")
         is_all = raw_op_type == OpType.INTERSECT_ALL
 
-        base_args = cls.extract_binary_commons(node_id, op_dict)
+        op_type = OpType.INTERSECT_ALL if is_all else OpType.INTERSECT
+
+        base_args = cls.extract_binary_commons(node_id, op_dict, op_type)
 
         return cls(
             **base_args,
-            op_type=OpType.INTERSECT_ALL if is_all else OpType.INTERSECT,
             is_all=is_all,
         )
 
