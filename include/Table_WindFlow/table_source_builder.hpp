@@ -101,8 +101,8 @@ class Source_Functor {
 
         void process_out_of_order(uint64_t& current_ts, uint64_t& current_wm) {
             //normalizza secondo il delay
-            current_ts = (current_ts + delay >= global_epoch) 
-                            ? (current_ts + delay - global_epoch) 
+            current_ts = (current_ts >= global_epoch) 
+                            ? (current_ts - global_epoch) 
                             : 0;
 
             max_ts = std::max(max_ts, current_ts);
@@ -303,7 +303,7 @@ class Table_Source_Builder{
         }
 
         //segna un EVENT TIME in cui si accetta del delay nei timestamp disordinati
-        Table_Source_Builder& withDelayEventTime(uint64_t epoch, uint64_t del) {
+        Table_Source_Builder& withDelayedEventTime(uint64_t epoch, uint64_t del) {
             this->event_time = true;
             this->ordered = false;
             this->delay = del;

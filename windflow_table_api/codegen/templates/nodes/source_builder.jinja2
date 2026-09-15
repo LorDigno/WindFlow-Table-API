@@ -12,7 +12,7 @@ auto {{ var_name }} = Table_Source_Builder<{{ out_struct }}>( "{{ filepath }}",
     {% if is_ordered %}
     .withOrderedEventTime({{epoch_var}})
     {% else %}
-    .withWatermarkDelay({{ epoch_var }}, {{ delay }}ULL)
+    .withDelayedEventTime({{ epoch_var }}, {{ delay }}ULL)
     {% endif %}
 {% endif %}
     .build();
