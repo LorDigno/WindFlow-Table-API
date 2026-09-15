@@ -30,7 +30,7 @@ inline bool        parse_BOOLEAN(const std::string& s){ return s == "1" || s == 
 
 //funzioni helper per il parsing del formato temporale
 // Converte 'YYYY-MM-DDTHH:MM:SS.mmmZ' in microsecondi lineari continui
-inline uint64_t parse_TIMESTAMP_ISO8601(const std::string& s) {
+inline uint64_t parse_ISO8601(const std::string& s) {
     if (s.size() < 23) return 0;
 
     // 1. Parsing componenti data
@@ -90,19 +90,19 @@ class Source_Functor {
         bool is_ordered;
 
         //necessari per il watermarking
-        uint64_t max_ts = 0, global_first_ts = 0 , last_wm = 0;
+        uint64_t max_ts = 0, global_epoch = 0 , last_wm = 0;
         bool first_wm = true;
 
         void process_ordered(uint64_t& current_ts, uint64_t& current_wm) {
             //normalizza secondo la prima tupla
-            current_ts = (current_ts >= global_first_ts) ? (current_ts - global_first_ts) : 0;
+            current_ts = (current_ts >= global_epoch) ? (current_ts - global_epoch) : 0;
             current_wm = current_ts;
         }
 
         void process_out_of_order(uint64_t& current_ts, uint64_t& current_wm) {
             //normalizza secondo il delay
-            current_ts = (current_ts + delay >= global_first_ts) 
-                            ? (current_ts + delay - global_first_ts) 
+            current_ts = (current_ts + delay >= global_epoch) 
+                            ? (current_ts + delay - global_epoch) 
                             : 0;
 
             max_ts = std::max(max_ts, current_ts);
@@ -121,7 +121,7 @@ class Source_Functor {
             event_time(ev),
             is_ordered(order),
             delay(del),
-            global_first_ts(base_ts),
+            global_epoch(base_ts),
             splits_map(splits) {}
     
         void operator()(wf::Source_Shipper<TupleT> &shipper, wf::RuntimeContext& ctx) {
@@ -224,6 +224,7 @@ class Table_Source_Builder{
         bool event_time = false;     
         uint64_t delay = 0;         
         bool ordered = false;    
+        uint64_t global_epoch = 0;      //timestamp di normalizzazione globale
 
         std::string op_name = "TableSource_Operator";
 
@@ -293,18 +294,20 @@ class Table_Source_Builder{
         }
 
         //segna un EVENT TIME in cui il file di input è ordinato per timestamp
-        Table_Source_Builder& withOrderedEventTime() {
+        Table_Source_Builder& withOrderedEventTime(uint64_t epoch) {
             this->event_time = true;
             this->ordered = true;
             this->delay = 0;
+            this->global_epoch = epoch;
             return *this;
         }
 
         //segna un EVENT TIME in cui si accetta del delay nei timestamp disordinati
-        Table_Source_Builder& withWatermarkDelay(uint64_t del) {
+        Table_Source_Builder& withDelayEventTime(uint64_t epoch, uint64_t del) {
             this->event_time = true;
             this->ordered = false;
             this->delay = del;
+            this->global_epoch = epoch;
             return *this;
         }
 
@@ -315,20 +318,6 @@ class Table_Source_Builder{
 
         auto build(){
             auto splits = make_splits(filepath, parallelism, split_size);
-
-            //prima tupla letta per dare una base di normalizzazione ai timestamp
-            uint64_t global_base_ts = 0;
-            if (event_time) {
-                std::ifstream f(filepath);
-                std::string first_line;
-                if (header) std::getline(f, first_line);
-                if (std::getline(f, first_line)) {
-                    TupleT dummy{};
-                    parser_lambda(first_line, dummy, global_base_ts);
-                }
-                f.close();
-            }
-
             Source_Functor<TupleT> functor = Source_Functor<TupleT>(
                 filepath,
                 header,
@@ -336,7 +325,7 @@ class Table_Source_Builder{
                 event_time,
                 ordered,
                 delay,
-                global_base_ts,
+                global_epoch,
                 std::move(splits)
             );
 

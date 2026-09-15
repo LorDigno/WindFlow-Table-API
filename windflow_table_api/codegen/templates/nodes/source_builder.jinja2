@@ -10,9 +10,9 @@ auto {{ var_name }} = Table_Source_Builder<{{ out_struct }}>( "{{ filepath }}",
 {% endif %}
 {% if event_time %}
     {% if is_ordered %}
-    .withOrderedEventTime()
+    .withOrderedEventTime({{epoch_var}})
     {% else %}
-    .withWatermarkDelay({{ delay }}ULL)
+    .withWatermarkDelay({{ epoch_var }}, {{ delay }}ULL)
     {% endif %}
 {% endif %}
     .build();

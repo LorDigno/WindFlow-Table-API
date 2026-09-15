@@ -10,6 +10,9 @@
 #include "keyless_window_group_structs.hpp"
 
 int main(int argc, char* argv[]) {
+    //variabile di epoch per la normalizzazione dei timestamp
+    uint64_t keyless_window_group_epoch = parse_ISO8601("2026-09-04T08:00:00.000Z");
+
     //-----     OPERATOR BUILDERS   -----
 
     auto from_1_op = Table_Source_Builder<source_keyless_window_group_from_3>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
@@ -19,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -31,7 +34,7 @@ int main(int argc, char* argv[]) {
     .withName("keyless_window_group_from_3")
     .withHeader()
     .withParallelism(2, 0ULL)
-    .withOrderedEventTime()
+    .withOrderedEventTime(keyless_window_group_epoch)
     .build();
 
     auto window_group_2_op = Windowed_Group_Builder<source_keyless_window_group_from_3, keyless_window_group_window_group_by_2_struct_out>(

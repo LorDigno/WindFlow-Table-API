@@ -33,6 +33,7 @@ class VisitContext:
     #variabili passate dall'explorer
     operations_counter: int      
     par: int 
+    epoch_var: Optional[str] = None
 
 @dataclass
 class VisitResult:
@@ -357,6 +358,7 @@ class FromOpNode(OpNode):
             event_time=self.time_col is not None,
             is_ordered=self.ordered,
             delay=self.delay,
+            epoch_var= ctx.epoch_var,
             par= ctx.par,
             split_size= self.split_size
         )

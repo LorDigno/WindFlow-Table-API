@@ -1,13 +1,13 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set, Tuple
 from .operators import *
 from .schema import Schema
 from .table import Table, Query
 from .windows import Interval, WindowType
 from .file_config import InputFileConfiguration
 from .job_handle import JobHandle
-from windflow_table_api import TimePolicy
+from ..times import TimePolicy, TimeFormats
 import json
 
 class TableEnvironment:
@@ -20,14 +20,25 @@ class TableEnvironment:
     """
 
     def __init__(self, 
-                 par: int = 1, 
-                 policy: TimePolicy = TimePolicy.NO_POLICY
+        par: int = 1, 
+        policy: TimePolicy = TimePolicy.NO_POLICY,
+        epoch: Optional[Tuple[str, TimeFormats]] = None
         ) -> None:
+        if epoch is None and policy == TimePolicy.EVENT_TIME:
+            raise ValueError(
+                f"Con politica {TimePolicy.EVENT_TIME} è necessario inserire un epoch per la normalizzazione dei timestamp."
+            )
+        if epoch and policy != TimePolicy.EVENT_TIME:
+            raise ValueError(
+                f"L'epoch va inserito solo con politica di tipo {TimePolicy.EVENT_TIME}"
+            )
+
         self._table_counter: int = 0
         self._tables: Dict[str, Table] = {}
         self._sources_config: Dict[str, InputFileConfiguration] = {}
         self.par = par
         self.policy = policy
+        self.epoch = epoch
 
     def _generate_table_id(self, prefix: str = "tab") -> str:
         """Genera un identificativo univoco progressivo per ogni tabella o query nell'ambiente."""
@@ -289,6 +300,7 @@ class TableEnvironment:
             time_policy=self.policy.name,
             parallelism=self.par,
             json_dir=out_path,
+            epoch= self.epoch
         )
 
         #log

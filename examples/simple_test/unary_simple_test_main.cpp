@@ -10,6 +10,9 @@
 #include "unary_simple_test_structs.hpp"
 
 int main(int argc, char* argv[]) {
+    //variabile di epoch per la normalizzazione dei timestamp
+    uint64_t unary_simple_test_epoch = parse_ISO8601("2026-09-04T08:00:00.000Z");
+
     //-----     OPERATOR BUILDERS   -----
 
     auto from_1_op = Table_Source_Builder<source_unary_simple_test_from_5>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
@@ -19,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -31,7 +34,7 @@ int main(int argc, char* argv[]) {
     .withName("unary_simple_test_from_5")
     .withHeader()
     .withParallelism(2, 0ULL)
-    .withOrderedEventTime()
+    .withOrderedEventTime(unary_simple_test_epoch)
     .build();
 
     auto where_2_op = Where_Builder<source_unary_simple_test_from_5>(

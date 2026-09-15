@@ -1,12 +1,11 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional, Union, Dict, List
+from typing import Any, Optional, Union, Dict, List
 from ..datatypes import DataTypes
 from windflow_table_api import ExprType, AggFuncType
 import copy
-if TYPE_CHECKING:
-    from .schema import Schema
+from .schema import Schema
 
 def _infer_literal_type(val: Any) -> DataTypes:
     """Inferisce il DataType a partire da un valore nativo Python."""
