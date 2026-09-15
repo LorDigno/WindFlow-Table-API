@@ -13,9 +13,9 @@ include_directories(
     "/home/user/TableAPI/include/WindFlow/wf"
     "/home/user/TableAPI/include/fastflow"
     "/home/user/TableAPI/include/Table_WindFlow"
-    "/home/user/TableAPI/examples/window_tests"
+    "/home/user/TableAPI/examples/multiple"
 )
             
-# --- Target per Query: window_tests ---
-add_executable(window_tests window_tests_main.cpp)
-target_link_libraries(window_tests PRIVATE Threads::Threads pthread)
+# --- Target per Query: multiple_join ---
+add_executable(multiple_join multiple_join_main.cpp)
+target_link_libraries(multiple_join PRIVATE Threads::Threads pthread)

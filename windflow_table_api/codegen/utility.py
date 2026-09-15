@@ -1,6 +1,7 @@
-from typing import Dict, Any, Tuple
+from typing import Dict, Any, Tuple, Callable, Union
 from enum import Enum
-from ..datatypes import TYPE_TRANSLATION
+from ..datatypes import TYPE_TRANSLATION, DataTypes
+from ..object_names import AggFuncType
 
 #mappa degli operatori logici/aritmetici tra JSON e C++
 OPERATOR_MAP: Dict[str, str] = {
@@ -26,79 +27,67 @@ OPERATOR_MAP: Dict[str, str] = {
         "/": "/",
     }
 
-class OP_TYPE(Enum):
-    SELECT = "SELECT",
-    FROM = "FROM",
-    TAB_REF = "TAB_REF",
-    WHERE = "WHERE",
-    GROUP_BY = "GROUP_BY"
-    WINDOW_GROUP_BY = "WINDOW_GROUP_BY",
-    DISTINCT = "DISTINCT"
-    JOIN_INNER = "JOIN_INNER"
-    JOIN_INTERVAL = "JOIN_INTERVAL"
-    JOIN_WINDOW = "JOIN_WINDOW"
-    UNION = "UNION"
-    UNION_ALL = "UNION_ALL"
-    INTERSECT = "INTERSECT"
-    INTERSECT_ALL = "INTERSECT_ALL"
+#registro per le funzioni di traduzione dei letterali
+#per ora delle lambda ma si potranno fare dei metodi appositi più corposi
+LITERAL_FORMATTERS: Dict[DataTypes, Callable[[Any], str]] = {
+    DataTypes.BOOLEAN: lambda val: "true" if val else "false",
+    DataTypes.STRING: lambda val: f'std::string("{val}")',
+    DataTypes.INT: lambda val: str(int(val)),
+    DataTypes.BIGINT: lambda val: f"{int(val)}LL",
+    DataTypes.UBIGINT: lambda val: f"{int(val)}ULL",
+    DataTypes.FLOAT: lambda val: f"{float(val)}f",
+    DataTypes.DOUBLE: lambda val: str(float(val)),
+}
 
-def get_aggregate_default(func_type: str, json_type: str) -> str:
+#handler per i valori di default delle aggregazioni
+
+def _default_sum(dtype: DataTypes, cpp_type: str) -> str:
+    if not dtype.is_number():
+        raise TypeError(f"L'aggregazione SUM non è applicabile a un tipo non numerico: {dtype.value}")
+    return "0.0" if dtype in (DataTypes.FLOAT, DataTypes.DOUBLE) else "0"
+
+def _default_max(dtype: DataTypes, cpp_type: str) -> str:
+    if dtype.is_number():
+        return f"std::numeric_limits<{cpp_type}>::lowest()"
+    raise TypeError(f"MAX non supportata per il tipo: {dtype.value}")
+
+def _default_min(dtype: DataTypes, cpp_type: str) -> str:
+    if dtype.is_number():
+        return f"std::numeric_limits<{cpp_type}>::max()"
+    raise TypeError(f"MIN non supportata per il tipo: {dtype.value}")
+
+#tabella di dispatch per i default
+_AGGREGATE_DEFAULT_DISPATCH: Dict[
+    AggFuncType, Callable[[DataTypes, str], str]
+] = {
+    AggFuncType.COUNT: lambda dtype, cpp_type: "0",
+    AggFuncType.AVG: lambda dtype, cpp_type: "0.0",
+    AggFuncType.SUM: _default_sum,
+    AggFuncType.MAX: _default_max,
+    AggFuncType.MIN: _default_min,
+}
+
+#entry-point per i default delle aggregazioni
+def get_aggregate_default(
+    func_type: Union[str, AggFuncType], json_type: Union[str, DataTypes]
+) -> str:
     """
     Restituisce la stringa del valore di default C++ per un dato aggregato.
+    Normalizza le stringhe in Enum e delega alla tabella di dispatch.
     """
+    try:
+        agg_func = AggFuncType(func_type) if isinstance(func_type, str) else func_type
+    except ValueError:
+        raise ValueError(f"Funzione di aggregazione sconosciuta o non supportata: '{func_type}'")
 
-    cpp_type = TYPE_TRANSLATION[json_type]
+    try:
+        dtype = DataTypes(json_type) if isinstance(json_type, str) else json_type
+    except ValueError:
+        raise ValueError(f"Tipo di dato sconosciuto o non supportato: '{json_type}'")
 
-    if func_type == "SUM":
-        if cpp_type in ("double", "float"):
-            return "0.0"
-        return "0"
+    handler = _AGGREGATE_DEFAULT_DISPATCH.get(agg_func)
+    if not handler:
+        raise NotImplementedError(f"Nessun handler di default registrato per: {agg_func.value}")
 
-    elif func_type == "AVG":
-        return "0.0"
-
-    elif func_type == "COUNT":
-        return "0"
-
-    elif func_type == "MAX":
-        return f"std::numeric_limits<{cpp_type}>::lowest()"
-
-    elif func_type == "MIN":
-        return f"std::numeric_limits<{cpp_type}>::max()"
-
-    else:
-        raise ValueError(f"Funzione di aggregazione sconosciuta: {func_type}")    
-
-def parse_window(window: Dict[str, Any]) -> Tuple[str, int, int]:
-    if window["type"] == "WINDOW_COUNT":
-        return ("COUNT", window["size"], window["slide"])
-
-    #finestra temporale
-    d1 = parse_duration_to_microseconds(window["size"])
-    d2 = parse_duration_to_microseconds( window["slide"])
-    return ("TIME", d1, d2)
-
-def parse_interval(interval: Dict[str, Any]) -> Tuple[int, int]:
-    d1 = parse_duration_to_microseconds(interval["lower_bound"])
-    d2 = parse_duration_to_microseconds(interval["upper_bound"])
-    return (d1, d2)
-
-def parse_duration_to_microseconds(duration: Dict[str, Any]) -> int:
-    unit = duration["unit"]
-    value = duration["value"]
-
-    if unit == "MICROSECONDS":
-        return value
-    elif unit == "MILLISECONDS":
-        return value * 1000   
-    elif unit == "SECONDS":
-        return value * 1000000
-    elif unit == "MINUTES":
-        return value * 1000000 * 60
-    elif unit == "HOURS":
-        return value * 1000000 * 60 * 60
-    elif unit == "DAYS":
-        return value * 1000000 * 60 * 60 * 24
-
-    raise ValueError(f"Unità di tempo {unit} sconosciuta.")
-    
+    cpp_type = TYPE_TRANSLATION[dtype]
+    return handler(dtype, cpp_type)

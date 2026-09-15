@@ -1,7 +1,11 @@
 from pathlib import Path
 from windflow_table_api import *
 
-env = TableEnvironment(par= 2, policy=TimePolicy.EVENT_TIME)
+env = TableEnvironment(
+    par= 2, 
+    policy=TimePolicy.EVENT_TIME, 
+    epoch= ("2026-09-04T08:00:00.000Z", TimeFormats.ISO8601)
+)
 
 sensor_schema = (SchemaBuilder()
                  .add_column("sensor_id", DataTypes.STRING)

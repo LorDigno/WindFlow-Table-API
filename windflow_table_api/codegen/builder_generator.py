@@ -23,6 +23,7 @@ class BuilderGenerator:
         event_time: bool = False,
         is_ordered: bool = True,
         delay: Optional[int] = None,
+        epoch_var: Optional[str] = None,
         par: int = 1,
         split_size: int = 0,
     ) -> str:
@@ -36,6 +37,7 @@ class BuilderGenerator:
             has_header=has_header,
             event_time=event_time,
             is_ordered=is_ordered,
+            epoch_var= epoch_var,
             delay=delay,
             par=par,
             split_size=split_size,

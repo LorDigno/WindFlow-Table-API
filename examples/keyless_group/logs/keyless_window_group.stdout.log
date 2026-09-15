@@ -8,6 +8,6 @@
 [SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SINK] File keyless_window_group_output0.csv aperto.
 [SINK] File keyless_window_group_output1.csv aperto.
-[SINK1] File keyless_window_group_output1.csv completato e chiuso.
-[SINK0] File keyless_window_group_output0.csv completato e chiuso.
+[SINK[SINK1] File keyless_window_group_output1.csv completato e chiuso.
+0] File keyless_window_group_output0.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [keyless_window_group] executed successfully[0m

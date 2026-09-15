@@ -44,8 +44,8 @@ int main(int argc, char* argv[]) {
     .build();
 
     auto distinct_3_op = Distinct_Builder<source_cold_and_dry_from_6, source_cold_and_dry_from_6>()
-    .withName("cold_and_dry_distinct_4")
-    .withParallelism(2)     
+    .withName("cold_and_dry_distinct_4")   
+    .withParallelism(2)  
     .withKeyBy([](const source_cold_and_dry_from_6& in) -> source_cold_and_dry_from_6 { return in; })
     .build_keyed();
 
@@ -98,9 +98,9 @@ int main(int argc, char* argv[]) {
     [](const avg_cold_temperature_select_1_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.avg_temp;}
 )
-    .withName("avg_cold_temperature_sink")
+    .withName("avg_cold_temperature_sink_7")
     .withParallelism(2)
-    .withHeader("sensor_id, avg_temp")
+    .withHeader("sensor_id,avg_temp")
     .build();
 
     //-----     PIPES AND TOPOLOGY  ------

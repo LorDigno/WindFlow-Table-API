@@ -10,6 +10,9 @@
 #include "intersect_tests_structs.hpp"
 
 int main(int argc, char* argv[]) {
+    //variabile di epoch per la normalizzazione dei timestamp
+    uint64_t intersect_tests_epoch = parse_ISO8601("2026-09-04T08:00:00.000Z");
+
     //-----     OPERATOR BUILDERS   -----
 
     auto from_1_op = Table_Source_Builder<source_sensor_source_query_5_from_5>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
@@ -19,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -31,7 +34,7 @@ int main(int argc, char* argv[]) {
     .withName("sensor_source_query_5_from_5")
     .withHeader()
     .withParallelism(2, 0ULL)
-    .withOrderedEventTime()
+    .withOrderedEventTime(intersect_tests_epoch)
     .build();
 
     auto where_2_op = Where_Builder<source_sensor_source_query_5_from_5>(
@@ -62,7 +65,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -74,7 +77,7 @@ int main(int argc, char* argv[]) {
     .withName("sensor_source_query_6_from_8")
     .withHeader()
     .withParallelism(2, 0ULL)
-    .withOrderedEventTime()
+    .withOrderedEventTime(intersect_tests_epoch)
     .build();
 
     auto where_5_op = Where_Builder<source_sensor_source_query_5_from_5>(

@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 from jinja2 import Environment
 from dataclasses import dataclass, field
 from .schema_gen import SchemaGenerator, CppStruct
@@ -20,7 +20,8 @@ class GraphExplorer:
         self,
         jinja_env: Environment,
         output_dir: Path,
-        parallelism: int = 1
+        parallelism: int = 1,
+        epoch_var: Optional[str] = None
     ):
         """
         Inizializza l'esploratore e i generatori sull'ambiente dato (aperto in condegen/templates/).
@@ -35,6 +36,7 @@ class GraphExplorer:
         #parametri dell'ambiente
         self.output_dir = output_dir
         self.parallelism = parallelism
+        self.epoch_var = epoch_var
 
         #gestione delle pipe
         self.pipe_counter = 0
@@ -84,7 +86,8 @@ class GraphExplorer:
             lambda_gen= self.lambda_gen,
             build_gen= self.build_gen,
             operations_counter= self.operations_counter,
-            par= self.parallelism
+            par= self.parallelism,
+            epoch_var= self.epoch_var
         )
 
         #corpo della visita, da implementare diversamente in base all'operatore

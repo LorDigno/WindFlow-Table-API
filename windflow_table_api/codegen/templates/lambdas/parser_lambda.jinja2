@@ -5,7 +5,7 @@
 {% if time_col_name %}
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_{{ time_col_format }}(token);
+    timestamp = parse_{{ time_col_format }}(token);
 {% endif %}
     //dati
 {% for field in fields %}

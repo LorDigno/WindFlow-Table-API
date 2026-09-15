@@ -10,6 +10,11 @@
 #include "{{ query_id }}_structs.hpp"
 
 int main(int argc, char* argv[]) {
+{% if epoch_var %}
+    //variabile di epoch per la normalizzazione dei timestamp
+    uint64_t {{epoch_var}} = parse_{{epoch_format}}("{{epoch_str}}");
+{% endif %}
+
     //-----     OPERATOR BUILDERS   -----
 
     {% for b in builders %}

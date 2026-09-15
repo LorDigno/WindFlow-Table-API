@@ -1,16 +1,18 @@
 from pathlib import Path
-from typing import Union
+from typing import Union, Tuple, Optional
 from jinja2 import Environment, FileSystemLoader
 from .parser import JsonParser, ParsedGraph, OpNode
 from .schema_gen import SchemaGenerator
 from .expr_translator import ExpressionTranslator
 from .explorer import GraphExplorer
+from ..times import TimeFormats
 
 def generate_code(
     query_id: str,
     time_policy: str = "NO_POLICY",
     parallelism: int = 1,
     json_dir: Union[Path, str] = Path("."),
+    epoch: Optional[Tuple[str, TimeFormats]] = None
 ) -> None:
     json_dir = Path(json_dir)
 
@@ -26,8 +28,11 @@ def generate_code(
         lstrip_blocks=True
     )
 
+    #nome della variabile di epoch se necessaria
+    epoch_var = f"{query_id}_epoch" if epoch else None
+
     #esplorazione del grafo
-    explorer = GraphExplorer( jinja_env, json_dir, parallelism)
+    explorer = GraphExplorer( jinja_env, json_dir, parallelism, epoch_var)
     explorer.visit(parsed_graph.target_root)
 
     #scrive l'header degli struct
@@ -40,7 +45,11 @@ def generate_code(
         builders= explorer.builders,
         policy= time_policy if time_policy != "NO_POLICY" else None,
         pipe_order= explorer.pipe_order,
-        pipes= explorer.pipes
+        pipes= explorer.pipes,
+        #gestion epoch
+        epoch_var= epoch_var,
+        epoch_str= epoch[0] if epoch else None,
+        epoch_format= epoch[1].value if epoch else None
     )
 
     #scrittura del file

@@ -1,6 +1,6 @@
 from __future__ import annotations
 from enum import Enum
-from typing import Dict
+from typing import Dict, Callable, Any
 
 class DataTypes(str, Enum):
     """

@@ -37,7 +37,8 @@ class JsonParser:
         sink_dict = {
             "schema_out": root_node.schema_out,
             "filename":f"{query_id}",
-            "op_type":OpType.SINK}
+            "op_type":OpType.SINK
+        }
         sink_id = self._gen_node_id(query_id, OpType.SINK)
         sink_node = OpNodeFactory.create(sink_id, sink_dict)
         sink_node.parents = [root_node]
@@ -46,7 +47,6 @@ class JsonParser:
             query_id= query_id,
             target_root= sink_node
         )
-
 
     def _gen_node_id(self, query_id: str, op_type: str) -> str:
         """
