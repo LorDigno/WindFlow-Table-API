@@ -10,6 +10,9 @@
 #include "avg_cold_temperature_structs.hpp"
 
 int main(int argc, char* argv[]) {
+    //variabile di epoch per la normalizzazione dei timestamp
+    uint64_t avg_cold_temperature_epoch = parse_ISO8601("2026-09-04T08:00:00.000Z");
+
     //-----     OPERATOR BUILDERS   -----
 
     auto from_1_op = Table_Source_Builder<source_cold_and_dry_from_6>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
@@ -19,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -31,12 +34,12 @@ int main(int argc, char* argv[]) {
     .withName("cold_and_dry_from_6")
     .withHeader()
     .withParallelism(2, 0ULL)
-    .withOrderedEventTime()
+    .withOrderedEventTime(avg_cold_temperature_epoch)
     .build();
 
     auto where_2_op = Where_Builder<source_cold_and_dry_from_6>(
         [](const source_cold_and_dry_from_6& in) -> bool {
-    return ((in.temperature < 10) && (in.humidity < 20));
+    return (in.temperature < 10);
 }
     )
     .withName("cold_and_dry_where_5")
@@ -50,20 +53,7 @@ int main(int argc, char* argv[]) {
     .build_keyed();
 
 
-    auto select_4_op = Select_Builder<source_cold_and_dry_from_6, source_cold_and_dry_from_6>(
-        [](const source_cold_and_dry_from_6& in) -> source_cold_and_dry_from_6 {
-    source_cold_and_dry_from_6 out;
-    out.sensor_id = in.sensor_id;
-    out.temperature = in.temperature;
-    out.humidity = in.humidity;
-    return out;
-}
-    )
-    .withName("select_4_op")
-    .withParallelism(2)
-    .build();
-
-    auto global_group_5_op = Global_Group_Builder<source_cold_and_dry_from_6, avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_global_group_by_2_key_struct>(
+    auto global_group_4_op = Global_Group_Builder<source_cold_and_dry_from_6, avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_global_group_by_2_key_struct>(
     [](const source_cold_and_dry_from_6& in, avg_cold_temperature_global_group_by_2_struct_out& out) -> void {
     out.sensor_id = in.sensor_id;
 
@@ -82,7 +72,7 @@ int main(int argc, char* argv[]) {
     .build_keyed();
 
 
-    auto select_6_op = Select_Builder<avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_select_1_struct_out>(
+    auto select_5_op = Select_Builder<avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_select_1_struct_out>(
         [](const avg_cold_temperature_global_group_by_2_struct_out& in) -> avg_cold_temperature_select_1_struct_out {
     avg_cold_temperature_select_1_struct_out out;
     out.sensor_id = in.sensor_id;
@@ -90,11 +80,11 @@ int main(int argc, char* argv[]) {
     return out;
 }
     )
-    .withName("select_6_op")
+    .withName("select_5_op")
     .withParallelism(2)
     .build();
 
-    auto sink_7_op = Table_Sink_Builder<avg_cold_temperature_select_1_struct_out>("avg_cold_temperature",
+    auto sink_6_op = Table_Sink_Builder<avg_cold_temperature_select_1_struct_out>("avg_cold_temperature",
     [](const avg_cold_temperature_select_1_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.avg_temp;}
 )
@@ -110,7 +100,7 @@ int main(int argc, char* argv[]) {
         , wf::Time_Policy_t::EVENT_TIME 
     );
 
-    auto& pipe_0 = topology.add_source(from_1_op).add(where_2_op).add(distinct_3_op).add(select_4_op).add(global_group_5_op).add(select_6_op).add_sink(sink_7_op);
+    auto& pipe_0 = topology.add_source(from_1_op).add(where_2_op).add(distinct_3_op).add(global_group_4_op).add(select_5_op).add_sink(sink_6_op);
 
     topology.run();
     return 0;

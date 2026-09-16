@@ -47,43 +47,20 @@
                         "op_type": "WHERE",
                         "condition": {
                             "expr_type": "BINARY_OP",
-                            "op": "&&",
+                            "op": "<",
                             "data_type": "BOOLEAN",
                             "left": {
-                                "expr_type": "BINARY_OP",
-                                "op": "<",
-                                "data_type": "BOOLEAN",
-                                "left": {
-                                    "expr_type": "COL_REF",
-                                    "name": "temperature",
-                                    "data_type": "DOUBLE"
-                                },
-                                "right": {
-                                    "expr_type": "LITERAL",
-                                    "value": 10,
-                                    "data_type": "INT",
-                                    "name": "10"
-                                },
-                                "name": "(temperature_<_10)"
+                                "expr_type": "COL_REF",
+                                "name": "temperature",
+                                "data_type": "DOUBLE"
                             },
                             "right": {
-                                "expr_type": "BINARY_OP",
-                                "op": "<",
-                                "data_type": "BOOLEAN",
-                                "left": {
-                                    "expr_type": "COL_REF",
-                                    "name": "humidity",
-                                    "data_type": "DOUBLE"
-                                },
-                                "right": {
-                                    "expr_type": "LITERAL",
-                                    "value": 20,
-                                    "data_type": "INT",
-                                    "name": "20"
-                                },
-                                "name": "(humidity_<_20)"
+                                "expr_type": "LITERAL",
+                                "value": 10,
+                                "data_type": "INT",
+                                "name": "10"
                             },
-                            "name": "((temperature_<_10)_&&_(humidity_<_20))"
+                            "name": "(temperature_<_10)"
                         },
                         "schema_out": {
                             "sensor_id": "STRING",

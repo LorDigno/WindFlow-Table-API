@@ -64,6 +64,7 @@ class OpNode(ABC):
 
     #lista di 0, 1, o 2 OpNode parents in base all'arietà dell'operatore
     parents: List[OpNode] = field(default_factory=list)
+    children: List[OpNode] = field(default_factory=list)
 
     #serializzazione JSON dell'operatore dell'api
     raw_dict: Dict[str, Any] = field(default_factory=dict)
