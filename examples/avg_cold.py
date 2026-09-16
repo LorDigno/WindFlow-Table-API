@@ -1,7 +1,11 @@
 from pathlib import Path
 from windflow_table_api import *
 
-env = TableEnvironment(par= 2, policy=TimePolicy.EVENT_TIME)
+env = TableEnvironment(
+    par= 2, 
+    policy=TimePolicy.EVENT_TIME,
+    epoch= ("2026-09-04T08:00:00.000Z", TimeFormats.ISO8601)
+)
 
 sensor_schema = (SchemaBuilder()
                  .add_column("sensor_id", DataTypes.STRING)
@@ -22,7 +26,7 @@ source_config = InputFileConfiguration(
 tab = env.table_from_file(source_config, "sensor_stream_input")
 
 #definisco la condizione per il where
-cond = (col("temperature") < 10) & (col("humidity") < 20)
+cond = col("temperature") < 10
 
 tab.name_draft("cold_and_dry")      #definisce l'id della query risultante
 q1 = (tab

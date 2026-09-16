@@ -6,6 +6,7 @@ from .schema_gen import SchemaGenerator
 from .expr_translator import ExpressionTranslator
 from .explorer import GraphExplorer
 from ..times import TimeFormats
+from .optimizer import GraphOptimizer
 
 def generate_code(
     query_id: str,
@@ -19,6 +20,7 @@ def generate_code(
     #parsing del json
     parser = JsonParser(json_dir=json_dir)
     parsed_graph = parser.create_ast(query_id)
+    parsed_graph = GraphOptimizer().optimize(parsed_graph)
 
     #setup di jinja
     templates_dir = Path(__file__).parent / "templates" 

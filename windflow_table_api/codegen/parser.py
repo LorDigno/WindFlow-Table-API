@@ -110,6 +110,9 @@ class JsonParser:
             parent_node = self._build_node_recursive(query_id, p_dict)
             node.parents.append(parent_node)
 
+            if node not in parent_node.children:
+                parent_node.children.append(node)
+
         return node
 
     def _handle_tab_ref(self, ref_dict: Dict[str, Any]) -> OpNode:
