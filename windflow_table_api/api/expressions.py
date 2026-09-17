@@ -223,7 +223,7 @@ class BinaryOpExpression(Expression):
         return ExprType.BINARY_OP  
 
     def get_default_name(self) -> str:
-        return f"({self.left.get_name()}_{self.op}_{self.right.get_name()})"
+        return f"{self.left.get_name()}_{self.op}_{self.right.get_name()}"
 
     def get_type(self, schema: Schema) -> DataTypes:
         t_left = self.left.get_type(schema)
