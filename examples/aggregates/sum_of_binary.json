@@ -1,15 +1,14 @@
 {
-    "query_id": "sensor_source_query_5",
+    "query_id": "sum_of_binary",
     "root": {
         "op_type": "SELECT",
         "schema_out": {
             "sensor_id": "STRING",
-            "temperature": "DOUBLE"
+            "SUM_temperature_+_humidity": "DOUBLE"
         },
         "schema_in": {
             "sensor_id": "STRING",
-            "temperature": "DOUBLE",
-            "humidity": "DOUBLE"
+            "SUM_temperature_+_humidity": "DOUBLE"
         },
         "expressions": [
             {
@@ -20,39 +19,49 @@
             {
                 "expr_type": "COL_REF",
                 "data_type": "DOUBLE",
-                "name": "temperature"
+                "name": "SUM_temperature_+_humidity"
             }
         ],
         "parents": [
             {
-                "op_type": "WHERE",
+                "op_type": "GLOBAL_GROUP_BY",
                 "schema_out": {
                     "sensor_id": "STRING",
-                    "temperature": "DOUBLE",
-                    "humidity": "DOUBLE"
+                    "SUM_temperature_+_humidity": "DOUBLE"
                 },
                 "schema_in": {
                     "sensor_id": "STRING",
                     "temperature": "DOUBLE",
                     "humidity": "DOUBLE"
                 },
-                "condition": {
-                    "expr_type": "BINARY_OP",
-                    "data_type": "BOOLEAN",
-                    "name": "(temperature_>_30)",
-                    "op": ">",
-                    "left": {
-                        "expr_type": "COL_REF",
+                "keys": [
+                    "sensor_id"
+                ],
+                "window": null,
+                "aggregations": [
+                    {
+                        "expr_type": "AGGREGATE",
                         "data_type": "DOUBLE",
-                        "name": "temperature"
-                    },
-                    "right": {
-                        "expr_type": "LITERAL",
-                        "data_type": "INT",
-                        "name": "30",
-                        "value": 30
+                        "name": "SUM_temperature_+_humidity",
+                        "func": "SUM",
+                        "target": {
+                            "expr_type": "BINARY_OP",
+                            "data_type": "DOUBLE",
+                            "name": "temperature_+_humidity",
+                            "op": "+",
+                            "left": {
+                                "expr_type": "COL_REF",
+                                "data_type": "DOUBLE",
+                                "name": "temperature"
+                            },
+                            "right": {
+                                "expr_type": "COL_REF",
+                                "data_type": "DOUBLE",
+                                "name": "humidity"
+                            }
+                        }
                     }
-                },
+                ],
                 "parents": [
                     {
                         "op_type": "FROM",
@@ -61,7 +70,7 @@
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
                         },
-                        "source_id": "sensor_source",
+                        "source_id": "sensor_stream_input",
                         "config": {
                             "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
                             "file_format": "CSV",

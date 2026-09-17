@@ -107,22 +107,7 @@ int main(int argc, char* argv[]) {
     .build_keyed();
 
 
-    auto select_6_op = Select_Builder<source_multiple_join_from_3_unified_source_multiple_join_from_4, source_multiple_join_from_3_unified_source_multiple_join_from_4>(
-        [](const source_multiple_join_from_3_unified_source_multiple_join_from_4& in) -> source_multiple_join_from_3_unified_source_multiple_join_from_4 {
-    source_multiple_join_from_3_unified_source_multiple_join_from_4 out;
-    out.sensor_id = in.sensor_id;
-    out.temp = in.temp;
-    out.temperature = in.temperature;
-    out.hum = in.hum;
-    out.humidity = in.humidity;
-    return out;
-}
-    )
-    .withName("select_6_op")
-    .withParallelism(2)
-    .build();
-
-    auto sink_7_op = Table_Sink_Builder<source_multiple_join_from_3_unified_source_multiple_join_from_4>("multiple_join",
+    auto sink_6_op = Table_Sink_Builder<source_multiple_join_from_3_unified_source_multiple_join_from_4>("multiple_join",
     [](const source_multiple_join_from_3_unified_source_multiple_join_from_4& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.temp << ","; os << record.hum << ","; os << record.temperature << ","; os << record.humidity;}
 )
@@ -144,7 +129,7 @@ int main(int argc, char* argv[]) {
 
     std::vector<wf::MultiPipe*> pipe_0_branches = {&pipe_1, &pipe_2};
 auto* pipe_0_pointer = wf::merge_multipipes_func(&topology, pipe_0_branches);
-auto& pipe_0 = (*pipe_0_pointer).add(join_5_op).add(select_6_op).add_sink(sink_7_op);
+auto& pipe_0 = (*pipe_0_pointer).add(join_5_op).add_sink(sink_6_op);
 
     topology.run();
     return 0;

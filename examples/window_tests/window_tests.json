@@ -2,32 +2,45 @@
     "query_id": "window_tests",
     "root": {
         "op_type": "SELECT",
-        "expressions": [
-            {
-                "expr_type": "COL_REF",
-                "name": "sensor_id",
-                "data_type": "STRING"
-            },
-            {
-                "expr_type": "COL_REF",
-                "name": "AVG_temperature",
-                "data_type": "DOUBLE",
-                "alias": "media"
-            }
-        ],
+        "schema_out": {
+            "sensor_id": "STRING",
+            "media": "DOUBLE"
+        },
         "schema_in": {
             "sensor_id": "STRING",
             "COUNT": "BIGINT",
             "SUM_temperature": "DOUBLE",
             "AVG_temperature": "DOUBLE"
         },
-        "schema_out": {
-            "sensor_id": "STRING",
-            "media": "DOUBLE"
-        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "sensor_id"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "DOUBLE",
+                "name": "AVG_temperature",
+                "alias": "media"
+            }
+        ],
         "parents": [
             {
                 "op_type": "WINDOW_GROUP_BY",
+                "schema_out": {
+                    "sensor_id": "STRING",
+                    "COUNT": "BIGINT",
+                    "SUM_temperature": "DOUBLE",
+                    "AVG_temperature": "DOUBLE"
+                },
+                "schema_in": {
+                    "sensor_id": "STRING",
+                    "temperature": "DOUBLE",
+                    "humidity": "DOUBLE",
+                    "temp": "DOUBLE",
+                    "hum": "DOUBLE"
+                },
                 "keys": [
                     "sensor_id"
                 ],
@@ -43,54 +56,58 @@
                         "unit": "MINUTES"
                     }
                 },
-                "schema_out": {
-                    "sensor_id": "STRING",
-                    "COUNT": "BIGINT",
-                    "SUM_temperature": "DOUBLE",
-                    "AVG_temperature": "DOUBLE"
-                },
-                "schema_in": {
-                    "sensor_id": "STRING",
-                    "temperature": "DOUBLE",
-                    "humidity": "DOUBLE",
-                    "temp": "DOUBLE",
-                    "hum": "DOUBLE"
-                },
                 "aggregations": [
                     {
                         "expr_type": "AGGREGATE",
-                        "func": "COUNT",
                         "data_type": "BIGINT",
-                        "target": null,
-                        "name": "COUNT"
+                        "name": "COUNT",
+                        "func": "COUNT",
+                        "target": null
                     },
                     {
                         "expr_type": "AGGREGATE",
+                        "data_type": "DOUBLE",
+                        "name": "SUM_temperature",
                         "func": "SUM",
-                        "data_type": "DOUBLE",
                         "target": {
                             "expr_type": "COL_REF",
-                            "name": "temperature",
-                            "data_type": "DOUBLE"
-                        },
-                        "name": "SUM_temperature"
+                            "data_type": "DOUBLE",
+                            "name": "temperature"
+                        }
                     },
                     {
                         "expr_type": "AGGREGATE",
-                        "func": "AVG",
                         "data_type": "DOUBLE",
+                        "name": "AVG_temperature",
+                        "alias": "media",
+                        "func": "AVG",
                         "target": {
                             "expr_type": "COL_REF",
-                            "name": "temperature",
-                            "data_type": "DOUBLE"
-                        },
-                        "name": "AVG_temperature",
-                        "alias": "media"
+                            "data_type": "DOUBLE",
+                            "name": "temperature"
+                        }
                     }
                 ],
                 "parents": [
                     {
                         "op_type": "JOIN_WINDOW",
+                        "schema_out": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE",
+                            "temp": "DOUBLE",
+                            "hum": "DOUBLE"
+                        },
+                        "tab1_schema": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE"
+                        },
+                        "tab2_schema": {
+                            "sensor_id": "STRING",
+                            "temp": "DOUBLE",
+                            "hum": "DOUBLE"
+                        },
                         "keys": [
                             "sensor_id"
                         ],
@@ -106,32 +123,15 @@
                                 "unit": "MINUTES"
                             }
                         },
-                        "tab1_schema": {
-                            "sensor_id": "STRING",
-                            "temperature": "DOUBLE",
-                            "humidity": "DOUBLE"
-                        },
-                        "tab2_schema": {
-                            "sensor_id": "STRING",
-                            "temp": "DOUBLE",
-                            "hum": "DOUBLE"
-                        },
-                        "schema_out": {
-                            "sensor_id": "STRING",
-                            "temperature": "DOUBLE",
-                            "humidity": "DOUBLE",
-                            "temp": "DOUBLE",
-                            "hum": "DOUBLE"
-                        },
                         "parents": [
                             {
                                 "op_type": "FROM",
-                                "source_id": "sensor_source",
                                 "schema_out": {
                                     "sensor_id": "STRING",
                                     "temperature": "DOUBLE",
                                     "humidity": "DOUBLE"
                                 },
+                                "source_id": "sensor_source",
                                 "config": {
                                     "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
                                     "file_format": "CSV",
@@ -147,12 +147,12 @@
                             },
                             {
                                 "op_type": "TAB_REF",
-                                "source_id": "renamed_src",
                                 "schema_out": {
                                     "sensor_id": "STRING",
                                     "temp": "DOUBLE",
                                     "hum": "DOUBLE"
-                                }
+                                },
+                                "source_id": "renamed_src"
                             }
                         ]
                     }

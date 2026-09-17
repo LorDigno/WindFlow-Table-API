@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
-from typing import Dict, List, Any, Optional, Set
-from dataclasses import dataclass, field
+from typing import Dict, List, Any, Set
+from dataclasses import dataclass
 from windflow_table_api import OpType
 from .operation_nodes import OpNodeFactory, OpNode
 
@@ -42,6 +42,7 @@ class JsonParser:
         sink_id = self._gen_node_id(query_id, OpType.SINK)
         sink_node = OpNodeFactory.create(sink_id, sink_dict)
         sink_node.parents = [root_node]
+        root_node.children = [sink_node]
 
         return ParsedGraph(
             query_id= query_id,
