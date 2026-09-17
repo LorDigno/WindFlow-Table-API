@@ -64,25 +64,52 @@
                 ],
                 "parents": [
                     {
-                        "op_type": "FROM",
+                        "op_type": "WHERE",
                         "schema_out": {
                             "sensor_id": "STRING",
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
                         },
-                        "source_id": "sensor_stream_input",
-                        "config": {
-                            "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
-                            "file_format": "CSV",
-                            "header": true,
-                            "time_col": {
-                                "name": "timestamp",
-                                "format": "ISO8601"
-                            },
-                            "order": true,
-                            "delay": null,
-                            "split_size": 0
-                        }
+                        "schema_in": {
+                            "sensor_id": "STRING",
+                            "temperature": "DOUBLE",
+                            "humidity": "DOUBLE"
+                        },
+                        "condition": {
+                            "expr_type": "UNARY_OP",
+                            "data_type": "BOOLEAN",
+                            "name": "not_(False)",
+                            "op": "not",
+                            "expr": {
+                                "expr_type": "LITERAL",
+                                "data_type": "BOOLEAN",
+                                "name": "False",
+                                "value": false
+                            }
+                        },
+                        "parents": [
+                            {
+                                "op_type": "FROM",
+                                "schema_out": {
+                                    "sensor_id": "STRING",
+                                    "temperature": "DOUBLE",
+                                    "humidity": "DOUBLE"
+                                },
+                                "source_id": "sensor_stream_input",
+                                "config": {
+                                    "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
+                                    "file_format": "CSV",
+                                    "header": true,
+                                    "time_col": {
+                                        "name": "timestamp",
+                                        "format": "ISO8601"
+                                    },
+                                    "order": true,
+                                    "delay": null,
+                                    "split_size": 0
+                                }
+                            }
+                        ]
                     }
                 ]
             }

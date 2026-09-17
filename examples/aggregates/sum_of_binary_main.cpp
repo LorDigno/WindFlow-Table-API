@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_sum_of_binary_from_3>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
-    [](const std::string& line, source_sum_of_binary_from_3& record, uint64_t& timestamp) {
+    auto from_1_op = Table_Source_Builder<source_sum_of_binary_from_4>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
+    [](const std::string& line, source_sum_of_binary_from_4& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
 
@@ -31,14 +31,23 @@ int main(int argc, char* argv[]) {
     record.humidity = parse_DOUBLE(token);
 }
 )
-    .withName("sum_of_binary_from_3")
+    .withName("sum_of_binary_from_4")
     .withHeader()
     .withParallelism(2, 0ULL)
     .withOrderedEventTime(sum_of_binary_epoch)
     .build();
 
-    auto global_group_2_op = Global_Group_Builder<source_sum_of_binary_from_3, sum_of_binary_global_group_by_2_struct_out, sum_of_binary_global_group_by_2_key_struct>(
-    [](const source_sum_of_binary_from_3& in, sum_of_binary_global_group_by_2_struct_out& out) -> void {
+    auto where_2_op = Where_Builder<source_sum_of_binary_from_4>(
+        [](const source_sum_of_binary_from_4& in) -> bool {
+    return !false;
+}
+    )
+    .withName("sum_of_binary_where_3")
+    .withParallelism(2)
+    .build();
+
+    auto global_group_3_op = Global_Group_Builder<source_sum_of_binary_from_4, sum_of_binary_global_group_by_2_struct_out, sum_of_binary_global_group_by_2_key_struct>(
+    [](const source_sum_of_binary_from_4& in, sum_of_binary_global_group_by_2_struct_out& out) -> void {
     out.sensor_id = in.sensor_id;
 
     out.SUM_temperature_+_humidity += (in.temperature + in.humidity);
@@ -46,7 +55,7 @@ int main(int argc, char* argv[]) {
 )
     .withName("sum_of_binary_global_group_by_2")
     .withParallelism(2)
-    .withKeyBy([](const source_sum_of_binary_from_3& in) -> sum_of_binary_global_group_by_2_key_struct {
+    .withKeyBy([](const source_sum_of_binary_from_4& in) -> sum_of_binary_global_group_by_2_key_struct {
     sum_of_binary_global_group_by_2_key_struct out;
     out.sensor_id = in.sensor_id;
     return out;
@@ -54,11 +63,11 @@ int main(int argc, char* argv[]) {
     .build_keyed();
 
 
-    auto sink_3_op = Table_Sink_Builder<sum_of_binary_global_group_by_2_struct_out>("sum_of_binary",
+    auto sink_4_op = Table_Sink_Builder<sum_of_binary_global_group_by_2_struct_out>("sum_of_binary",
     [](const sum_of_binary_global_group_by_2_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.SUM_temperature_+_humidity;}
 )
-    .withName("sum_of_binary_sink_4")
+    .withName("sum_of_binary_sink_5")
     .withParallelism(2)
     .withHeader("sensor_id,SUM_temperature_+_humidity")
     .build();
@@ -70,7 +79,7 @@ int main(int argc, char* argv[]) {
         , wf::Time_Policy_t::EVENT_TIME 
     );
 
-    auto& pipe_0 = topology.add_source(from_1_op).add(global_group_2_op).add_sink(sink_3_op);
+    auto& pipe_0 = topology.add_source(from_1_op).add(where_2_op).add(global_group_3_op).add_sink(sink_4_op);
 
     topology.run();
     return 0;
