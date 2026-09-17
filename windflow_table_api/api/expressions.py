@@ -61,10 +61,17 @@ class Expression(ABC):
         """
         pass
 
-    @abstractmethod
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
-        pass
-
+        """Serializza lo stato comune a tutte le espressioni AST."""
+        res: Dict[str, Any] = {
+            "expr_type": self.get_expr_type().value,
+            "data_type": self.get_type(applied_schema).value,
+            "name": self.get_default_name(),
+        }
+        if self._alias_name:
+            res["alias"] = self._alias_name
+        return res
+    
     @abstractmethod
     def validate_grouped(self, keys: List[str]) -> bool:
         """Controlla che questa espressione possa essere selezionata a seguito di un group_by(keys)."""
@@ -157,16 +164,6 @@ class ColRefExpression(Expression):
         alias_str = f" AS '{self._alias_name}'" if self._alias_name else ""
         return f"col('{self.column_name}'){alias_str}"
 
-    def to_dict(self, applied_schema:Schema) -> Dict[str, Any]:
-        res = {
-            "expr_type": self.get_expr_type().value,
-            "name": self.column_name,
-            "data_type": self.get_type(applied_schema).value
-        }
-        if self._alias_name:
-            res["alias"] = self._alias_name
-        return res
-
     def validate_grouped(self, keys: List[str]) -> bool:
         #si possono selezionare solo le colonne chiave
         return self.column_name in keys
@@ -199,15 +196,9 @@ class LiteralExpression(Expression):
         return f"lit({self.value}: {self.data_type.name}){alias_str}"
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
-        res = {
-            "expr_type": self.get_expr_type().value,
-            "value": self.value,
-            "data_type": self.data_type.value,
-            "name": self.get_default_name()
-        }
-        if self._alias_name:
-            res["alias"] = self._alias_name
-        return res
+        data = super().to_dict(applied_schema)
+        data["value"] = self.value
+        return data
 
     def validate_grouped(self, keys: List[str]) -> bool:
             #si può sempre avere un Literal in più
@@ -268,17 +259,11 @@ class BinaryOpExpression(Expression):
         return f"({self.left!r} {self.op} {self.right!r}){alias_str}"
     
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
-        res = {
-            "expr_type": self.get_expr_type().value,
-            "op": self.op,
-            "data_type": self.get_type(applied_schema).value,
-            "left": self.left.to_dict(applied_schema),
-            "right": self.right.to_dict(applied_schema),
-            "name": self.get_default_name()
-        }
-        if self._alias_name:
-            res["alias"] = self._alias_name
-        return res
+        data = super().to_dict(applied_schema)
+        data["op"] = self.op
+        data["left"] = self.left.to_dict(applied_schema)
+        data["right"] = self.right.to_dict(applied_schema)
+        return data
 
     def validate_grouped(self, keys: List[str]) -> bool:
             #valida solo se sono valide le sue sotto-espressioni
@@ -327,16 +312,10 @@ class UnaryOpExpression(Expression):
         return expr_t
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
-        res = {
-            "expr_type": self.get_expr_type().value,
-            "op": self.op,
-            "data_type": self.get_type(applied_schema).value,
-            "expr": self.expr.to_dict(applied_schema),
-            "name": self.get_default_name()
-        }
-        if self._alias_name:
-            res["alias"] = self._alias_name
-        return res
+        data = super().to_dict(applied_schema)
+        data["op"] = self.op
+        data["expr"] = self.expr.to_dict(applied_schema)
+        return data
 
     def rewrite_grouped(self) -> Expression:
         res = UnaryOpExpression(self.expr.rewrite_grouped(), self.op)
@@ -421,16 +400,12 @@ class AggregateExpression(Expression):
         return f"{self.func_type.value}({target_str}){alias_str}"
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
-        res = {
-            "expr_type": self.get_expr_type().value,
-            "func": self.func_type.value,
-            "data_type": self.get_type(applied_schema).value,
-            "target": self.target_expr.to_dict(applied_schema) if self.target_expr else None,
-            "name": self.get_default_name()
-        }
-        if self._alias_name:
-            res["alias"] = self._alias_name
-        return res
+        data = super().to_dict(applied_schema)
+        data["func"] = self.func_type.value
+        data["target"] = (
+            self.target_expr.to_dict(applied_schema) if self.target_expr else None
+        )
+        return data
 
     def validate_grouped(self, keys: List[str]) -> bool:
         #il group_by serve proprio per fare le aggregazioni

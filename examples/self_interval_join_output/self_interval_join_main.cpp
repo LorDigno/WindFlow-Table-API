@@ -10,6 +10,9 @@
 #include "self_interval_join_structs.hpp"
 
 int main(int argc, char* argv[]) {
+    //variabile di epoch per la normalizzazione dei timestamp
+    uint64_t self_interval_join_epoch = parse_ISO8601("2026-09-01T06:45:00.000Z");
+
     //-----     OPERATOR BUILDERS   -----
 
     auto from_1_op = Table_Source_Builder<source_self_interval_join_from_3>( "/home/user/TableAPI/data_streams/sensor_real_stream.csv",
@@ -19,7 +22,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -31,7 +34,7 @@ int main(int argc, char* argv[]) {
     .withName("self_interval_join_from_3")
     .withHeader()
     .withParallelism(2, 1024ULL)
-    .withWatermarkDelay(7200000000ULL)
+    .withDelayedEventTime(self_interval_join_epoch, 7200000000ULL)
     .build();
 
     auto from_2_op = Table_Source_Builder<source_self_interval_join_from_3>( "/home/user/TableAPI/data_streams/sensor_real_stream.csv",
@@ -41,7 +44,7 @@ int main(int argc, char* argv[]) {
 
     //timestamp
     std::getline(ss, token, ',');
-    timestamp = parse_TIMESTAMP_ISO8601(token);
+    timestamp = parse_ISO8601(token);
     //dati
     std::getline(ss, record.sensor_id, ',');
     std::getline(ss, token, ',');
@@ -53,7 +56,7 @@ int main(int argc, char* argv[]) {
     .withName("renaming_for_selfjoin_from_5")
     .withHeader()
     .withParallelism(2, 1024ULL)
-    .withWatermarkDelay(7200000000ULL)
+    .withDelayedEventTime(self_interval_join_epoch, 7200000000ULL)
     .build();
 
     auto select_3_op = Select_Builder<source_self_interval_join_from_3, renaming_for_selfjoin_select_4_struct_out>(

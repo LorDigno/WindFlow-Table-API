@@ -1,10 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from enum import Enum
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
-from .schema import Schema, SchemaBuilder, Field
-from .expressions import Expression, ColRefExpression, AggregateExpression
-from .durations import TimeCol
+from typing import Any, Dict, List, Optional, Union
+from .schema import Schema, SchemaBuilder
+from .expressions import Expression, AggregateExpression
 from .windows import Window, Interval, WindowType
 from ..datatypes import DataTypes
 from .file_config import InputFileConfiguration
@@ -21,22 +19,15 @@ class Operator(ABC):
     def __init__(
         self, 
         schema_out: Schema, 
-        input_schema: Schema, 
         parents: Optional[List[Operator]] = None
     ) -> None:
         self._schema_out = schema_out
-        self._input_schema = input_schema
         self._parents: List[Operator] = parents if parents is not None else []
 
     @property
     def schema_out(self) -> Schema:
         """Restituisce lo schema calcolato prodotto in uscita dall'operatore."""
         return self._schema_out
-
-    @property
-    def input_schema(self) -> Schema:
-        """Restituisce lo schema in ingresso dell'operatore."""
-        return self._input_schema
 
     @property
     def parents(self) -> List[Operator]:
@@ -53,13 +44,12 @@ class Operator(ABC):
         """Restituisce l'identificativo univoco del tipo di operatore."""
         pass
 
-    @abstractmethod
     def to_dict(self) -> Dict[str, Any]:
-        """
-        Serializza l'operatore e la sua configurazione in un dizionario
-        utilizzato per la generazione del JSON.
-        """
-        pass
+        """Serializza lo stato base comune a tutti gli operatori."""
+        return {
+            "op_type": self.get_op_type().value,
+            "schema_out": self.schema_out.to_dict(),
+        }
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(type='{self.get_op_type()}', out_schema={self._schema_out})"
@@ -78,7 +68,7 @@ class FromOp(Operator):
         self, source_table_id: str, 
         file_config: InputFileConfiguration
     ) -> None:
-        super().__init__(schema_out=file_config.schema, input_schema=SchemaBuilder().build(), parents=[])
+        super().__init__(schema_out=file_config.schema, parents=[])
         self.source_table_id = source_table_id    
         self.config = file_config
 
@@ -86,12 +76,10 @@ class FromOp(Operator):
         return OpType.FROM
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "source_id": self.source_table_id,
-            "schema_out": self.schema_out.to_dict(),
-            "config": self.config.to_dict()
-        }
+        data = super().to_dict()
+        data["source_id"] = self.source_table_id
+        data["config"] = self.config.to_dict()
+        return data
 
     def set_parents(self, parents: List[Operator]) -> None:
         """Nega la possibilità di aggiunta."""
@@ -109,18 +97,16 @@ class TableRefOp(Operator):
         source_table_id: str, 
         schema_out: Schema, 
     ) -> None:
-        super().__init__(schema_out=schema_out, input_schema=SchemaBuilder().build(), parents=[])
+        super().__init__(schema_out=schema_out, parents=[])
         self.source_table_id = source_table_id     
 
     def get_op_type(self) -> OpType:
         return OpType.TABLE_REF
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "source_id": self.source_table_id,
-            "schema_out": self.schema_out.to_dict()
-        }
+        data = super().to_dict()
+        data["source_id"] = self.source_table_id
+        return data
 
     def set_parents(self, parents: List[Operator]) -> None:
             """Nega la possibilità di aggiunta."""
@@ -142,7 +128,9 @@ class UnaryOperator(Operator, ABC):
                 parent: Optional[Operator] = None
         ) -> None:
         parents = [parent] if parent is not None else []
-        super().__init__(schema_out=schema_out, input_schema=input_schema, parents=parents)
+        super().__init__(schema_out=schema_out, parents=parents)
+
+        self.input_schema = input_schema
 
     @property
     def parent(self) -> Optional[Operator]:
@@ -160,6 +148,11 @@ class UnaryOperator(Operator, ABC):
         else:
             self._parents = parents
 
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data["schema_in"] = self.input_schema.to_dict()
+        return data
+
 class BinaryOperator(Operator, ABC):
     """
     Classe base per operatori a doppio ingresso come Join, Union e Intersect.
@@ -168,16 +161,17 @@ class BinaryOperator(Operator, ABC):
     def __init__(
         self,
         schema_out: Schema,
-        input_schema: Schema,
+        tab1_schema: Schema,
+        tab2_schema: Schema,
         left_parent: Optional[Operator] = None,
         right_parent: Optional[Operator] = None,
     ) -> None:
-        parents = []
-        if left_parent:
-            parents.append(left_parent)
-        if right_parent:
-            parents.append(right_parent)
-        super().__init__(schema_out=schema_out, input_schema=input_schema, parents=parents)
+        super().__init__(
+            schema_out=schema_out,
+            parents=[p for p in (left_parent, right_parent) if p],
+        )
+        self.tab1_schema = tab1_schema
+        self.tab2_schema = tab2_schema
 
     @property
     def left_parent(self) -> Optional[Operator]:
@@ -198,6 +192,12 @@ class BinaryOperator(Operator, ABC):
             raise RuntimeError("Devono esserci esattamente 2 parents in un operatore binario")
         else:
             self._parents = parents
+
+    def to_dict(self) -> Dict[str, Any]:
+        data = super().to_dict()
+        data["tab1_schema"] = self.tab1_schema.to_dict()
+        data["tab2_schema"] = self.tab2_schema.to_dict()
+        return data
 
 # -------------------------------------------------------------------------
 # Sottoclassi Specializzate per ogni Operazione
@@ -230,12 +230,11 @@ class SelectOp(UnaryOperator):
         return OpType.SELECT
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "expressions": [expr.to_dict(self.input_schema) for expr in self.expressions],
-            "schema_in": self.input_schema.to_dict(),
-            "schema_out": self.schema_out.to_dict()
-        }
+        data = super().to_dict()
+        data["expressions"] = [
+            expr.to_dict(self.input_schema) for expr in self.expressions
+        ]
+        return data
 
 class WhereOp(UnaryOperator):
     """
@@ -263,12 +262,9 @@ class WhereOp(UnaryOperator):
         return OpType.WHERE
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "condition": self.condition.to_dict(self.input_schema),
-            "schema_out": self.schema_out.to_dict(),
-            "schema_in": self.input_schema.to_dict()
-        }
+        data = super().to_dict()
+        data["condition"] = self.condition.to_dict(self.input_schema)
+        return data
 
 class GroupByOp(UnaryOperator):
     """
@@ -312,14 +308,13 @@ class GroupByOp(UnaryOperator):
         self.aggregations = aggregations
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "keys": self.keys,
-            "window": self.window.to_dict() if self.window else None,
-            "schema_out": self.schema_out.to_dict(),   
-            "schema_in": self.input_schema.to_dict(),
-            "aggregations": [ag.to_dict(self.input_schema) for ag in self.aggregations]
-        }
+        data = super().to_dict()
+        data["keys"] = self.keys
+        data["window"] = self.window.to_dict() if self.window else None
+        data["aggregations"] = [
+            ag.to_dict(self.input_schema) for ag in self.aggregations
+        ]
+        return data
 
 class DistinctOp(UnaryOperator):
     """
@@ -334,13 +329,6 @@ class DistinctOp(UnaryOperator):
 
     def get_op_type(self) -> OpType:
         return OpType.DISTINCT
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "schema_out": self.schema_out.to_dict(),
-            "schema_in": self.input_schema.to_dict()
-        }
 
 class JoinOp(BinaryOperator):
     """
@@ -393,11 +381,13 @@ class JoinOp(BinaryOperator):
                 )
             builder.add_column(current.name, current.data_type)         
 
-        super().__init__(schema_out=builder.build(), input_schema=tab1_schema)
+        super().__init__(
+            schema_out=builder.build(), 
+            tab1_schema= tab1_schema,
+            tab2_schema= tab2_schema
+        )
 
         self.keys = keys
-        self.tab1_schema = tab1_schema
-        self.tab2_schema = tab2_schema
         self.attachment = attachment
 
     def get_op_type(self) -> OpType:
@@ -406,14 +396,10 @@ class JoinOp(BinaryOperator):
         return OpType.JOIN_INTERVAL
 
     def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "keys": self.keys,
-            "attachment": self.attachment.to_dict(),
-            "tab1_schema": self.tab1_schema.to_dict(),
-            "tab2_schema": self.tab2_schema.to_dict(),
-            "schema_out": self.schema_out.to_dict()
-        }
+        data = super().to_dict()
+        data["keys"] = self.keys
+        data["attachment"] = self.attachment.to_dict()
+        return data
 
 class SetOp(BinaryOperator):
     """
@@ -433,19 +419,13 @@ class SetOp(BinaryOperator):
         if not(tab1_schema == tab2_schema):
             raise RuntimeError(f"{set_op_type.value} si può fare solo su tabelle a schema uguale")
 
-        super().__init__(schema_out=tab1_schema, input_schema=tab1_schema)
+        super().__init__(
+            schema_out=tab1_schema, 
+            tab1_schema= tab1_schema, 
+            tab2_schema= tab2_schema,
+        )
         self.set_op_type = set_op_type
-        #salvo anche lo schema di tab2 per un'eventuale conversione nel C++
-        self.tab2_schema = tab2_schema
 
     def get_op_type(self) -> OpType:
         return self.set_op_type
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "op_type": self.get_op_type().value,
-            "schema_out": self.schema_out.to_dict(),
-            "tab1_schema": self.input_schema.to_dict(),
-            "tab2_schema": self.tab2_schema.to_dict()
-        }
     

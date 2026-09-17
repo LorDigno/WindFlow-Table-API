@@ -151,19 +151,7 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto select_11_op = Select_Builder<sensor_source_query_5_select_4_struct_out, sensor_source_query_5_select_4_struct_out>(
-        [](const sensor_source_query_5_select_4_struct_out& in) -> sensor_source_query_5_select_4_struct_out {
-    sensor_source_query_5_select_4_struct_out out;
-    out.sensor_id = in.sensor_id;
-    out.temperature = in.temperature;
-    return out;
-}
-    )
-    .withName("select_11_op")
-    .withParallelism(2)
-    .build();
-
-    auto sink_12_op = Table_Sink_Builder<sensor_source_query_5_select_4_struct_out>("union_tests",
+    auto sink_11_op = Table_Sink_Builder<sensor_source_query_5_select_4_struct_out>("union_tests",
     [](const sensor_source_query_5_select_4_struct_out& record, std::ostream& os) {
  os << record.sensor_id << ","; os << record.temperature;}
 )
@@ -191,7 +179,7 @@ auto& pipe_1 = (*pipe_1_pointer).add(distinct_7_op);
 
     std::vector<wf::MultiPipe*> pipe_0_branches = {&pipe_1, &pipe_4};
 auto* pipe_0_pointer = wf::merge_multipipes_func(&topology, pipe_0_branches);
-auto& pipe_0 = (*pipe_0_pointer).add(select_11_op).add_sink(sink_12_op);
+auto& pipe_0 = (*pipe_0_pointer).add_sink(sink_11_op);
 
     topology.run();
     return 0;
