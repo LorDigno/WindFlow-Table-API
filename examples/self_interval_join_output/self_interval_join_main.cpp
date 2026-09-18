@@ -53,15 +53,15 @@ int main(int argc, char* argv[]) {
     record.humidity = parse_DOUBLE(token);
 }
 )
-    .withName("renaming_for_selfjoin_from_5")
+    .withName("renaming_for_self_join_from_5")
     .withHeader()
     .withParallelism(2, 1024ULL)
     .withDelayedEventTime(self_interval_join_epoch, 7200000000ULL)
     .build();
 
-    auto select_3_op = Select_Builder<source_self_interval_join_from_3, renaming_for_selfjoin_select_4_struct_out>(
-        [](const source_self_interval_join_from_3& in) -> renaming_for_selfjoin_select_4_struct_out {
-    renaming_for_selfjoin_select_4_struct_out out;
+    auto select_3_op = Select_Builder<source_self_interval_join_from_3, renaming_for_self_join_select_4_struct_out>(
+        [](const source_self_interval_join_from_3& in) -> renaming_for_self_join_select_4_struct_out {
+    renaming_for_self_join_select_4_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temp = in.temperature;
     out.hum = in.humidity;
@@ -72,9 +72,9 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto left_unifier_4_op = Select_Builder<source_self_interval_join_from_3, source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out>(
-        [](const source_self_interval_join_from_3& in) -> source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
-    source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out out;
+    auto left_unifier_4_op = Select_Builder<source_self_interval_join_from_3, source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out>(
+        [](const source_self_interval_join_from_3& in) -> source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out {
+    source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temperature = in.temperature;
     out.humidity = in.humidity;
@@ -85,9 +85,9 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto right_unifier_5_op = Select_Builder<renaming_for_selfjoin_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out>(
-        [](const renaming_for_selfjoin_select_4_struct_out& in) -> source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
-    source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out out;
+    auto right_unifier_5_op = Select_Builder<renaming_for_self_join_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out>(
+        [](const renaming_for_self_join_select_4_struct_out& in) -> source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out {
+    source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temp = in.temp;
     out.hum = in.hum;
@@ -98,9 +98,9 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto join_6_op = Table_Interval_Join_Builder<source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out, self_interval_join_join_interval_2_key_struct>(
-    [](const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& left, const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& right) -> source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
-    source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out out;
+    auto join_6_op = Table_Interval_Join_Builder<source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out, self_interval_join_join_interval_2_key_struct>(
+    [](const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& left, const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& right) -> source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out {
+    source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out out;
     out.sensor_id = left.sensor_id;
     out.temperature = left.temperature;
     out.humidity = left.humidity;
@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
 )
     .withName("self_interval_join_join_interval_2")
     .withParallelism(2)
-    .withKeyBy([](const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& in) -> self_interval_join_join_interval_2_key_struct {
+    .withKeyBy([](const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& in) -> self_interval_join_join_interval_2_key_struct {
     self_interval_join_join_interval_2_key_struct out;
     out.sensor_id = in.sensor_id;
     return out;
@@ -121,8 +121,8 @@ int main(int argc, char* argv[]) {
     .build_keyed();
 
 
-    auto select_7_op = Select_Builder<source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out, self_interval_join_select_1_struct_out>(
-        [](const source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out& in) -> self_interval_join_select_1_struct_out {
+    auto select_7_op = Select_Builder<source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out, self_interval_join_select_1_struct_out>(
+        [](const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& in) -> self_interval_join_select_1_struct_out {
     self_interval_join_select_1_struct_out out;
     out.sensor_id = in.sensor_id;
     out.temperature = in.temperature;

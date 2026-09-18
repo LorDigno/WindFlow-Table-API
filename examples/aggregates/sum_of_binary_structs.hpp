@@ -46,7 +46,7 @@ namespace std {
 // ============================================================================
 struct sum_of_binary_global_group_by_2_struct_out {
     std::string sensor_id;
-    double SUM_temperature_+_humidity = 0.0; 
+    double SUM_temperature_plus_humidity = 0.0; 
 
 
 };

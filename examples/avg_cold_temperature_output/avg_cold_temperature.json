@@ -83,7 +83,7 @@
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
                         },
-                        "source_id": "cold_and_dry"
+                        "source_id": "cold"
                     }
                 ]
             }

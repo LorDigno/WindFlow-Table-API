@@ -4,11 +4,11 @@
         "op_type": "SELECT",
         "schema_out": {
             "sensor_id": "STRING",
-            "SUM_temperature_+_humidity": "DOUBLE"
+            "SUM_temperature_plus_humidity": "DOUBLE"
         },
         "schema_in": {
             "sensor_id": "STRING",
-            "SUM_temperature_+_humidity": "DOUBLE"
+            "SUM_temperature_plus_humidity": "DOUBLE"
         },
         "expressions": [
             {
@@ -19,7 +19,7 @@
             {
                 "expr_type": "COL_REF",
                 "data_type": "DOUBLE",
-                "name": "SUM_temperature_+_humidity"
+                "name": "SUM_temperature_plus_humidity"
             }
         ],
         "parents": [
@@ -27,7 +27,7 @@
                 "op_type": "GLOBAL_GROUP_BY",
                 "schema_out": {
                     "sensor_id": "STRING",
-                    "SUM_temperature_+_humidity": "DOUBLE"
+                    "SUM_temperature_plus_humidity": "DOUBLE"
                 },
                 "schema_in": {
                     "sensor_id": "STRING",
@@ -42,12 +42,12 @@
                     {
                         "expr_type": "AGGREGATE",
                         "data_type": "DOUBLE",
-                        "name": "SUM_temperature_+_humidity",
+                        "name": "SUM_temperature_plus_humidity",
                         "func": "SUM",
                         "target": {
                             "expr_type": "BINARY_OP",
                             "data_type": "DOUBLE",
-                            "name": "temperature_+_humidity",
+                            "name": "temperature_plus_humidity",
                             "op": "+",
                             "left": {
                                 "expr_type": "COL_REF",

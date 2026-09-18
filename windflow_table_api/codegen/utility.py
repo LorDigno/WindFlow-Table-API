@@ -3,30 +3,6 @@ from enum import Enum
 from ..datatypes import TYPE_TRANSLATION, DataTypes
 from ..object_names import AggFuncType
 
-#mappa degli operatori logici/aritmetici tra JSON e C++
-OPERATOR_MAP: Dict[str, str] = {
-        # Logici
-        "&&": "&&",
-        "||": "||",
-        "and": "&&",
-        "or": "||",
-        "!": "!",
-        "not": "!",
-        "~": "!",
-        # Confronto
-        "==": "==",
-        "!=": "!=",
-        "<": "<",
-        "<=": "<=",
-        ">": ">",
-        ">=": ">=",
-        # Aritmetici
-        "+": "+",
-        "-": "-",
-        "*": "*",
-        "/": "/",
-    }
-
 #registro per le funzioni di traduzione dei letterali
 #per ora delle lambda ma si potranno fare dei metodi appositi più corposi
 LITERAL_FORMATTERS: Dict[DataTypes, Callable[[Any], str]] = {

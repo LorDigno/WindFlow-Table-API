@@ -39,7 +39,7 @@
                 "condition": {
                     "expr_type": "BINARY_OP",
                     "data_type": "BOOLEAN",
-                    "name": "(temperature_>_30)",
+                    "name": "temperature_gt_30",
                     "op": ">",
                     "left": {
                         "expr_type": "COL_REF",

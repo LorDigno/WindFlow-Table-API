@@ -4,6 +4,7 @@ from enum import Enum
 from typing import Any, Optional, Union, Dict, List
 from ..datatypes import DataTypes
 from windflow_table_api import ExprType, AggFuncType
+from ..expr_ops import BinExprOp, UnExprOp
 import copy
 from .schema import Schema
 
@@ -99,46 +100,44 @@ class Expression(ABC):
     # -------------------------------------------------------------------------
 
     def __add__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "+", self._to_expr(other))
+        return BinaryOpExpression(self, BinExprOp.PLUS, self._to_expr(other))
 
     def __sub__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "-", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.MINUS, self._to_expr(other))
 
     def __mul__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "*", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.MULT, self._to_expr(other))
 
     def __truediv__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "/", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.DIV, self._to_expr(other))
 
     def __gt__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, ">", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.GT, self._to_expr(other))
 
     def __lt__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "<", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.LT, self._to_expr(other))
 
     def __ge__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, ">=", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.GE, self._to_expr(other))
 
     def __le__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "<=", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.LE, self._to_expr(other))
 
-    def __eq__(self, other: Any) -> "BinaryOpExpression":  
-        return BinaryOpExpression(self, "==", self._to_expr(other))
+    def __eq__(self, other: Any) -> "BinaryOpExpression":
+      return BinaryOpExpression(self, BinExprOp.EQ, self._to_expr(other))
 
-    def __ne__(self, other: Any) -> "BinaryOpExpression":  
-        return BinaryOpExpression(self, "!=", self._to_expr(other))
+    def __ne__(self, other: Any) -> "BinaryOpExpression":
+      return BinaryOpExpression(self, BinExprOp.NE, self._to_expr(other))
 
     def __and__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "&&", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.AND, self._to_expr(other))
 
     def __or__(self, other: Any) -> "BinaryOpExpression":
-        return BinaryOpExpression(self, "||", self._to_expr(other))
+      return BinaryOpExpression(self, BinExprOp.OR, self._to_expr(other))
 
     def __invert__(self) -> UnaryOpExpression:
-        """
-        Bitwise Not (~) usato per il not logico perché il not logico non ha un metodo magico.
-        """
-        return UnaryOpExpression(self, "not")
+      """Bitwise Not (~) usato per il not logico perché il not logico non ha un metodo magico."""
+      return UnaryOpExpression(self, UnExprOp.NOT)
 
 # -------------------------------------------------------------------------
 # Classi figlie di Expression
@@ -213,67 +212,45 @@ class LiteralExpression(Expression):
 class BinaryOpExpression(Expression):
     """Rappresenta un'operazione binaria tra due espressioni."""
 
-    def __init__(self, left: Expression, op: str, right: Expression):
+    def __init__(self, left: Expression, op: BinExprOp, right: Expression):
         super().__init__()
         self.left = left
         self.op = op
         self.right = right
 
     def get_expr_type(self) -> ExprType:
-        return ExprType.BINARY_OP  
+        return ExprType.BINARY_OP
 
     def get_default_name(self) -> str:
-        return f"{self.left.get_name()}_{self.op}_{self.right.get_name()}"
+        return (
+            f"{self.left.get_name()}_{self.op.name.lower()}_{self.right.get_name()}"
+        )
 
     def get_type(self, schema: Schema) -> DataTypes:
         t_left = self.left.get_type(schema)
         t_right = self.right.get_type(schema)
-
-        #operatori di confronto
-        if self.op in (">", "<", ">=", "<=", "==", "!="):
-            if (t_left != t_right) and (not(t_left.is_number() and t_right.is_number())):
-                raise TypeError(
-                    f"Non si può fare {t_left} {self.op} {t_right}."
-                    f"I tipi devono essere lo stesso o entrambi numerici."
-                )
-            return DataTypes.BOOLEAN
-
-        #operatori logici
-        if self.op in ("&&", "||"):
-            if not(t_left.is_bool() and t_right.is_bool()):
-                raise TypeError(
-                    f"Non si può fare {t_left} {self.op} {t_right}."
-                    f"I tipi devono essere entrambi booleani."
-                )
-            return DataTypes.BOOLEAN
-
-        #operatori aritmetici
-        if self.op in ("+", "-", "*", "/"):
-            return DataTypes.most_general_number(t_left, t_right)
-
-        #non dovrebbe mai arrivarci dato che gli if devono essere comprensivi
-        return t_left
+        return self.op.resolve_binary_type(t_left, t_right)
 
     def __repr__(self) -> str:
         alias_str = f" AS '{self._alias_name}'" if self._alias_name else ""
-        return f"({self.left!r} {self.op} {self.right!r}){alias_str}"
-    
+        return f"({self.left!r} {self.op.value} {self.right!r}){alias_str}"
+
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
         data = super().to_dict(applied_schema)
-        data["op"] = self.op
+        data["op"] = self.op.value
         data["left"] = self.left.to_dict(applied_schema)
         data["right"] = self.right.to_dict(applied_schema)
         return data
 
     def validate_grouped(self, keys: List[str]) -> bool:
-            #valida solo se sono valide le sue sotto-espressioni
-            return self.left.validate_grouped(keys) and self.right.validate_grouped(keys)
+        # valida solo se sono valide le sue sotto-espressioni
+        return self.left.validate_grouped(keys) and self.right.validate_grouped(keys)
 
     def aggregation_dependencies(self) -> List[AggregateExpression]:
         out = []
         out += self.left.aggregation_dependencies()
         out += self.right.aggregation_dependencies()
-        return out  
+        return out
 
     def rewrite_grouped(self) -> Expression:
         res = BinaryOpExpression(
@@ -286,34 +263,24 @@ class BinaryOpExpression(Expression):
 class UnaryOpExpression(Expression):
     """Rappresenta un'operazione unaria su un'espressione."""
 
-    def __init__(self, expr:Expression, op:str):
+    def __init__(self, expr: Expression, op: UnExprOp):
         super().__init__()
         self.op = op
         self.expr = expr
 
     def get_expr_type(self) -> ExprType:
-        return ExprType.UNARY_OP    
+        return ExprType.UNARY_OP
 
     def get_default_name(self) -> str:
-            return f"{self.op}_({self.expr.get_name()})"   
+        return f"{self.op.name.lower()}_({self.expr.get_name()})"
 
     def get_type(self, schema: Schema) -> DataTypes:
-        expr_t :DataTypes = self.expr.get_type(schema)
-
-        if self.op in ("not"):
-            if expr_t != DataTypes.BOOLEAN:
-                raise TypeError(
-                    f"Non si può fare {self.op} {expr_t}."
-                    f"Il tipo dell'espressione deve essere bool."
-                )
-
-            return DataTypes.BOOLEAN
-
-        return expr_t
+        expr_t: DataTypes = self.expr.get_type(schema)
+        return self.op.resolve_unary_type(expr_t)
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
         data = super().to_dict(applied_schema)
-        data["op"] = self.op
+        data["op"] = self.op.value
         data["expr"] = self.expr.to_dict(applied_schema)
         return data
 
@@ -324,7 +291,7 @@ class UnaryOpExpression(Expression):
         return res
 
     def validate_grouped(self, keys: List[str]) -> bool:
-        #valida solo se è valide le sotto-espressione
+        # valida solo se è valide le sotto-espressione
         return self.expr.validate_grouped(keys)
 
     def aggregation_dependencies(self) -> List[AggregateExpression]:
@@ -332,7 +299,7 @@ class UnaryOpExpression(Expression):
 
     def __repr__(self) -> str:
         alias_str = f" AS '{self._alias_name}'" if self._alias_name else ""
-        return f"{self.op.upper()}({self.expr!r}){alias_str}"
+        return f"{self.op.name.upper()}({self.expr!r}){alias_str}"
 
 # -------------------------------------------------------------------------
 # Aggregazioni
@@ -348,7 +315,7 @@ class AggregateExpression(Expression):
     def __init__(
         self,
         func_type: AggFuncType,
-        target_expr: Optional[ColRefExpression] = None
+        target_expr: Optional[Expression] = None
     ) -> None:
         super().__init__()
         self.func_type = func_type
@@ -440,7 +407,7 @@ def lit(value: Any, data_type: Optional[DataTypes] = None) -> LiteralExpression:
 
     return LiteralExpression(value, data_type)
 
-def sum(expr: Union[str, ColRefExpression]) -> AggregateExpression:
+def sum(expr: Union[str, Expression]) -> AggregateExpression:
     """Calcola la somma dei valori della colonna o espressione target."""
 
     if isinstance(expr, str):
@@ -450,7 +417,7 @@ def sum(expr: Union[str, ColRefExpression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.SUM, target)
 
-def avg(expr: Union[str, ColRefExpression]) -> AggregateExpression:
+def avg(expr: Union[str, Expression]) -> AggregateExpression:
     """
     Calcola la media aritmetica dei valori della colonna o espressione target, restituisce DOUBLE.
     """
@@ -462,7 +429,7 @@ def avg(expr: Union[str, ColRefExpression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.AVG, target)
 
-def min(expr: Union[str, ColRefExpression]) -> AggregateExpression:
+def min(expr: Union[str, Expression]) -> AggregateExpression:
     """Calcola il valore minimo della colonna o espressione target."""
 
     if isinstance(expr, str):
@@ -472,7 +439,7 @@ def min(expr: Union[str, ColRefExpression]) -> AggregateExpression:
 
     return AggregateExpression(AggFuncType.MIN, target)
 
-def max(expr: Union[str, ColRefExpression]) -> AggregateExpression:
+def max(expr: Union[str, Expression]) -> AggregateExpression:
     """Calcola il valore massimo della colonna o espressione target."""
 
     if isinstance(expr, str):

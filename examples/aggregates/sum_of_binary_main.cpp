@@ -41,7 +41,7 @@ int main(int argc, char* argv[]) {
     [](const source_sum_of_binary_from_3& in, sum_of_binary_global_group_by_2_struct_out& out) -> void {
     out.sensor_id = in.sensor_id;
 
-    out.SUM_temperature_+_humidity += (in.temperature + in.humidity);
+    out.SUM_temperature_plus_humidity += (in.temperature + in.humidity);
 }
 )
     .withName("sum_of_binary_global_group_by_2")
@@ -56,11 +56,11 @@ int main(int argc, char* argv[]) {
 
     auto sink_3_op = Table_Sink_Builder<sum_of_binary_global_group_by_2_struct_out>("sum_of_binary",
     [](const sum_of_binary_global_group_by_2_struct_out& record, std::ostream& os) {
- os << record.sensor_id << ","; os << record.SUM_temperature_+_humidity;}
+ os << record.sensor_id << ","; os << record.SUM_temperature_plus_humidity;}
 )
     .withName("sum_of_binary_sink_4")
     .withParallelism(2)
-    .withHeader("sensor_id,SUM_temperature_+_humidity")
+    .withHeader("sensor_id,SUM_temperature_plus_humidity")
     .build();
 
     //-----     PIPES AND TOPOLOGY  ------

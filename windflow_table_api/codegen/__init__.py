@@ -8,7 +8,6 @@ from .parser import ParsedGraph, JsonParser
 from .schema_gen import CppField, CppStruct, SchemaGenerator
 from .expr_translator import ExpressionTranslator
 from .utility import (
-    OPERATOR_MAP, 
     get_aggregate_default, 
 )
 from .lambda_gen import LambdaGenerator
@@ -25,16 +24,12 @@ __all__ = [
     "CppStruct",
     "SchemaGenerator",
     "ExpressionTranslator",
-    "OPERATOR_MAP",
     "LambdaGenerator",
     "BuilderGenerator",
     "GraphExplorer",
     "VisitContext",
     "VisitResult",
     "get_aggregate_default",
-    "parse_window",
-    "parse_duration_to_microseconds",
-    "parse_interval",
     "code_generator",
     "generate_code"
 ]

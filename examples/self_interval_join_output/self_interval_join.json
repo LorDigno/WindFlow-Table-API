@@ -96,7 +96,7 @@
                             "temp": "DOUBLE",
                             "hum": "DOUBLE"
                         },
-                        "source_id": "renaming_for_selfjoin"
+                        "source_id": "renaming_for_self_join"
                     }
                 ]
             }

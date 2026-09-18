@@ -5,11 +5,11 @@
 --> Non-blocking queues [32menabled[0m
 --> Pinning of threads [32menabled[0m
 [SRC0] File /home/user/TableAPI/data_streams/sensor_second_stream.csv aperto.
-[SRC1] File /home/user/TableAPI/data_streams/sensor_second_stream.csv aperto.
+[SRC[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.1
+] File /home/user/TableAPI/data_streams/sensor_second_stream.csv aperto.
 [SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
-[SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SINK] File multiple_join_output1.csv aperto.
-[SINK1] File multiple_join_output1.csv completato e chiuso.
 [SINK] File multiple_join_output0.csv aperto.
 [SINK0] File multiple_join_output0.csv completato e chiuso.
+[SINK1] File multiple_join_output1.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [multiple_join] executed successfully[0m

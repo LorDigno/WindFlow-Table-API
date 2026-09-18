@@ -28,8 +28,8 @@ src = env.table_from_file(source_config, "sensor_source")
 hot_cond = col("temperature") > 30
 
 #operatori unari semplici con raggruppamento globale
-src.name_draft("unary_simple_test")
 q1 = (src
+    .name_query("unary_simple_test")
     .where(hot_cond)
     .distinct()
     .group_by("sensor_id")
@@ -44,9 +44,8 @@ window_time = Window.createTBWindow(
 
 window_count = Window.createCBWindow(10, 10)
 
-#ridenominazione per selfjoin
-src.name_draft("renamed_src")
-renamed_src = src.rename_columns(
+#ridenominazione per selfjoi
+renamed_src = src.name_query("renamed_src").rename_columns(
     {
         "temperature": "temp",
         "humidity": "hum"
@@ -54,8 +53,8 @@ renamed_src = src.rename_columns(
 )
 
 #raggruppamento e join su finestra
-src.name_draft("window_tests")
 q2 = (src
+      .name_query("window_tests")
     .join(renamed_src, "sensor_id", attachment=window_time)
     .group_by("sensor_id", window= window_time)
     .select("sensor_id", avg("temperature").alias("media"))
@@ -80,8 +79,8 @@ q5 = (src
 )
 
 #test insiemistici
-q3.name_draft("union_tests")
 q6 = (q3                    #hot
+      .name_query("union_tests")
     .union(q4)              #warm ma deduplica gli hot
     .union_all(q5)          #aggiunge i cold
     .select("sensor_id", "temperature")
@@ -89,8 +88,8 @@ q6 = (q3                    #hot
 )
 env.execute(q6, rexecute=True, output_dir="./union_tests")
 
-q3.name_draft("intersect_tests")
 q7 = (q3
+      .name_query("intersect_tests")
     .intersect(q4)      
     .select("sensor_id", "temperature")
 )
@@ -102,8 +101,7 @@ interval = Interval(
 )
 
 #ridenominazione per selfjoin senza chiave
-src.name_draft("rerenamed_src")
-rerenamed_src = src.rename_columns(
+rerenamed_src = src.name_query("rerenamed_src").rename_columns(
     {
         "sensor_id": "sens",
         "temperature": "temp",
@@ -112,15 +110,15 @@ rerenamed_src = src.rename_columns(
 )
 
 #prove su operatori keyed senza chiavi
-src.name_draft("keyless_interval_join")
 q8 = (src
+      .name_query("keyless_interval_join")
     .join(rerenamed_src, attachment=interval)
     .select("sensor_id", "temperature", "sens", "hum")
 )
 env.execute(q8, rexecute=True, output_dir="./keyless_join")
 
-src.name_draft("keyless_window_group")
 q9 = (src
+      .name_query("keyless_window_group")
     .group_by(window=window_time)
     .select(count().alias("conteggio"))
 )
