@@ -1,5 +1,11 @@
-[](const {{ input_struct }}& {{ left_var }}, const {{ input_struct }}& {{ right_var }}) -> {{ output_struct }} {
-    {{ output_struct }} out;
+[](const {{ input_struct }}& {{ left_var }}, const {{ input_struct }}& {{ right_var }}) -> std::optional<{{ output_struct }}> {
+{%if theta_cond %}
+    if( !({{theta_cond}})){
+        return std::nullopt;
+    }
+{% endif %}
+
+    {{ output_struct }} out{};
     {% for target, expr in mappings %}
     out.{{ target }} = {{ expr }};
     {% endfor %}

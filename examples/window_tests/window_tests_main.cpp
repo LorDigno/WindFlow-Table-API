@@ -99,8 +99,9 @@ int main(int argc, char* argv[]) {
     .build();
 
     auto join_6_op = Table_Window_Join_Builder<source_window_tests_from_4_unified_renamed_src_select_5_struct_out, source_window_tests_from_4_unified_renamed_src_select_5_struct_out, window_tests_join_window_3_key_struct>(
-    [](const source_window_tests_from_4_unified_renamed_src_select_5_struct_out& left, const source_window_tests_from_4_unified_renamed_src_select_5_struct_out& right) -> source_window_tests_from_4_unified_renamed_src_select_5_struct_out {
-    source_window_tests_from_4_unified_renamed_src_select_5_struct_out out;
+    [](const source_window_tests_from_4_unified_renamed_src_select_5_struct_out& left, const source_window_tests_from_4_unified_renamed_src_select_5_struct_out& right) -> std::optional<source_window_tests_from_4_unified_renamed_src_select_5_struct_out> {
+
+    source_window_tests_from_4_unified_renamed_src_select_5_struct_out out{};
     out.sensor_id = left.sensor_id;
     out.temperature = left.temperature;
     out.humidity = left.humidity;

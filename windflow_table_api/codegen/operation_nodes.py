@@ -860,16 +860,20 @@ class JoinNode(BinaryNode, ABC):
     """
 
     keys:List[str]
+    theta:Optional[Dict[str, Any]] = None
 
     @classmethod
     def extract_join_commons(cls, node_id:str, op_dict: Dict[str, Any]) -> Dict[str, Any]:
         keys = OpNode.require(op_dict, "keys", cls.op_type, list)
 
+        theta = OpNode.require(op_dict, "where", cls.op_type, dict, optional=True)
+
         base_args = cls.extract_binary_commons(node_id, op_dict, cls.op_type)
 
         return {
             **base_args,
-            "keys": keys
+            "keys": keys,
+            "theta": theta
         }
 
     def get_unifier_map(
@@ -892,6 +896,24 @@ class JoinNode(BinaryNode, ABC):
             var_name= var_name,
             ctx= ctx
         )
+
+    def get_theta_sides(
+        self,
+        left_parent_struct: CppStruct,
+        right_parent_struct: CppStruct
+    ) -> Dict[str, str]:
+        #insiemi dei campi dei due rami
+        left_cols = {f.name for f in left_parent_struct.fields}
+        right_cols = {f.name for f in right_parent_struct.fields}
+
+        #costruzione del dizionario delle variabili
+        var_map: Dict[str, str] = {}
+        for col in right_cols:
+            var_map[col] = "right"
+        for col in left_cols:
+            var_map[col] = "left"
+
+        return var_map
 
     def _prepare_join_context(self, ctx:VisitContext):
         """
@@ -987,6 +1009,12 @@ class JoinNode(BinaryNode, ABC):
             else:
                 join_mappings.append((f.name, f"right.{f.name}")) 
 
+        #traduco il predicato di theta-join con le variabili corrette
+        theta_str = None
+        if self.theta is not None:
+            var_dict = self.get_theta_sides(left_parent_struct, right_parent_struct)
+            theta_str = ctx.expr_tl.translate_with_multiple_var(self.theta, var_dict)
+
         #join lambda
         join_lambda = ctx.lambda_gen.join_lambda(
             input_struct= joined_struct.struct_name,
@@ -994,6 +1022,7 @@ class JoinNode(BinaryNode, ABC):
             mappings= join_mappings,
             left_var= "left",
             right_var= "right",
+            theta_str= theta_str
         )
 
         return result, joined_struct, join_lambda, needs_keyBy, key_lambda, key_struct

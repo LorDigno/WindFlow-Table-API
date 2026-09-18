@@ -99,8 +99,9 @@ int main(int argc, char* argv[]) {
     .build();
 
     auto join_6_op = Table_Interval_Join_Builder<source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out, source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out>(
-    [](const source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out& left, const source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out& right) -> source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out {
-    source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out out;
+    [](const source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out& left, const source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out& right) -> std::optional<source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out> {
+
+    source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out out{};
     out.sensor_id = left.sensor_id;
     out.temperature = left.temperature;
     out.humidity = left.humidity;
@@ -113,6 +114,7 @@ int main(int argc, char* argv[]) {
     300000000
 )
     .withName("keyless_interval_join_join_interval_2")
+    .withParallelism(2)
     .build();
 
 

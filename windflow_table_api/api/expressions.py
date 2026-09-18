@@ -8,6 +8,7 @@ from ..expr_ops import BinExprOp, UnExprOp
 import copy
 from .schema import Schema
 
+
 def _infer_literal_type(val: Any) -> DataTypes:
     """Inferisce il DataType a partire da un valore nativo Python."""
 
