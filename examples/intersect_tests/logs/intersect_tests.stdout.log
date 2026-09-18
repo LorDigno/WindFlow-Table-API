@@ -9,7 +9,7 @@
 [SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SRC0] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SINK] File intersect_tests_output1.csv aperto.
-[SINK1] File intersect_tests_output1.csv completato e chiuso.
 [SINK] File intersect_tests_output0.csv aperto.
 [SINK0] File intersect_tests_output0.csv completato e chiuso.
+[SINK1] File intersect_tests_output1.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [intersect_tests] executed successfully[0m

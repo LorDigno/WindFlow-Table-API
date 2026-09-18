@@ -1,7 +1,7 @@
 from typing import Any, Dict, Callable
 from dataclasses import dataclass
 from jinja2 import Environment
-from .utility import OPERATOR_MAP, LITERAL_FORMATTERS
+from .utility import LITERAL_FORMATTERS
 from ..object_names import ExprType, AggFuncType
 from ..datatypes import DataTypes
 
@@ -34,6 +34,48 @@ class ExpressionTranslator:
             AggFuncType.MIN: self._translate_min,
         }
 
+    #----- metodi per l'estrazione degli attributi
+
+    @staticmethod
+    def get_name(expr: Dict[str, Any]) -> str:
+        name = expr.get("name")
+        if not name:
+            raise KeyError(
+                f"Chiave 'alias' o 'name' mancante nell'espressione: {expr}"
+            )
+        return name
+
+    @staticmethod
+    def get_alias(expr: Dict[str, Any]) -> str:
+        """Rende l'alias se presente, altrimenti il name"""
+        alias = expr.get("alias")
+        if alias is None:
+            return ExpressionTranslator.get_name(expr)
+        return alias
+
+    @staticmethod
+    def get_op(expr: Dict[str, Any]) -> str:
+        op = expr.get("op")
+        if not op:
+            raise KeyError(f"Chiave 'op' mancante nell'espressione: {expr}")
+        return op
+
+    @staticmethod
+    def get_target(expr: Dict[str, Any]) -> Dict[str, Any]:
+        target = expr.get("target")
+        if target is None:
+            raise KeyError(f"Chiave 'target' mancante nell'aggregazione: {expr}")
+        return target
+
+    @staticmethod
+    def get_data_type(expr: Dict[str, Any]) -> DataTypes:
+        raw = expr.get("data_type")
+        if not raw:
+            raise KeyError(f"Campo 'data_type' mancante nel nodo: {expr}")
+        return DataTypes(raw) if isinstance(raw, str) else raw        
+
+    #----- effettivi metodi di traduzione
+
     def translate_expr(
         self, expr_dict: Dict[str, Any], ctx:TranslationContext = TranslationContext() 
     ) -> str:
@@ -55,10 +97,12 @@ class ExpressionTranslator:
     def _translate_col_ref(
         self, expr_dict: Dict[str, Any], ctx:TranslationContext
     ) -> str:
-        """Traduce un riferimento a colonna (COL_REF)."""
+        """
+        Traduce un riferimento a colonna (COL_REF).
+        Si usa il name e non l'alias perché questa traduzione sarà assegnata all'alias
+        """
 
-        col_name = expr_dict["name"]
-
+        col_name = self.get_name(expr_dict)
         return f"{ctx.input_var}.{col_name}"
 
     def _translate_literal(self, expr_dict: Dict[str, Any], ctx:TranslationContext) -> str:
@@ -73,8 +117,7 @@ class ExpressionTranslator:
         val = expr_dict["value"]
         data_type_raw = expr_dict.get("data_type")
 
-        if not data_type_raw:
-            raise ValueError(f"Campo 'data_type' obbligatorio mancante nel nodo LITERAL: {expr_dict}")
+        data_type_raw = self.get_data_type(expr_dict)
 
         #estraggo il DataType se possibile
         try:
@@ -93,11 +136,7 @@ class ExpressionTranslator:
     ) -> str:
         """Traduce ricorsivamente un'operazione binaria (BINARY_OP)."""
 
-        raw_op = expr_dict["op"]
-        if raw_op not in OPERATOR_MAP:
-            raise KeyError(f"Operatore binario non supportato: '{raw_op}'")
-
-        cpp_op = OPERATOR_MAP[raw_op]
+        cpp_op = self.get_op(expr_dict)
 
         # tarduzione ricorsiva
         left_cpp = self.translate_expr(expr_dict["left"], ctx)
@@ -110,11 +149,7 @@ class ExpressionTranslator:
     ) -> str:
         """Traduce un'operazione unaria (UNARY_OP), come la negazione logica '!'."""
 
-        raw_op = expr_dict["op"]
-        if raw_op not in OPERATOR_MAP:
-            raise KeyError(f"Operatore unario non supportato: '{raw_op}'")
-
-        cpp_op = OPERATOR_MAP[raw_op]
+        cpp_op = self.get_op(expr_dict)
 
         inner_expr = expr_dict.get("expr")
         if inner_expr is None:
@@ -146,7 +181,7 @@ class ExpressionTranslator:
     def _translate_count(self, expr_dict: Dict[str, Any], ctx:TranslationContext) -> str:
         template = self.jinja_env.get_template("aggregates/count.jinja2")
         return template.render(
-            field= expr_dict["name"],
+            field= self.get_name(expr_dict),
             out_var= ctx.output_var
         ) 
 
@@ -154,12 +189,12 @@ class ExpressionTranslator:
         expr_dict: Dict[str, Any], 
         ctx: TranslationContext
         ) -> str:
-        target = expr_dict["target"]
+        target = self.get_target(expr_dict)
         target_cpp = self.translate_expr(target, ctx)
 
         template = self.jinja_env.get_template("aggregates/sum.jinja2")
         return template.render(
-            field= expr_dict["name"],
+            field= self.get_name(expr_dict),
             out_var= ctx.output_var,
             target= target_cpp
         )       
@@ -168,12 +203,12 @@ class ExpressionTranslator:
         expr_dict: Dict[str, Any], 
         ctx: TranslationContext
         ) -> str:
-        target = expr_dict["target"]
+        target = self.get_target(expr_dict)
         target_cpp = self.translate_expr(target, ctx)
 
         template = self.jinja_env.get_template("aggregates/max.jinja2")
         return template.render(
-            field= expr_dict["name"],
+            field= self.get_name(expr_dict),
             out_var= ctx.output_var,
             target= target_cpp
         )         
@@ -182,12 +217,12 @@ class ExpressionTranslator:
         expr_dict: Dict[str, Any], 
         ctx: TranslationContext
         ) -> str:
-        target = expr_dict["target"]
+        target = self.get_target(expr_dict)
         target_cpp = self.translate_expr(target, ctx)
 
         template = self.jinja_env.get_template("aggregates/min.jinja2")
         return template.render(
-            field= expr_dict["name"],
+            field= self.get_name(expr_dict),
             out_var= ctx.output_var,
             target= target_cpp
         ) 
@@ -196,12 +231,12 @@ class ExpressionTranslator:
         expr_dict: Dict[str, Any], 
         ctx: TranslationContext
         ) -> str:
-        target = expr_dict["target"]
+        target = self.get_target(expr_dict)
 
         template = self.jinja_env.get_template("aggregates/avg.jinja2")
         return template.render(
-            field= expr_dict["name"],
+            field= self.get_name(expr_dict),
             out_var= ctx.output_var,
-            target= target["name"]
+            target= self.get_name(target)
         )       
    

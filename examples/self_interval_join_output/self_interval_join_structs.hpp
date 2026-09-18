@@ -19,9 +19,9 @@ struct source_self_interval_join_from_3 {
 
 
 // ============================================================================
-// Struct: renaming_for_selfjoin_select_4_struct_out
+// Struct: renaming_for_self_join_select_4_struct_out
 // ============================================================================
-struct renaming_for_selfjoin_select_4_struct_out {
+struct renaming_for_self_join_select_4_struct_out {
     std::string sensor_id;
     double temp;
     double hum;
@@ -31,9 +31,9 @@ struct renaming_for_selfjoin_select_4_struct_out {
 
 
 // ============================================================================
-// Struct: source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out
+// Struct: source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out
 // ============================================================================
-struct source_self_interval_join_from_3_unified_renaming_for_selfjoin_select_4_struct_out {
+struct source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out {
     std::string sensor_id;
     double temperature;
     double humidity;

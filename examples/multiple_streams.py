@@ -49,8 +49,8 @@ window = Window.createTBWindow(
     Duration.minutes(2)
 )
 
-src_real.name_draft("multiple_join")
 q1 = (src_real
+    .name_query("multiple_join")
     .join(src_ord, "sensor_id", attachment= window)
     .select("sensor_id", "temp", "temperature", "hum", "humidity")
 )

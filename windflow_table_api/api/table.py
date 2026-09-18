@@ -73,18 +73,13 @@ class Table:
         self._draft = None
         self._draft_name = None
 
-    def name_draft(self, name: str) -> None:
+    def name_query(self, name: str) -> Table:
         """
-        Assegna il nome al prossimo Draft che sarà il table_id della query risultante.
-        Non si può chiamare durante il drafting ma solo prima.
+        Assegna il nome al draft corrente che sarà il table_id della query risultante.
         """
 
-        if self.is_drafting():
-            raise RuntimeError(
-                f"Impossibile impostare il nome del draft '{name}': "
-                f"la composizione del Draft sulla tabella '{self._table_id}' è già iniziata."
-            )
         self._draft_name = name
+        return self
 
     # -------------------------------------------------------------------------
     # Operatori Unari

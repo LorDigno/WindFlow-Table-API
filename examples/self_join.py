@@ -28,8 +28,7 @@ source_config = InputFileConfiguration(
 
 tab = env.table_from_file(source_config, "sensor_stream_input")
 
-tab.name_draft("renaming_for_selfjoin")
-renamed_self = tab.rename_columns(
+renamed_self = tab.name_query("renaming_for_self_join").rename_columns(
     {
         "temperature": "temp",
         "humidity": "hum"
@@ -41,8 +40,8 @@ interval = Interval(
     Duration.minutes(30)
 )
 
-tab.name_draft("self_interval_join")
 q1 = (tab
+      .name_query("self_interval_join")
       .join(renamed_self, "sensor_id", attachment=interval)
       .select("sensor_id", "temperature", "hum")
 )

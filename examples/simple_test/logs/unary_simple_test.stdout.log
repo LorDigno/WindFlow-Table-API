@@ -8,6 +8,6 @@
 [SRC1] File /home/user/TableAPI/data_streams/sensor_input_stream.csv aperto.
 [SINK] File unary_simple_test_output0.csv aperto.
 [SINK] File unary_simple_test_output1.csv aperto.
-[SINK1] File unary_simple_test_output1.csv completato e chiuso.
 [SINK0] File unary_simple_test_output0.csv completato e chiuso.
+[SINK1] File unary_simple_test_output1.csv completato e chiuso.
 [32mWindFlow Status Message: PipeGraph [unary_simple_test] executed successfully[0m

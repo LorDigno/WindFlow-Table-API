@@ -15,8 +15,8 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_cold_and_dry_from_6>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
-    [](const std::string& line, source_cold_and_dry_from_6& record, uint64_t& timestamp) {
+    auto from_1_op = Table_Source_Builder<source_cold_from_6>( "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
+    [](const std::string& line, source_cold_from_6& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
 
@@ -31,30 +31,30 @@ int main(int argc, char* argv[]) {
     record.humidity = parse_DOUBLE(token);
 }
 )
-    .withName("cold_and_dry_from_6")
+    .withName("cold_from_6")
     .withHeader()
     .withParallelism(2, 0ULL)
     .withOrderedEventTime(avg_cold_temperature_epoch)
     .build();
 
-    auto where_2_op = Where_Builder<source_cold_and_dry_from_6>(
-        [](const source_cold_and_dry_from_6& in) -> bool {
+    auto where_2_op = Where_Builder<source_cold_from_6>(
+        [](const source_cold_from_6& in) -> bool {
     return (in.temperature < 10);
 }
     )
-    .withName("cold_and_dry_where_5")
+    .withName("cold_where_5")
     .withParallelism(2)
     .build();
 
-    auto distinct_3_op = Distinct_Builder<source_cold_and_dry_from_6, source_cold_and_dry_from_6>()
-    .withName("cold_and_dry_distinct_4")   
+    auto distinct_3_op = Distinct_Builder<source_cold_from_6, source_cold_from_6>()
+    .withName("cold_distinct_4")   
     .withParallelism(2)  
-    .withKeyBy([](const source_cold_and_dry_from_6& in) -> source_cold_and_dry_from_6 { return in; })
+    .withKeyBy([](const source_cold_from_6& in) -> source_cold_from_6 { return in; })
     .build_keyed();
 
 
-    auto global_group_4_op = Global_Group_Builder<source_cold_and_dry_from_6, avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_global_group_by_2_key_struct>(
-    [](const source_cold_and_dry_from_6& in, avg_cold_temperature_global_group_by_2_struct_out& out) -> void {
+    auto global_group_4_op = Global_Group_Builder<source_cold_from_6, avg_cold_temperature_global_group_by_2_struct_out, avg_cold_temperature_global_group_by_2_key_struct>(
+    [](const source_cold_from_6& in, avg_cold_temperature_global_group_by_2_struct_out& out) -> void {
     out.sensor_id = in.sensor_id;
 
     out.COUNT += 1;
@@ -64,7 +64,7 @@ int main(int argc, char* argv[]) {
 )
     .withName("avg_cold_temperature_global_group_by_2")
     .withParallelism(2)
-    .withKeyBy([](const source_cold_and_dry_from_6& in) -> avg_cold_temperature_global_group_by_2_key_struct {
+    .withKeyBy([](const source_cold_from_6& in) -> avg_cold_temperature_global_group_by_2_key_struct {
     avg_cold_temperature_global_group_by_2_key_struct out;
     out.sensor_id = in.sensor_id;
     return out;

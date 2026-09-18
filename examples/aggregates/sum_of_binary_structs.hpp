@@ -7,9 +7,9 @@
 #include <limits>
 
 // ============================================================================
-// Struct: source_sum_of_binary_from_4
+// Struct: source_sum_of_binary_from_3
 // ============================================================================
-struct source_sum_of_binary_from_4 {
+struct source_sum_of_binary_from_3 {
     std::string sensor_id;
     double temperature;
     double humidity;
@@ -46,7 +46,7 @@ namespace std {
 // ============================================================================
 struct sum_of_binary_global_group_by_2_struct_out {
     std::string sensor_id;
-    double SUM_temperature_+_humidity = 0.0; 
+    double SUM_temperature_plus_humidity = 0.0; 
 
 
 };

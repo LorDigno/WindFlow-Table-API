@@ -25,11 +25,8 @@ source_config = InputFileConfiguration(
 
 tab = env.table_from_file(source_config, "sensor_stream_input")
 
-cond = neg(lit(False, DataTypes.BOOLEAN))
-
-tab.name_draft("sum_of_binary")
 q1 = (tab
-    .where(cond)
+    .name_query("sum_of_binary")
     .group_by("sensor_id")
     .select(
         "sensor_id",
