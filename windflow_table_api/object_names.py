@@ -77,6 +77,7 @@ class ExprType(str, Enum):
     BINARY_OP = "BINARY_OP"
     UNARY_OP = "UNARY_OP"
     AGGREGATE = "AGGREGATE"
+    CURRENT_TIMESTAMP = "CURRENT_TIMESTAMP"
 
 #---- Aggregazioni con metodi di risoluzione dei tipi
 

@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 from windflow_table_api import *
 
 env = TableEnvironment(
@@ -42,7 +41,11 @@ window = Window.createTBWindow(
     Duration.minutes(5)
 )
 
-theta = (col("hum") > 50) & (col("temperature") < 20) & (col("timestamp") > col("ts"))
+theta = (
+    (col("hum") > 50) & (col("temperature") < 20) 
+    & (col("timestamp") > col("ts")) 
+    & (col("timestamp") > current_timestamp())
+)
 
 q1 = (tab
       .name_query("self_theta_join")

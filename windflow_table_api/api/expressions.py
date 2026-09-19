@@ -2,7 +2,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Optional, Union, Dict, List
 from ..object_names import ExprType, AggFuncType
-from ..types import DataTypes, TypeDescriptor
+from ..types import DataTypes, TypeDescriptor, TimeFormats
 from ..expr_ops import BinExprOp, UnExprOp
 import copy
 from .schema import Schema
@@ -374,6 +374,38 @@ class AggregateExpression(Expression):
         return res
 
 # -------------------------------------------------------------------------
+# Current Timestamp
+# -------------------------------------------------------------------------
+
+class CurrentTimestampExpression(Expression):
+    """Rappresenta il timestamp di sistema corrente (microsecondi da Unix Epoch)."""
+
+    def __init__(self) -> None:
+        super().__init__()
+
+    def get_expr_type(self) -> ExprType:
+        return ExprType.CURRENT_TIMESTAMP
+
+    def get_default_name(self) -> str:
+        return "CURRENT_TIMESTAMP"
+
+    def get_type(self, schema: Schema) -> TypeDescriptor:
+        #rende il tipo temporale standard di default
+        return TimeFormats.ISO8601
+
+    def __repr__(self) -> str:
+        return "CURRENT_TIMESTAMP()"
+
+    def validate_grouped(self, keys: List[str]) -> bool:
+        return True
+
+    def rewrite_grouped(self) -> Expression:
+        return self
+
+    def aggregation_dependencies(self) -> List[AggregateExpression]:
+        return []
+
+# -------------------------------------------------------------------------
 # Helper Functions per l'interfaccia utente
 # -------------------------------------------------------------------------
 
@@ -442,3 +474,7 @@ def neg(expr: Expression) -> UnaryOpExpression:
     Rende la UnaryOpExpression con il not logico applicato all'espressione di input. 
     """
     return ~expr
+
+def current_timestamp() -> CurrentTimestampExpression:
+    """Restituisce l'espressione che rappresenta il timestamp di sistema corrente in microsecondi."""
+    return CurrentTimestampExpression()

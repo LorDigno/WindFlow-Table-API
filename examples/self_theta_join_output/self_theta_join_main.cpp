@@ -111,7 +111,7 @@ int main(int argc, char* argv[]) {
 
     auto join_6_op = Table_Window_Join_Builder<source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out, source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out>(
     [](const source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out& left, const source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out& right) -> std::optional<source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out> {
-    if( !((((right.hum > 50) && (left.temperature < 20)) && (left.timestamp > right.ts)))){
+    if( !(((((right.hum > 50) && (left.temperature < 20)) && (left.timestamp > right.ts)) && (left.timestamp > current_time_micros())))){
         return std::nullopt;
     }
 

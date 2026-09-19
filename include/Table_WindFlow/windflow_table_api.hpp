@@ -55,5 +55,6 @@
 // ============================================================================
 #include "table_source_builder.hpp"
 #include "table_sink_builder.hpp"
+#include "helper_functions.hpp"
 
 #endif // WINDFLOW_TABLE_API_HPP

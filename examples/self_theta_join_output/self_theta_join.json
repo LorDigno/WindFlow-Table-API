@@ -81,52 +81,74 @@
                 "where": {
                     "expr_type": "BINARY_OP",
                     "data_type": "BOOL",
-                    "name": "hum_gt_50_and_temperature_lt_20_and_timestamp_gt_ts",
+                    "name": "hum_gt_50_and_temperature_lt_20_and_timestamp_gt_ts_and_timestamp_gt_CURRENT_TIMESTAMP",
                     "op": "&&",
                     "left": {
                         "expr_type": "BINARY_OP",
                         "data_type": "BOOL",
-                        "name": "hum_gt_50_and_temperature_lt_20",
+                        "name": "hum_gt_50_and_temperature_lt_20_and_timestamp_gt_ts",
                         "op": "&&",
                         "left": {
                             "expr_type": "BINARY_OP",
                             "data_type": "BOOL",
-                            "name": "hum_gt_50",
-                            "op": ">",
+                            "name": "hum_gt_50_and_temperature_lt_20",
+                            "op": "&&",
                             "left": {
-                                "expr_type": "COL_REF",
-                                "data_type": "DOUBLE",
-                                "name": "hum"
+                                "expr_type": "BINARY_OP",
+                                "data_type": "BOOL",
+                                "name": "hum_gt_50",
+                                "op": ">",
+                                "left": {
+                                    "expr_type": "COL_REF",
+                                    "data_type": "DOUBLE",
+                                    "name": "hum"
+                                },
+                                "right": {
+                                    "expr_type": "LITERAL",
+                                    "data_type": "INT",
+                                    "name": "50",
+                                    "value": 50
+                                }
                             },
                             "right": {
-                                "expr_type": "LITERAL",
-                                "data_type": "INT",
-                                "name": "50",
-                                "value": 50
+                                "expr_type": "BINARY_OP",
+                                "data_type": "BOOL",
+                                "name": "temperature_lt_20",
+                                "op": "<",
+                                "left": {
+                                    "expr_type": "COL_REF",
+                                    "data_type": "DOUBLE",
+                                    "name": "temperature"
+                                },
+                                "right": {
+                                    "expr_type": "LITERAL",
+                                    "data_type": "INT",
+                                    "name": "20",
+                                    "value": 20
+                                }
                             }
                         },
                         "right": {
                             "expr_type": "BINARY_OP",
                             "data_type": "BOOL",
-                            "name": "temperature_lt_20",
-                            "op": "<",
+                            "name": "timestamp_gt_ts",
+                            "op": ">",
                             "left": {
                                 "expr_type": "COL_REF",
-                                "data_type": "DOUBLE",
-                                "name": "temperature"
+                                "data_type": "ISO8601",
+                                "name": "timestamp"
                             },
                             "right": {
-                                "expr_type": "LITERAL",
-                                "data_type": "INT",
-                                "name": "20",
-                                "value": 20
+                                "expr_type": "COL_REF",
+                                "data_type": "ISO8601",
+                                "name": "ts"
                             }
                         }
                     },
                     "right": {
                         "expr_type": "BINARY_OP",
                         "data_type": "BOOL",
-                        "name": "timestamp_gt_ts",
+                        "name": "timestamp_gt_CURRENT_TIMESTAMP",
                         "op": ">",
                         "left": {
                             "expr_type": "COL_REF",
@@ -134,9 +156,9 @@
                             "name": "timestamp"
                         },
                         "right": {
-                            "expr_type": "COL_REF",
+                            "expr_type": "CURRENT_TIMESTAMP",
                             "data_type": "ISO8601",
-                            "name": "ts"
+                            "name": "CURRENT_TIMESTAMP"
                         }
                     }
                 },

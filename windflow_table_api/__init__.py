@@ -41,6 +41,7 @@ from .api.expressions import (
     min,
     neg,
     sum,
+    current_timestamp,
 )
 from .api.file_config import FileFormat, InputFileConfiguration, SplitSize
 from .api.schema import Field, Schema, SchemaBuilder
@@ -86,6 +87,7 @@ __all__ = [
     "min",
     "max",
     "count",
+    "current_timestamp",
     # Espressioni AST
     "Expression",
     "ColRefExpression",
