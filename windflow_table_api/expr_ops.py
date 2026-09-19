@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, Callable
 from abc import ABC, abstractmethod
-from .datatypes import DataTypes
+from .types import TypeDescriptor, DataTypes
 
 class ExprOp(Enum):
     def __init__(self, cpp_syntax: str):
@@ -10,18 +10,18 @@ class ExprOp(Enum):
 class UnExprOp(ExprOp):
     NOT = "!"
 
-    def resolve_unary_type(self, t:DataTypes) -> DataTypes:
+    def resolve_unary_type(self, t:TypeDescriptor) -> TypeDescriptor:
         target = UNARY_TYPE_RULES[self]
         return target(t)
 
-def _resolve_unary_not(t: DataTypes) -> DataTypes:
-  if not t.is_bool():
+def _resolve_unary_not(t: TypeDescriptor) -> TypeDescriptor:
+  if not t.is_boolean:
     raise TypeError(
-        f"L'operatore NOT richiede un tipo booleano, ricevuto: {t.name}"
+        f"L'operatore NOT richiede un tipo booleano, ricevuto: {t.logical_name}"
     )
   return DataTypes.BOOLEAN    
 
-UNARY_TYPE_RULES: Dict[UnExprOp, Callable[[DataTypes], DataTypes]] = {
+UNARY_TYPE_RULES: Dict[UnExprOp, Callable[[TypeDescriptor], TypeDescriptor]] = {
     UnExprOp.NOT: _resolve_unary_not,
 }
 
@@ -39,26 +39,26 @@ class BinExprOp(ExprOp):
     EQ = "=="
     NE = "!="
 
-    def resolve_binary_type(self, t_left: DataTypes, t_right: DataTypes) -> DataTypes:
+    def resolve_binary_type(self, t_left: TypeDescriptor, t_right: TypeDescriptor) -> TypeDescriptor:
         target = BINARY_TYPE_RULES[self]
         return target(t_left, t_right)
 
-def _resolve_arithmetic(t_left: DataTypes, t_right: DataTypes) -> DataTypes:
-    if not (t_left.is_number() and t_right.is_number()):
+def _resolve_arithmetic(t_left: TypeDescriptor, t_right: TypeDescriptor) -> TypeDescriptor:
+    if not (t_left.is_number and t_right.is_number):
         raise TypeError(f"Operazione aritmetica non valida tra {t_left} e {t_right}")
     return DataTypes.most_general_number(t_left, t_right)
 
-def _resolve_comparison(t_left: DataTypes, t_right: DataTypes) -> DataTypes:
-    if (t_left != t_right) and not (t_left.is_number() and t_right.is_number()):
+def _resolve_comparison(t_left: TypeDescriptor, t_right: TypeDescriptor) -> TypeDescriptor:
+    if (t_left != t_right) and not (t_left.is_number and t_right.is_number):
         raise TypeError(f"Confronto non valido tra {t_left} e {t_right}")
     return DataTypes.BOOLEAN
 
-def _resolve_logical(t_left: DataTypes, t_right: DataTypes) -> DataTypes:
-    if not (t_left.is_bool() and t_right.is_bool()):
+def _resolve_logical(t_left: TypeDescriptor, t_right: TypeDescriptor) -> TypeDescriptor:
+    if not (t_left.is_boolean and t_right.is_boolean):
         raise TypeError(f"Operatore logico richiede booleani, ricevuti: {t_left}, {t_right}")
     return DataTypes.BOOLEAN
 
-BINARY_TYPE_RULES: Dict[BinExprOp, Callable[[DataTypes, DataTypes], DataTypes]] = {
+BINARY_TYPE_RULES: Dict[BinExprOp, Callable[[TypeDescriptor, TypeDescriptor], TypeDescriptor]] = {
     BinExprOp.PLUS: _resolve_arithmetic,
     BinExprOp.MINUS: _resolve_arithmetic,
     BinExprOp.MULT: _resolve_arithmetic,

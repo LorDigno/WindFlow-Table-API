@@ -1,11 +1,10 @@
 """WindFlow Table API - Python DSL e Code Generator per Streaming Analytics su WindFlow."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 # =============================================================================
 # Tipi ed Enum Condivisi (Contratti trasversali tra API, Codegen e Runtime)
 # =============================================================================
-from .datatypes import DataTypes, TYPE_TRANSLATION
 from .object_names import (
     OpType,
     AggFuncType,
@@ -14,9 +13,13 @@ from .object_names import (
     WindowType,
 )
 from .times import (
-    TimeFormats,
     TimePolicy,
     TimeUnits,
+)
+from .types import (
+    TypeDescriptor,
+    DataTypes,
+    TimeFormats
 )
 
 # =============================================================================
@@ -59,11 +62,11 @@ __all__ = [
     "OpType",
     "ExprType",
     "AggFuncType",
-    "DataTypes",
-    "TYPE_TRANSLATION",
     "TimeUnits",
-    "TimeFormats",
     "TimePolicy",
+    "TypeDescriptor",
+    "DataTypes",
+    "TimeFormats",
     "WindowType",
     "WindowKind",
     # DSL Environment & Tabelle
