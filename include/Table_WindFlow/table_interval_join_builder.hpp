@@ -13,10 +13,10 @@ class Interval_Functor{
 
     private:
         //date le due tuple 
-        std::function<OutputT(const InputT&, const InputT&)> join_func;
+        std::function<std::optional<OutputT>(const InputT&, const InputT&)> join_func;
 
     public:
-        Interval_Functor(std::function<OutputT(const InputT&, const InputT&)> func) 
+        Interval_Functor(std::function<std::optional<OutputT>(const InputT&, const InputT&)> func) 
             : join_func(func) {} 
   
         std::optional<OutputT> operator()(const InputT& left, const InputT& right){
@@ -27,7 +27,7 @@ class Interval_Functor{
 template <typename InputT, typename OutputT, typename KeyT = std::string>
 class Table_Interval_Join_Builder {
 private:
-    std::function<OutputT(const InputT&, const InputT&)> join_func;
+    std::function<std::optional<OutputT>(const InputT&, const InputT&)> join_func;
     std::string op_name = "IntervalJoin_Operator";
     size_t parallelism = 1;
 
@@ -40,7 +40,7 @@ private:
 public:
     //associa la lambda
     Table_Interval_Join_Builder(
-        std::function<OutputT(const InputT&, const InputT&)> func,
+        std::function<std::optional<OutputT>(const InputT&, const InputT&)> func,
         int64_t low,
         int64_t up) 
             : join_func(func), lower_bound(low), upper_bound(up) {}
@@ -68,7 +68,8 @@ public:
         Interval_Functor<InputT, OutputT> functor(join_func);
         return wf::Interval_Join_Builder(functor)
             .withName(op_name)
-            .withParallelism(1)
+            .withParallelism(parallelism)
+            .withKeyBy([](const InputT&) -> int { return 0; }) //dummy per il parallelismo
             .withDPMode()
             .withBoundaries(
                 std::chrono::microseconds(lower_bound), 

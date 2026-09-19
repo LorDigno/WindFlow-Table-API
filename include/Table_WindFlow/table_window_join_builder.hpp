@@ -15,10 +15,10 @@ public:
     using result_t = OutputT;
 
 private:
-    std::function<OutputT(const InputT&, const InputT&)> join_func;
+    std::function<std::optional<OutputT>(const InputT&, const InputT&)> join_func;
 
 public:
-    Join_Functor(std::function<OutputT(const InputT&, const InputT&)> func) 
+    Join_Functor(std::function<std::optional<OutputT>(const InputT&, const InputT&)> func) 
         : join_func(func) {} 
 
     std::optional<OutputT> operator()(const InputT& left, const InputT& right) {
@@ -29,7 +29,7 @@ public:
 template <typename InputT, typename OutputT, typename KeyT = std::string>
 class Table_Window_Join_Builder {
 private:
-    std::function<OutputT(const InputT&, const InputT&)> join_func;
+    std::function<std::optional<OutputT>(const InputT&, const InputT&)> join_func;
     std::string op_name = "WindowJoin_Operator";
     size_t parallelism = 1;
 
@@ -41,7 +41,7 @@ private:
     uint64_t win_slide = 0;
 
 public:
-    Table_Window_Join_Builder(std::function<OutputT(const InputT&, const InputT&)> func)
+    Table_Window_Join_Builder(std::function<std::optional<OutputT>(const InputT&, const InputT&)> func)
         : join_func(func) {}
 
     Table_Window_Join_Builder& withName(const std::string& name) {
@@ -74,7 +74,8 @@ public:
 
         auto builder = wf::Window_Join_Builder(functor)
             .withName(op_name)
-            .withParallelism(1)
+            .withParallelism(parallelism)
+            .withKeyBy([](const InputT&) -> int { return 0; }) //dummy per il parallelismo
             .withDPMode();
 
         if (win_size == win_slide) {

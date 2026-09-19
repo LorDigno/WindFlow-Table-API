@@ -99,8 +99,9 @@ int main(int argc, char* argv[]) {
     .build();
 
     auto join_6_op = Table_Interval_Join_Builder<source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out, source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out, self_interval_join_join_interval_2_key_struct>(
-    [](const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& left, const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& right) -> source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out {
-    source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out out;
+    [](const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& left, const source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out& right) -> std::optional<source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out> {
+
+    source_self_interval_join_from_3_unified_renaming_for_self_join_select_4_struct_out out{};
     out.sensor_id = left.sensor_id;
     out.temperature = left.temperature;
     out.humidity = left.humidity;

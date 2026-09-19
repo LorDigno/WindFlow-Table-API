@@ -86,8 +86,9 @@ int main(int argc, char* argv[]) {
     .build();
 
     auto join_5_op = Table_Window_Join_Builder<source_multiple_join_from_3_unified_source_multiple_join_from_4, source_multiple_join_from_3_unified_source_multiple_join_from_4, multiple_join_join_window_2_key_struct>(
-    [](const source_multiple_join_from_3_unified_source_multiple_join_from_4& left, const source_multiple_join_from_3_unified_source_multiple_join_from_4& right) -> source_multiple_join_from_3_unified_source_multiple_join_from_4 {
-    source_multiple_join_from_3_unified_source_multiple_join_from_4 out;
+    [](const source_multiple_join_from_3_unified_source_multiple_join_from_4& left, const source_multiple_join_from_3_unified_source_multiple_join_from_4& right) -> std::optional<source_multiple_join_from_3_unified_source_multiple_join_from_4> {
+
+    source_multiple_join_from_3_unified_source_multiple_join_from_4 out{};
     out.sensor_id = left.sensor_id;
     out.temp = left.temp;
     out.hum = left.hum;

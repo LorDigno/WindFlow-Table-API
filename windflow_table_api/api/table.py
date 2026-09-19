@@ -269,6 +269,7 @@ class Table:
         other: Table,
         *on: str,
         attachment: Union[Interval, Window],
+        where: Optional[Expression] = None
     ) -> Table:
         """
         Esegue una Join (Inner, Interval, Window) tra questa tabella e un'altra tabella target.
@@ -290,7 +291,7 @@ class Table:
             )
 
         draft = self.get_draft()
-        join_op = JoinOp(list(on), draft.current_schema, other.schema, attachment)
+        join_op = JoinOp(list(on), draft.current_schema, other.schema, attachment, where)
         draft.add_binary_operator(join_op, TableRefOp(other.table_id, other.schema))
 
         return self

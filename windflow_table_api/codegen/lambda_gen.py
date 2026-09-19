@@ -65,6 +65,7 @@ class LambdaGenerator:
         mappings: List[Tuple[str, str]],
         left_var: str = "left",
         right_var: str = "right",
+        theta_str: Optional[str] = None
     ) -> str:
         template = self._jinja_env.get_template("lambdas/join_lambda.jinja2")
         return template.render(
@@ -72,7 +73,8 @@ class LambdaGenerator:
             output_struct= out_struct,
             mappings= mappings, 
             left_var= left_var,
-            right_var= right_var
+            right_var= right_var,
+            theta_cond= theta_str
         )        
 
     def parser_lambda(

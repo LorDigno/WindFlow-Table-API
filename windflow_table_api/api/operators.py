@@ -340,7 +340,8 @@ class JoinOp(BinaryOperator):
         keys: List[str],
         tab1_schema: Schema,
         tab2_schema: Schema,
-        attachment: Union[Window, Interval]
+        attachment: Union[Window, Interval],
+        where: Optional[Expression] = None
     ) -> None:                
         if isinstance(attachment, Window) and attachment.window_type == WindowType.COUNT:
             raise TypeError(
@@ -381,14 +382,24 @@ class JoinOp(BinaryOperator):
                 )
             builder.add_column(current.name, current.data_type)         
 
+        output_schema = builder.build()
+
+        #controllo che where sia un predicato
+        if where and where.get_type(output_schema) != DataTypes.BOOLEAN:
+            raise TypeError(
+                f"La condizione 'where' (theta) di una join deve essere un predicato."
+                f"\nRicevuto {where},\n di tipo {where.get_type(output_schema)}"
+            )
+
         super().__init__(
-            schema_out=builder.build(), 
+            schema_out= output_schema, 
             tab1_schema= tab1_schema,
             tab2_schema= tab2_schema
         )
 
         self.keys = keys
         self.attachment = attachment
+        self.where = where
 
     def get_op_type(self) -> OpType:
         if isinstance(self.attachment, Window):
@@ -399,6 +410,10 @@ class JoinOp(BinaryOperator):
         data = super().to_dict()
         data["keys"] = self.keys
         data["attachment"] = self.attachment.to_dict()
+
+        if self.where:
+            data["where"] = self.where.to_dict(self.schema_out)
+
         return data
 
 class SetOp(BinaryOperator):

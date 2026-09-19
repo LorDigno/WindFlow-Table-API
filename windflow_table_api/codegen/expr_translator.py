@@ -1,5 +1,5 @@
 from typing import Any, Dict, Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from jinja2 import Environment
 from .utility import LITERAL_FORMATTERS
 from ..object_names import ExprType, AggFuncType
@@ -10,6 +10,9 @@ from ..datatypes import DataTypes
 class TranslationContext:
     input_var: str = "in"
     output_var: str = "out"
+
+    #dizionario usato per estrarre a colonne diverse da variabili diverse 
+    var_names: Dict[str, str] = field(default_factory= dict)
 
 class ExpressionTranslator:
     """Traduce le espressioni nel JSON in stringhe di codice C++."""
@@ -103,7 +106,18 @@ class ExpressionTranslator:
         """
 
         col_name = self.get_name(expr_dict)
-        return f"{ctx.input_var}.{col_name}"
+        var = ctx.input_var
+
+        #estraggo una variabile non di default se presente
+        if ctx.var_names:
+            if not (col_name in ctx.var_names):
+                raise KeyError(
+                    f"Colonna '{col_name}' non trovata tra le variabili fornite:"
+                    f" {list(ctx.var_names.keys())}"
+                )
+            var = ctx.var_names[col_name]
+
+        return f"{var}.{col_name}"
 
     def _translate_literal(self, expr_dict: Dict[str, Any], ctx:TranslationContext) -> str:
         """
@@ -158,6 +172,19 @@ class ExpressionTranslator:
         inner_cpp = self.translate_expr(inner_expr, ctx)
 
         return f"{cpp_op}{inner_cpp}"
+
+    #----- Entry Point per traduzioni a più variabili
+    def translate_with_multiple_var(
+        self,
+        expr_dict: Dict[str, Any],
+        var_dict: Dict[str, str]
+    ) -> str:
+        """
+        Entry point per tradurre espressioni che utilizzano più variabili.
+        """
+
+        ctx = TranslationContext(var_names= var_dict)
+        return self.translate_expr(expr_dict, ctx)
 
 # -------------------------------------------------------------------------
 # Aggregazioni
