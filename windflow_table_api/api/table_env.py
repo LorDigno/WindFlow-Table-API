@@ -7,7 +7,8 @@ from .table import Table, Query
 from .windows import Interval, WindowType
 from .file_config import InputFileConfiguration
 from .job_handle import JobHandle
-from ..times import TimePolicy, TimeFormats
+from ..times import TimePolicy
+from ..types import TimeFormats
 import json
 
 class TableEnvironment:

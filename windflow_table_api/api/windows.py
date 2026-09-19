@@ -1,5 +1,4 @@
 from __future__ import annotations
-from enum import Enum
 from typing import Any, Dict, Optional, Union
 from .durations import Duration
 from windflow_table_api import WindowType, WindowKind

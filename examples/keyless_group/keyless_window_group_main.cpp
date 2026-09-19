@@ -20,15 +20,19 @@ int main(int argc, char* argv[]) {
     std::stringstream ss(line);
     std::string token;
 
-    //timestamp
     std::getline(ss, token, ',');
+    record.timestamp = parse_ISO8601(token);
     timestamp = parse_ISO8601(token);
-    //dati
-    std::getline(ss, record.sensor_id, ',');
+
+    std::getline(ss, token, ',');
+    record.sensor_id = parse_STRING(token);
+
     std::getline(ss, token, ',');
     record.temperature = parse_DOUBLE(token);
+
     std::getline(ss, token, ',');
     record.humidity = parse_DOUBLE(token);
+
 }
 )
     .withName("keyless_window_group_from_3")
@@ -61,7 +65,9 @@ int main(int argc, char* argv[]) {
 
     auto sink_4_op = Table_Sink_Builder<keyless_window_group_select_1_struct_out>("keyless_window_group",
     [](const keyless_window_group_select_1_struct_out& record, std::ostream& os) {
- os << record.conteggio;}
+ 
+    os << record.conteggio;
+}
 )
     .withName("keyless_window_group_sink_4")
     .withParallelism(2)

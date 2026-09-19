@@ -1,23 +1,24 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Dict, List, Optional, Iterator
-from ..datatypes import DataTypes
+from typing import TYPE_CHECKING, Dict, List, Optional, Iterator, Union
+from ..types import TypeDescriptor
 if TYPE_CHECKING:
     from .expressions import Expression
+
 
 class Field:
     """
     Rappresenta un singolo campo/colonna all'interno di uno Schema.
-    Mantiene il nome logico, il DataType e l'eventuale Espressione AST che l'ha generato.
+    Mantiene il nome logico, il TypeDescriptor e l'eventuale Expression che l'ha generato.
     """
 
-    def __init__(self, name: str, data_type: DataTypes, expression: Optional[Expression] = None):
+    def __init__(self, name: str, type: TypeDescriptor, expression: Optional[Expression] = None):
         self.name = name
-        self.data_type = data_type
+        self.data_type = type
         self.expression = expression
 
     def __repr__(self) -> str:
-        expr_str = f", expr={self.expression!r}" if self.expression else ""
-        return f"Field(name='{self.name}', type={self.data_type.value}{expr_str})"
+        expr_str = f", expr={self.expression}" if self.expression else ""
+        return f"Field(name='{self.name}', type={self.data_type.logical_name}{expr_str})"
 
 class Schema:
     """
@@ -29,8 +30,8 @@ class Schema:
         self._fields: Dict[str, Field] = fields.copy()
 
     @property
-    def fields(self) -> Dict[str, DataTypes]:
-        """Restituisce una mappa nome_colonna -> DataType"""
+    def fields(self) -> Dict[str, TypeDescriptor]:
+        """Restituisce una mappa nome_colonna -> TypeDescriptor"""
 
         return {name: field.data_type for name, field in self._fields.items()}
 
@@ -39,8 +40,8 @@ class Schema:
 
         return list(self._fields.keys())
 
-    def get_types(self) -> List[DataTypes]:
-        """Restituisce la lista ordinata dei DataType delle colonne."""
+    def get_types(self) -> List[TypeDescriptor]:
+        """Restituisce la lista ordinata dei TypeDescriptor delle colonne."""
 
         return [field.data_type for field in self._fields.values()]
 
@@ -60,8 +61,8 @@ class Schema:
         
         return self._fields[column_name]
 
-    def get_type_for(self, column_name: str) -> DataTypes:
-        """Restituisce il DataType di una specifica colonna."""
+    def get_type_for(self, column_name: str) -> TypeDescriptor:
+        """Restituisce il TypeDescriptor di una specifica colonna."""
 
         f = self.get_field(column_name)
         return f.data_type
@@ -75,7 +76,7 @@ class Schema:
         return f.expression
     
     def __repr__(self) -> str:
-        fields_str = ", ".join(f"'{k}': {v.data_type.value}" for k, v in self._fields.items())
+        fields_str = ", ".join(f"'{k}': {v.data_type.logical_name}" for k, v in self._fields.items())
         return f"Schema({{{fields_str}}})"
 
     def __eq__(self, other) -> bool:
@@ -85,7 +86,7 @@ class Schema:
         return other.fields == self.fields
 
     def to_dict(self)-> Dict[str, str]:
-        return {col_name: data_type.name for col_name, data_type in self.fields.items()}
+        return {col_name: data_type.logical_name for col_name, data_type in self.fields.items()}
 
     def __contains__(self, column_name: object) -> bool:
         return column_name in self._fields
@@ -108,17 +109,19 @@ class SchemaBuilder:
         self._fields: Dict[str, Field] = {}
 
     def add_column(
-        self, name: str, data_type: DataTypes, expression: Optional[Expression] = None
+        self, name: str, data_type: Union[TypeDescriptor, str], expression: Optional[Expression] = None
     ) -> SchemaBuilder:
         """
-        Aggiunge una colonna specificando esplicitamente nome, DataType ed eventuale espressione.
+        Aggiunge una colonna specificando esplicitamente nome, TypeDescriptor ed eventuale espressione.
         Se la colonna è già presente solleva un errore.
+        Si può passare la stringa equivalente al TypeDescriptor.
         """
 
         if name in self._fields:
             raise ValueError(f"La colonna '{name}' è già presente nello schema {self._fields}.")
-        
-        self._fields[name] = Field(name, data_type, expression)
+
+        resolved_type = TypeDescriptor.from_value(data_type)
+        self._fields[name] = Field(name, resolved_type, expression)
         return self
 
     def add_expression(
@@ -129,7 +132,7 @@ class SchemaBuilder:
         """
         Aggiunge una colonna derivata direttamente da un'Expression:
         - Estrae il nome dall'alias o dal nome di default dell'espressione (se default_name = True prende sempre il default)
-        - Calcola il DataType applicando l'espressione sullo schema di input
+        - Calcola il TypeDescriptor applicando l'espressione sullo schema di input
         - Associa l'oggetto Expression al campo
         """
 

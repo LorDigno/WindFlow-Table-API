@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional, Dict, Any
-from .durations import TimeCol, Duration
+from .durations import Duration
 from .schema import Schema
 from pathlib import Path
 
@@ -41,7 +41,7 @@ class InputFileConfiguration:
     has_header: bool
     is_ordered: bool
     delay: Optional[Duration]
-    time_col: Optional[TimeCol]
+    time_col: Optional[str]
     split_size: int
 
     def __init__( self,
@@ -51,7 +51,7 @@ class InputFileConfiguration:
         has_header: bool,
         order: bool,
         split_size: SplitSize = SplitSize(0),
-        time_col: Optional[TimeCol] = None,
+        time_col: Optional[str] = None,
         delay: Optional[Duration] = None
     ):
         resolved_path = path.resolve().absolute()
@@ -68,6 +68,13 @@ class InputFileConfiguration:
             raise ValueError(
                 "Per sorgenti ordinate (order=True) non è consentito specificare un 'delay'."
             )
+
+        if time_col is not None and not schema.has_field(time_col):
+            raise ValueError(
+                "La TimeCol deve essere una colonna presente nello schema."
+                f"\nFornita: {time_col} per {schema}."
+            )
+
         
         self.filepath = resolved_path
         self.file_format = format
@@ -83,7 +90,7 @@ class InputFileConfiguration:
             "filepath": str(self.filepath),
             "file_format": self.file_format.name,
             "header": self.has_header,
-            "time_col": self.time_col.to_dict() if self.time_col else None,
+            "time_col": self.time_col,
             "order": self.is_ordered,
             "delay": self.delay.to_dict() if self.delay else None,
             "split_size": self.split_size

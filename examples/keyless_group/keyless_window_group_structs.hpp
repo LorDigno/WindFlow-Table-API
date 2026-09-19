@@ -10,6 +10,7 @@
 // Struct: source_keyless_window_group_from_3
 // ============================================================================
 struct source_keyless_window_group_from_3 {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;

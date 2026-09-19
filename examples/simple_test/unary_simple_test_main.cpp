@@ -20,15 +20,19 @@ int main(int argc, char* argv[]) {
     std::stringstream ss(line);
     std::string token;
 
-    //timestamp
     std::getline(ss, token, ',');
+    record.timestamp = parse_ISO8601(token);
     timestamp = parse_ISO8601(token);
-    //dati
-    std::getline(ss, record.sensor_id, ',');
+
+    std::getline(ss, token, ',');
+    record.sensor_id = parse_STRING(token);
+
     std::getline(ss, token, ',');
     record.temperature = parse_DOUBLE(token);
+
     std::getline(ss, token, ',');
     record.humidity = parse_DOUBLE(token);
+
 }
 )
     .withName("unary_simple_test_from_5")
@@ -84,7 +88,11 @@ int main(int argc, char* argv[]) {
 
     auto sink_6_op = Table_Sink_Builder<unary_simple_test_select_1_struct_out>("unary_simple_test",
     [](const unary_simple_test_select_1_struct_out& record, std::ostream& os) {
- os << record.sensor_id << ","; os << record.conteggio;}
+ 
+    os << record.sensor_id << ",";
+ 
+    os << record.conteggio;
+}
 )
     .withName("unary_simple_test_sink_6")
     .withParallelism(2)

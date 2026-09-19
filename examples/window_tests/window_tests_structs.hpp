@@ -10,6 +10,7 @@
 // Struct: source_window_tests_from_4
 // ============================================================================
 struct source_window_tests_from_4 {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
@@ -22,6 +23,7 @@ struct source_window_tests_from_4 {
 // Struct: renamed_src_select_5_struct_out
 // ============================================================================
 struct renamed_src_select_5_struct_out {
+    uint64_t ts;
     std::string sensor_id;
     double temp;
     double hum;
@@ -34,9 +36,11 @@ struct renamed_src_select_5_struct_out {
 // Struct: source_window_tests_from_4_unified_renamed_src_select_5_struct_out
 // ============================================================================
 struct source_window_tests_from_4_unified_renamed_src_select_5_struct_out {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
+    uint64_t ts;
     double temp;
     double hum;
 

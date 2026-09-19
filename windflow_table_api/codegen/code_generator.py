@@ -5,7 +5,7 @@ from .parser import JsonParser, ParsedGraph, OpNode
 from .schema_gen import SchemaGenerator
 from .expr_translator import ExpressionTranslator
 from .explorer import GraphExplorer
-from ..times import TimeFormats
+from ..types import TimeFormats 
 from .optimizer import GraphOptimizer
 
 def generate_code(
@@ -51,7 +51,7 @@ def generate_code(
         #gestion epoch
         epoch_var= epoch_var,
         epoch_str= epoch[0] if epoch else None,
-        epoch_format= epoch[1].value if epoch else None
+        epoch_format= epoch[1].logical_name if epoch else None
     )
 
     #scrittura del file

@@ -28,15 +28,14 @@ inline float       parse_FLOAT(const std::string& s)  { return std::stof(s); }
 inline double      parse_DOUBLE(const std::string& s) { return std::stod(s); }
 inline bool        parse_BOOLEAN(const std::string& s){ return s == "1" || s == "true" || s == "TRUE"; }
 
-//funzioni helper per il parsing del formato temporale
-// Converte 'YYYY-MM-DDTHH:MM:SS.mmmZ' in microsecondi lineari continui
+// Converte 'YYYY-MM-DDTHH:MM:SS.mmmZ' in microsecondi da Unix Epoch (1970-01-01 00:00:00 UTC)
 inline uint64_t parse_ISO8601(const std::string& s) {
     if (s.size() < 23) return 0;
 
     // 1. Parsing componenti data
-    uint64_t year  = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
-    uint64_t month = (s[5] - '0') * 10 + (s[6] - '0');
-    uint64_t day   = (s[8] - '0') * 10 + (s[9] - '0');
+    int64_t year  = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
+    unsigned month = (s[5] - '0') * 10 + (s[6] - '0');
+    unsigned day   = (s[8] - '0') * 10 + (s[9] - '0');
 
     // 2. Parsing componenti orarie
     uint64_t hours = (s[11] - '0') * 10 + (s[12] - '0');
@@ -44,23 +43,18 @@ inline uint64_t parse_ISO8601(const std::string& s) {
     uint64_t secs  = (s[17] - '0') * 10 + (s[18] - '0');
     uint64_t ms    = (s[20] - '0') * 100 + (s[21] - '0') * 10 + (s[22] - '0');
 
-    // 3. Tabella giorni cumulativi pregressi per mese (anno non bisestile)
-    static const uint32_t days_before_month[13] = {
-        0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-    };
+    // 3. Algoritmo O(1) di conteggio giorni rispetto a 1970-01-01 (algoritmo civile di Hinnant)
+    year -= (month <= 2);
+    const int64_t era = (year >= 0 ? year : year - 399) / 400;
+    const unsigned yoe = static_cast<unsigned>(year - era * 400);
+    const unsigned doy = (153 * (month > 2 ? month - 3 : month + 9) + 2) / 5 + day - 1;
+    const unsigned doe = yoe * 365 + yoe / 4 - yoe / 100 + doy;
+    int64_t total_days = era * 146097 + static_cast<int64_t>(doe) - 719468;
 
-    // 4. Calcolo giorni totali assoluti (conteggiando gli anni bisestili)
-    uint64_t leap_years = (year - 1) / 4 - (year - 1) / 100 + (year - 1) / 400;
-    uint64_t total_days = (year * 365ULL) + leap_years + days_before_month[month] + day;
-    
-    // Giorno bisestile per l'anno corrente dopo febbraio
-    bool is_current_leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-    if (month > 2 && is_current_leap) {
-        total_days++;
-    }
+    if (total_days < 0) return 0; // Guardia per date antecedenti al 1970
 
-    // 5. Conversione lineare continua in microsecondi
-    uint64_t total_secs = total_days * 86400ULL + hours * 3600ULL + mins * 60ULL + secs;
+    // 4. Conversione finale continua in microsecondi
+    uint64_t total_secs = static_cast<uint64_t>(total_days) * 86400ULL + hours * 3600ULL + mins * 60ULL + secs;
     return (total_secs * 1000ULL + ms) * 1000ULL;
 }
 

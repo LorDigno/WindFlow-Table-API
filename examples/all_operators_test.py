@@ -8,6 +8,7 @@ env = TableEnvironment(
 )
 
 sensor_schema = (SchemaBuilder()
+                 .add_column("timestamp", TimeFormats.ISO8601)
                  .add_column("sensor_id", DataTypes.STRING)
                  .add_column("temperature", DataTypes.DOUBLE)
                  .add_column("humidity", DataTypes.DOUBLE)
@@ -19,7 +20,7 @@ source_config = InputFileConfiguration(
     format= FileFormat.CSV,
     schema= sensor_schema, 
     has_header= True,
-    time_col= TimeCol("timestamp", TimeFormats.ISO8601),
+    time_col= "timestamp",
     order= True,
 )
 
@@ -47,6 +48,7 @@ window_count = Window.createCBWindow(10, 10)
 #ridenominazione per selfjoi
 renamed_src = src.name_query("renamed_src").rename_columns(
     {
+        "timestamp": "ts",
         "temperature": "temp",
         "humidity": "hum"
     }
@@ -103,6 +105,7 @@ interval = Interval(
 #ridenominazione per selfjoin senza chiave
 rerenamed_src = src.name_query("rerenamed_src").rename_columns(
     {
+        "timestamp": "ts",
         "sensor_id": "sens",
         "temperature": "temp",
         "humidity": "hum"
@@ -113,7 +116,7 @@ rerenamed_src = src.name_query("rerenamed_src").rename_columns(
 q8 = (src
       .name_query("keyless_interval_join")
     .join(rerenamed_src, attachment=interval)
-    .select("sensor_id", "temperature", "sens", "hum")
+    .select("sensor_id", "temperature", "sens", "hum", "timestamp", "ts")
 )
 env.execute(q8, rexecute=True, output_dir="./keyless_join")
 

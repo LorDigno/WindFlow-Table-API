@@ -10,6 +10,7 @@
 // Struct: source_sensor_source_query_5_from_6
 // ============================================================================
 struct source_sensor_source_query_5_from_6 {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;

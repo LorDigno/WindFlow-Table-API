@@ -1,13 +1,13 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
 from .draft import Draft
 from .expressions import Expression, col
 from .operators import *
 from .schema import Schema
 from .windows import Interval, Window, WindowType
-from windflow_table_api import OpType
+from ..object_names import OpType
 if TYPE_CHECKING:
-    from .table_env import TableEnvironment
+  from .table_env import TableEnvironment
 
 
 class Table:

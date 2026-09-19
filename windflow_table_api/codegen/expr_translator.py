@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from jinja2 import Environment
 from .utility import LITERAL_FORMATTERS
 from ..object_names import ExprType, AggFuncType
-from ..datatypes import DataTypes
+from ..types import DataTypes
 
 #dati da passare alle sotto-espressioni
 @dataclass(frozen=True)

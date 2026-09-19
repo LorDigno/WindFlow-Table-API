@@ -1,7 +1,7 @@
 """Sotto-package api: definisce il DSL logico, la gestione del Draft e il TableEnvironment."""
 
 from .draft import Draft
-from .durations import Duration, TimeCol
+from .durations import Duration
 from .expressions import (
     AggregateExpression,
     BinaryOpExpression,
@@ -78,7 +78,6 @@ __all__ = [
     "count",
     # Finestre e I/O
     "Duration",
-    "TimeCol",
     "Window",
     "Interval",
     "InputFileConfiguration",

@@ -25,7 +25,7 @@ from .types import (
 # =============================================================================
 # DSL e Componenti Principali (Accessibili con: from windflow_table_api import ...)
 # =============================================================================
-from .api.durations import Duration, TimeCol
+from .api.durations import Duration
 from .api.expressions import (
     AggregateExpression,
     BinaryOpExpression,
@@ -95,7 +95,6 @@ __all__ = [
     "AggregateExpression",
     # Finestre, Durate e Configurazione File
     "Duration",
-    "TimeCol",
     "Window",
     "Interval",
     "InputFileConfiguration",

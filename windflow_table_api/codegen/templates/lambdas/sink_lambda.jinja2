@@ -1,3 +1,9 @@
 [](const {{ in_struct }}& record, std::ostream& os) {
-{% for field in fields %} os << record.{{ field.name }}{% if not loop.last %} << ","{% endif %};{% endfor %}
+{% for field in fields %} 
+{% if field.name in dates %}
+    os << reformat_{{dates[field.name]}}(record.{{ field.name }}){% if not loop.last %} << ","{% endif %};
+{% else %}
+    os << record.{{ field.name }}{% if not loop.last %} << ","{% endif %};
+{% endif %}
+{% endfor %}
 }

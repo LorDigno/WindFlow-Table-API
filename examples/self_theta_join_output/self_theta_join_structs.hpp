@@ -10,6 +10,7 @@
 // Struct: source_self_theta_join_from_3
 // ============================================================================
 struct source_self_theta_join_from_3 {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
@@ -22,6 +23,7 @@ struct source_self_theta_join_from_3 {
 // Struct: renaming_for_self_join_select_4_struct_out
 // ============================================================================
 struct renaming_for_self_join_select_4_struct_out {
+    uint64_t ts;
     std::string sens;
     double temp;
     double hum;
@@ -34,9 +36,11 @@ struct renaming_for_self_join_select_4_struct_out {
 // Struct: source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out
 // ============================================================================
 struct source_self_theta_join_from_3_unified_renaming_for_self_join_select_4_struct_out {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
+    uint64_t ts;
     std::string sens;
     double temp;
     double hum;

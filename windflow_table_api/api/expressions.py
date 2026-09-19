@@ -1,9 +1,8 @@
 from __future__ import annotations
 from abc import ABC, abstractmethod
-from enum import Enum
 from typing import Any, Optional, Union, Dict, List
-from ..datatypes import DataTypes
-from windflow_table_api import ExprType, AggFuncType
+from ..object_names import ExprType, AggFuncType
+from ..types import DataTypes, TypeDescriptor
 from ..expr_ops import BinExprOp, UnExprOp
 import copy
 from .schema import Schema
@@ -56,7 +55,7 @@ class Expression(ABC):
         return self._alias_name if self._alias_name is not None else self.get_default_name()
 
     @abstractmethod
-    def get_type(self, schema: Schema) -> DataTypes:
+    def get_type(self, schema: Schema) -> TypeDescriptor:
         """
         Calcola e restituisce il DataType risultante applicando 
         l'espressione sullo schema di input.
@@ -157,7 +156,7 @@ class ColRefExpression(Expression):
     def get_default_name(self) -> str:
         return self.column_name
 
-    def get_type(self, schema: Schema) -> DataTypes:
+    def get_type(self, schema: Schema) -> TypeDescriptor:
         return schema.get_type_for(self.column_name)
 
     def __repr__(self) -> str:
@@ -175,7 +174,10 @@ class ColRefExpression(Expression):
         return self    
 
 class LiteralExpression(Expression):
-    """Rappresenta una costante con relativo DataType."""
+    """
+    Rappresenta una costante con relativo DataType.
+    Attualmente non sono supportati i TimeFormats.
+    """
 
     def __init__(self, value: Any, data_type: Optional[DataTypes] = None):
         super().__init__()
@@ -188,7 +190,7 @@ class LiteralExpression(Expression):
     def get_default_name(self) -> str:
         return str(self.value)
 
-    def get_type(self, schema: Schema) -> DataTypes:
+    def get_type(self, schema: Schema) -> TypeDescriptor:
         return self.data_type
 
     def __repr__(self) -> str:
@@ -227,7 +229,7 @@ class BinaryOpExpression(Expression):
             f"{self.left.get_name()}_{self.op.name.lower()}_{self.right.get_name()}"
         )
 
-    def get_type(self, schema: Schema) -> DataTypes:
+    def get_type(self, schema: Schema) -> TypeDescriptor:
         t_left = self.left.get_type(schema)
         t_right = self.right.get_type(schema)
         return self.op.resolve_binary_type(t_left, t_right)
@@ -275,8 +277,8 @@ class UnaryOpExpression(Expression):
     def get_default_name(self) -> str:
         return f"{self.op.name.lower()}_({self.expr.get_name()})"
 
-    def get_type(self, schema: Schema) -> DataTypes:
-        expr_t: DataTypes = self.expr.get_type(schema)
+    def get_type(self, schema: Schema) -> TypeDescriptor:
+        expr_t = self.expr.get_type(schema)
         return self.op.resolve_unary_type(expr_t)
 
     def to_dict(self, applied_schema: Schema) -> Dict[str, Any]:
@@ -330,37 +332,14 @@ class AggregateExpression(Expression):
             return self.func_type.value  
         return f"{self.func_type.value}_{self.target_expr.get_name()}"
 
-    def get_type(self, schema: Schema) -> DataTypes:
-        #COUNT rende un BIGINT perchè il numero di tuple è potenzialmente infinito
-        if self.func_type == AggFuncType.COUNT:
-            return DataTypes.BIGINT
-
-        if self.target_expr is None:
-            raise ValueError(f"L'aggregazione {self.func_type.value} richiede un'espressione target.")
-
-        #calcola il tipo reso applicando lo schema all'espressione target
-        input_type = self.target_expr.get_type(schema)
-
-        #AVG rende sempre un DOUBLE
-        if self.func_type == AggFuncType.AVG:
-            if not input_type.is_number():
-                raise TypeError(
-                    f"L'aggregazione {self.func_type.value} richiede un tipo numerico, "
-                    f"ricevuto: {input_type.value}"
-                )
-            return DataTypes.DOUBLE
-
-        #SUM, MIN, MAX conservano il tipo numerico di input
-        if self.func_type in (AggFuncType.SUM, AggFuncType.MIN, AggFuncType.MAX):
-            if not input_type.is_number():
-                raise TypeError(
-                    f"L'aggregazione {self.func_type.value} richiede un tipo numerico, "
-                    f"ricevuto: {input_type.value}"
-                )
-            return input_type
-
-        #altrimenti si suppone di mantenere il tipo in input
-        return input_type
+    def get_type(self, schema: Schema) -> TypeDescriptor:
+        input_type = (
+            self.target_expr.get_type(schema)
+            if self.target_expr is not None
+            else None
+        )
+        #delega il typechecking all'aggregazione
+        return self.func_type.resolve_agg_type(input_type)
 
     def __repr__(self) -> str:
         alias_str = f" AS '{self._alias_name}'" if self._alias_name else ""
