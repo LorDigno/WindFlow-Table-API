@@ -4,11 +4,11 @@
         "op_type": "SELECT",
         "schema_out": {
             "sensor_id": "STRING",
-            "SUM_temperature_plus_humidity": "DOUBLE"
+            "SUM_AVG_temperature": "DOUBLE"
         },
         "schema_in": {
             "sensor_id": "STRING",
-            "SUM_temperature_plus_humidity": "DOUBLE"
+            "SUM_AVG_temperature": "DOUBLE"
         },
         "expressions": [
             {
@@ -19,7 +19,7 @@
             {
                 "expr_type": "COL_REF",
                 "data_type": "DOUBLE",
-                "name": "SUM_temperature_plus_humidity"
+                "name": "SUM_AVG_temperature"
             }
         ],
         "parents": [
@@ -27,9 +27,10 @@
                 "op_type": "GLOBAL_GROUP_BY",
                 "schema_out": {
                     "sensor_id": "STRING",
-                    "SUM_temperature_plus_humidity": "DOUBLE"
+                    "SUM_AVG_temperature": "DOUBLE"
                 },
                 "schema_in": {
+                    "timestamp": "ISO8601",
                     "sensor_id": "STRING",
                     "temperature": "DOUBLE",
                     "humidity": "DOUBLE"
@@ -42,22 +43,17 @@
                     {
                         "expr_type": "AGGREGATE",
                         "data_type": "DOUBLE",
-                        "name": "SUM_temperature_plus_humidity",
+                        "name": "SUM_AVG_temperature",
                         "func": "SUM",
                         "target": {
-                            "expr_type": "BINARY_OP",
+                            "expr_type": "AGGREGATE",
                             "data_type": "DOUBLE",
-                            "name": "temperature_plus_humidity",
-                            "op": "+",
-                            "left": {
+                            "name": "AVG_temperature",
+                            "func": "AVG",
+                            "target": {
                                 "expr_type": "COL_REF",
                                 "data_type": "DOUBLE",
                                 "name": "temperature"
-                            },
-                            "right": {
-                                "expr_type": "COL_REF",
-                                "data_type": "DOUBLE",
-                                "name": "humidity"
                             }
                         }
                     }
@@ -66,6 +62,7 @@
                     {
                         "op_type": "FROM",
                         "schema_out": {
+                            "timestamp": "ISO8601",
                             "sensor_id": "STRING",
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
@@ -75,10 +72,7 @@
                             "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
                             "file_format": "CSV",
                             "header": true,
-                            "time_col": {
-                                "name": "timestamp",
-                                "format": "ISO8601"
-                            },
+                            "time_col": "timestamp",
                             "order": true,
                             "delay": null,
                             "split_size": 0

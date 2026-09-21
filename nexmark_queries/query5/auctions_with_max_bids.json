@@ -1,0 +1,66 @@
+{
+    "query_id": "auctions_with_max_bids",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "auction_id": "BIGINT"
+        },
+        "schema_in": {
+            "bids_counter": "BIGINT",
+            "auction_id": "BIGINT"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "auction_id"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "JOIN_INTERVAL",
+                "schema_out": {
+                    "bids_counter": "BIGINT",
+                    "auction_id": "BIGINT"
+                },
+                "tab1_schema": {
+                    "auction_id": "BIGINT",
+                    "bids_counter": "BIGINT"
+                },
+                "tab2_schema": {
+                    "bids_counter": "BIGINT"
+                },
+                "keys": [
+                    "bids_counter"
+                ],
+                "attachment": {
+                    "lower_bound": {
+                        "value": -60,
+                        "unit": "SECONDS"
+                    },
+                    "upper_bound": {
+                        "value": 60,
+                        "unit": "SECONDS"
+                    }
+                },
+                "parents": [
+                    {
+                        "op_type": "TAB_REF",
+                        "schema_out": {
+                            "auction_id": "BIGINT",
+                            "bids_counter": "BIGINT"
+                        },
+                        "source_id": "bids_counter_per_auction"
+                    },
+                    {
+                        "op_type": "TAB_REF",
+                        "schema_out": {
+                            "bids_counter": "BIGINT"
+                        },
+                        "source_id": "max_bid_count"
+                    }
+                ]
+            }
+        ]
+    }
+}

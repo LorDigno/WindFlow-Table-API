@@ -8,6 +8,7 @@ env = TableEnvironment(
 )
 
 sensor_schema = (SchemaBuilder()
+                 .add_column("timestamp", TimeFormats.ISO8601)
                  .add_column("sensor_id", DataTypes.STRING)
                  .add_column("temperature", DataTypes.DOUBLE)
                  .add_column("humidity", DataTypes.DOUBLE)
@@ -19,7 +20,7 @@ source_config = InputFileConfiguration(
     format= FileFormat.CSV,
     schema= sensor_schema, 
     has_header= True,
-    time_col= TimeCol("timestamp", TimeFormats.ISO8601),
+    time_col= "timestamp",
     order= True,
 )
 

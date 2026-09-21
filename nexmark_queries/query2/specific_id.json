@@ -1,0 +1,187 @@
+{
+    "query_id": "specific_id",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "auction_id": "BIGINT",
+            "price": "BIGINT"
+        },
+        "schema_in": {
+            "auction_id": "BIGINT",
+            "bidder": "BIGINT",
+            "price": "BIGINT",
+            "channel": "STRING",
+            "url": "STRING",
+            "bid_dateTime": "ISO8601",
+            "extra": "STRING"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "auction_id"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "price"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "WHERE",
+                "schema_out": {
+                    "auction_id": "BIGINT",
+                    "bidder": "BIGINT",
+                    "price": "BIGINT",
+                    "channel": "STRING",
+                    "url": "STRING",
+                    "bid_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "schema_in": {
+                    "auction_id": "BIGINT",
+                    "bidder": "BIGINT",
+                    "price": "BIGINT",
+                    "channel": "STRING",
+                    "url": "STRING",
+                    "bid_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "condition": {
+                    "expr_type": "BINARY_OP",
+                    "data_type": "BOOL",
+                    "name": "auction_id_eq_1007_or_auction_id_eq_1020_or_auction_id_eq_2001_or_auction_id_eq_2019_or_auction_id_eq_2087",
+                    "op": "||",
+                    "left": {
+                        "expr_type": "BINARY_OP",
+                        "data_type": "BOOL",
+                        "name": "auction_id_eq_1007_or_auction_id_eq_1020_or_auction_id_eq_2001_or_auction_id_eq_2019",
+                        "op": "||",
+                        "left": {
+                            "expr_type": "BINARY_OP",
+                            "data_type": "BOOL",
+                            "name": "auction_id_eq_1007_or_auction_id_eq_1020_or_auction_id_eq_2001",
+                            "op": "||",
+                            "left": {
+                                "expr_type": "BINARY_OP",
+                                "data_type": "BOOL",
+                                "name": "auction_id_eq_1007_or_auction_id_eq_1020",
+                                "op": "||",
+                                "left": {
+                                    "expr_type": "BINARY_OP",
+                                    "data_type": "BOOL",
+                                    "name": "auction_id_eq_1007",
+                                    "op": "==",
+                                    "left": {
+                                        "expr_type": "COL_REF",
+                                        "data_type": "BIGINT",
+                                        "name": "auction_id"
+                                    },
+                                    "right": {
+                                        "expr_type": "LITERAL",
+                                        "data_type": "INT",
+                                        "name": "1007",
+                                        "value": 1007
+                                    }
+                                },
+                                "right": {
+                                    "expr_type": "BINARY_OP",
+                                    "data_type": "BOOL",
+                                    "name": "auction_id_eq_1020",
+                                    "op": "==",
+                                    "left": {
+                                        "expr_type": "COL_REF",
+                                        "data_type": "BIGINT",
+                                        "name": "auction_id"
+                                    },
+                                    "right": {
+                                        "expr_type": "LITERAL",
+                                        "data_type": "INT",
+                                        "name": "1020",
+                                        "value": 1020
+                                    }
+                                }
+                            },
+                            "right": {
+                                "expr_type": "BINARY_OP",
+                                "data_type": "BOOL",
+                                "name": "auction_id_eq_2001",
+                                "op": "==",
+                                "left": {
+                                    "expr_type": "COL_REF",
+                                    "data_type": "BIGINT",
+                                    "name": "auction_id"
+                                },
+                                "right": {
+                                    "expr_type": "LITERAL",
+                                    "data_type": "INT",
+                                    "name": "2001",
+                                    "value": 2001
+                                }
+                            }
+                        },
+                        "right": {
+                            "expr_type": "BINARY_OP",
+                            "data_type": "BOOL",
+                            "name": "auction_id_eq_2019",
+                            "op": "==",
+                            "left": {
+                                "expr_type": "COL_REF",
+                                "data_type": "BIGINT",
+                                "name": "auction_id"
+                            },
+                            "right": {
+                                "expr_type": "LITERAL",
+                                "data_type": "INT",
+                                "name": "2019",
+                                "value": 2019
+                            }
+                        }
+                    },
+                    "right": {
+                        "expr_type": "BINARY_OP",
+                        "data_type": "BOOL",
+                        "name": "auction_id_eq_2087",
+                        "op": "==",
+                        "left": {
+                            "expr_type": "COL_REF",
+                            "data_type": "BIGINT",
+                            "name": "auction_id"
+                        },
+                        "right": {
+                            "expr_type": "LITERAL",
+                            "data_type": "INT",
+                            "name": "2087",
+                            "value": 2087
+                        }
+                    }
+                },
+                "parents": [
+                    {
+                        "op_type": "FROM",
+                        "schema_out": {
+                            "auction_id": "BIGINT",
+                            "bidder": "BIGINT",
+                            "price": "BIGINT",
+                            "channel": "STRING",
+                            "url": "STRING",
+                            "bid_dateTime": "ISO8601",
+                            "extra": "STRING"
+                        },
+                        "source_id": "bid_source",
+                        "config": {
+                            "filepath": "/home/user/TableAPI/data_streams/bid.csv",
+                            "file_format": "CSV",
+                            "header": true,
+                            "time_col": "bid_dateTime",
+                            "order": true,
+                            "delay": null,
+                            "split_size": 5242880
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}
