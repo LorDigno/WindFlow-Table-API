@@ -9,11 +9,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
 find_package(Threads REQUIRED)
 
 include_directories(
-    "/home/user/TableAPI/include"
-    "/home/user/TableAPI/include/WindFlow/wf"
-    "/home/user/TableAPI/include/fastflow"
-    "/home/user/TableAPI/include/Table_WindFlow"
-    "/home/user/TableAPI/nexmark_queries/query1"
+    "/disc1/homes/lorenzoni/WindFlow-Table-API/include"
+    "/disc1/homes/lorenzoni/WindFlow-Table-API/include/WindFlow/wf"
+    "/disc1/homes/lorenzoni/WindFlow-Table-API/include/fastflow"
+    "/disc1/homes/lorenzoni/WindFlow-Table-API/include/Table_WindFlow"
+    "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/query1"
 )
             
 # --- Target per Query: dol_to_eur ---

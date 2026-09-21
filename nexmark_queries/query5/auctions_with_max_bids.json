@@ -35,12 +35,12 @@
                 ],
                 "attachment": {
                     "lower_bound": {
-                        "value": -60,
-                        "unit": "SECONDS"
+                        "value": -4,
+                        "unit": "HOURS"
                     },
                     "upper_bound": {
-                        "value": 60,
-                        "unit": "SECONDS"
+                        "value": 4,
+                        "unit": "HOURS"
                     }
                 },
                 "parents": [

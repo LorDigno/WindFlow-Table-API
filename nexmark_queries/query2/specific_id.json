@@ -171,7 +171,7 @@
                         },
                         "source_id": "bid_source",
                         "config": {
-                            "filepath": "/home/user/TableAPI/data_streams/bid.csv",
+                            "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
                             "file_format": "CSV",
                             "header": true,
                             "time_col": "bid_dateTime",

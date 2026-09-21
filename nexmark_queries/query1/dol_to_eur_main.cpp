@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_dol_to_eur_from_2>( "/home/user/TableAPI/data_streams/bid.csv",
+    auto from_1_op = Table_Source_Builder<source_dol_to_eur_from_2>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
     [](const std::string& line, source_dol_to_eur_from_2& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;

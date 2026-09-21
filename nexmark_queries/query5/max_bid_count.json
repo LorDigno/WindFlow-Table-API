@@ -31,12 +31,12 @@
                     "type": "TIME",
                     "kind": "TUMBLE",
                     "size": {
-                        "value": 1,
-                        "unit": "MINUTES"
+                        "value": 4,
+                        "unit": "HOURS"
                     },
                     "slide": {
-                        "value": 1,
-                        "unit": "MINUTES"
+                        "value": 4,
+                        "unit": "HOURS"
                     }
                 },
                 "aggregations": [

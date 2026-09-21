@@ -4,15 +4,6 @@ from pathlib import Path
 env = TableEnvironment(
     par= 2, 
     policy=TimePolicy.EVENT_TIME,
-    epoch= ("epoch da decidere una volta preso il dataset", TimeFormats.ISO8601)
-)
-
-from windflow_table_api import *
-from pathlib import Path
-
-env = TableEnvironment(
-    par= 2, 
-    policy=TimePolicy.EVENT_TIME,
     epoch=("2026-09-01T00:00:00.000Z", TimeFormats.ISO8601)
 )
 
@@ -91,45 +82,33 @@ bid_config = InputFileConfiguration(
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-#---    QUERY 5 
-#--- Which auctions have seen the most bids in the last period?
+#---    QUERY 6
+#--- What is the average selling price per seller for their last 10 closed auctions.
 
-#finestra temporale utilizzata
+valid_bid = (col("bid_dateTime") <= col("expires"))
+
+#nel dataset attuale una auction dura 7/8 ore
 window = Window.createTBWindow(
-    Duration.hours(8),
-    Duration.hours(4)
+    Duration.days(2)
 )
 
-#quante puntate per ogni asta
-bids_per_auction = (bid
-    .name_query("bids_counter_per_auction")
-    .group_by("auction_id", window= window)
-    .select("auction_id", count().alias("bids_counter"))
+#interval brutto per simulare la join completa sul mese
+interval = Interval(
+    Duration.days(-40),
+    Duration.days(+40)
 )
 
-#considero solo la slide corrente
-slide_bucket = Window.createTBWindow(
-    Duration.hours(4)
+auction_winners = (auction
+    .name_query("winning_price_per_auction_by_seller")
+    .join(bid, "auction_id", attachment= interval, where= valid_bid)
+    .group_by("auction_id", "seller", window= window)
+    .select("seller", max("price").alias("final"))
 )
 
-#numero di puntate per le aste più richieste
-most_requested = (bids_per_auction
-    .name_query("max_bid_count")
-    .group_by(window= slide_bucket)
-    .select(max("bids_counter").alias("bids_counter"))
+q6 = (auction_winners
+    .name_query("avg_selling_price_by_seller")
+    .group_by("seller") #così è su tutte non le ultime 10, per quello ci vuole un CBWindow
+    .select("seller", avg("final"))
 )
 
-#intervallo utilizzato per la join, necessario per il disallineamento dei ts
-join_interval = Interval(
-    Duration.hours(-4),
-    Duration.hours(+4)
-)
-
-#aste più richieste
-hot_auctions = (bids_per_auction
-    .name_query("auctions_with_max_bids")
-    .join(most_requested, "bids_counter", attachment= join_interval)
-    .select("auction_id")
-)
-
-env.execute(hot_auctions, rexecute=True, output_dir="./query5")
+env.execute(q6, rexecute= True, output_dir= "./query6")

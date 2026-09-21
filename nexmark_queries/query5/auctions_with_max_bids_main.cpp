@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_bids_counter_per_auction_from_5>( "/home/user/TableAPI/data_streams/bid.csv",
+    auto from_1_op = Table_Source_Builder<source_bids_counter_per_auction_from_5>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
     [](const std::string& line, source_bids_counter_per_auction_from_5& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 }
 )
     .withName("bids_counter_per_auction_window_group_by_4")
-    .withTBWindow(3600000000ULL, 60000000ULL)
+    .withTBWindow(28800000000ULL, 14400000000ULL)
     .withParallelism(2)
     .withKeyBy([](const source_bids_counter_per_auction_from_5& in) -> bids_counter_per_auction_window_group_by_4_key_struct {
     bids_counter_per_auction_window_group_by_4_key_struct out;
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto from_4_op = Table_Source_Builder<source_bids_counter_per_auction_from_5>( "/home/user/TableAPI/data_streams/bid.csv",
+    auto from_4_op = Table_Source_Builder<source_bids_counter_per_auction_from_5>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
     [](const std::string& line, source_bids_counter_per_auction_from_5& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -123,7 +123,7 @@ int main(int argc, char* argv[]) {
 }
 )
     .withName("bids_counter_per_auction_window_group_by_4")
-    .withTBWindow(3600000000ULL, 60000000ULL)
+    .withTBWindow(28800000000ULL, 14400000000ULL)
     .withParallelism(2)
     .withKeyBy([](const source_bids_counter_per_auction_from_5& in) -> bids_counter_per_auction_window_group_by_4_key_struct {
     bids_counter_per_auction_window_group_by_4_key_struct out;
@@ -155,7 +155,7 @@ if( MAX_bids_counter_tmp > out.MAX_bids_counter ){
 }
 )
     .withName("max_bid_count_window_group_by_7")
-    .withTBWindow(60000000ULL, 60000000ULL)
+    .withTBWindow(14400000000ULL, 14400000000ULL)
     .build();
 
 
@@ -201,8 +201,8 @@ if( MAX_bids_counter_tmp > out.MAX_bids_counter ){
     out.bids_counter = left.bids_counter;
     return out;
 },
-    -60000000,
-    60000000
+    -14400000000,
+    14400000000
 )
     .withName("auctions_with_max_bids_join_interval_2")
     .withParallelism(2)

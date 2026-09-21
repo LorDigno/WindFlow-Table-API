@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_selling_in_states_from_4>( "/home/user/TableAPI/data_streams/person.csv",
+    auto from_1_op = Table_Source_Builder<source_selling_in_states_from_4>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/person.csv",
     [](const std::string& line, source_selling_in_states_from_4& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
     .withParallelism(2)
     .build();
 
-    auto from_3_op = Table_Source_Builder<source_auction_source_query_4_from_7>( "/home/user/TableAPI/data_streams/auction.csv",
+    auto from_3_op = Table_Source_Builder<source_auction_source_query_4_from_7>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/auction.csv",
     [](const std::string& line, source_auction_source_query_4_from_7& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;

@@ -1,0 +1,204 @@
+{
+    "query_id": "winning_price_per_auction_by_seller",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "seller": "BIGINT",
+            "final": "BIGINT"
+        },
+        "schema_in": {
+            "auction_id": "BIGINT",
+            "seller": "BIGINT",
+            "MAX_price": "BIGINT"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "seller"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "MAX_price",
+                "alias": "final"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "WINDOW_GROUP_BY",
+                "schema_out": {
+                    "auction_id": "BIGINT",
+                    "seller": "BIGINT",
+                    "MAX_price": "BIGINT"
+                },
+                "schema_in": {
+                    "auction_id": "BIGINT",
+                    "item_name": "STRING",
+                    "description": "STRING",
+                    "initial_bid": "BIGINT",
+                    "reserve": "BIGINT",
+                    "auction_dateTime": "ISO8601",
+                    "expires": "ISO8601",
+                    "seller": "BIGINT",
+                    "category": "BIGINT",
+                    "bidder": "BIGINT",
+                    "price": "BIGINT",
+                    "channel": "STRING",
+                    "url": "STRING",
+                    "bid_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "keys": [
+                    "auction_id",
+                    "seller"
+                ],
+                "window": {
+                    "type": "TIME",
+                    "kind": "TUMBLE",
+                    "size": {
+                        "value": 2,
+                        "unit": "DAYS"
+                    },
+                    "slide": {
+                        "value": 2,
+                        "unit": "DAYS"
+                    }
+                },
+                "aggregations": [
+                    {
+                        "expr_type": "AGGREGATE",
+                        "data_type": "BIGINT",
+                        "name": "MAX_price",
+                        "alias": "final",
+                        "func": "MAX",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "data_type": "BIGINT",
+                            "name": "price"
+                        }
+                    }
+                ],
+                "parents": [
+                    {
+                        "op_type": "JOIN_INTERVAL",
+                        "schema_out": {
+                            "auction_id": "BIGINT",
+                            "item_name": "STRING",
+                            "description": "STRING",
+                            "initial_bid": "BIGINT",
+                            "reserve": "BIGINT",
+                            "auction_dateTime": "ISO8601",
+                            "expires": "ISO8601",
+                            "seller": "BIGINT",
+                            "category": "BIGINT",
+                            "bidder": "BIGINT",
+                            "price": "BIGINT",
+                            "channel": "STRING",
+                            "url": "STRING",
+                            "bid_dateTime": "ISO8601",
+                            "extra": "STRING"
+                        },
+                        "tab1_schema": {
+                            "auction_id": "BIGINT",
+                            "item_name": "STRING",
+                            "description": "STRING",
+                            "initial_bid": "BIGINT",
+                            "reserve": "BIGINT",
+                            "auction_dateTime": "ISO8601",
+                            "expires": "ISO8601",
+                            "seller": "BIGINT",
+                            "category": "BIGINT"
+                        },
+                        "tab2_schema": {
+                            "auction_id": "BIGINT",
+                            "bidder": "BIGINT",
+                            "price": "BIGINT",
+                            "channel": "STRING",
+                            "url": "STRING",
+                            "bid_dateTime": "ISO8601",
+                            "extra": "STRING"
+                        },
+                        "keys": [
+                            "auction_id"
+                        ],
+                        "attachment": {
+                            "lower_bound": {
+                                "value": -40,
+                                "unit": "DAYS"
+                            },
+                            "upper_bound": {
+                                "value": 40,
+                                "unit": "DAYS"
+                            }
+                        },
+                        "where": {
+                            "expr_type": "BINARY_OP",
+                            "data_type": "BOOL",
+                            "name": "bid_dateTime_le_expires",
+                            "op": "<=",
+                            "left": {
+                                "expr_type": "COL_REF",
+                                "data_type": "ISO8601",
+                                "name": "bid_dateTime"
+                            },
+                            "right": {
+                                "expr_type": "COL_REF",
+                                "data_type": "ISO8601",
+                                "name": "expires"
+                            }
+                        },
+                        "parents": [
+                            {
+                                "op_type": "FROM",
+                                "schema_out": {
+                                    "auction_id": "BIGINT",
+                                    "item_name": "STRING",
+                                    "description": "STRING",
+                                    "initial_bid": "BIGINT",
+                                    "reserve": "BIGINT",
+                                    "auction_dateTime": "ISO8601",
+                                    "expires": "ISO8601",
+                                    "seller": "BIGINT",
+                                    "category": "BIGINT"
+                                },
+                                "source_id": "auction_source",
+                                "config": {
+                                    "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/auction.csv",
+                                    "file_format": "CSV",
+                                    "header": true,
+                                    "time_col": "auction_dateTime",
+                                    "order": true,
+                                    "delay": null,
+                                    "split_size": 512000
+                                }
+                            },
+                            {
+                                "op_type": "FROM",
+                                "schema_out": {
+                                    "auction_id": "BIGINT",
+                                    "bidder": "BIGINT",
+                                    "price": "BIGINT",
+                                    "channel": "STRING",
+                                    "url": "STRING",
+                                    "bid_dateTime": "ISO8601",
+                                    "extra": "STRING"
+                                },
+                                "source_id": "bid_source",
+                                "config": {
+                                    "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
+                                    "file_format": "CSV",
+                                    "header": true,
+                                    "time_col": "bid_dateTime",
+                                    "order": true,
+                                    "delay": null,
+                                    "split_size": 5242880
+                                }
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
