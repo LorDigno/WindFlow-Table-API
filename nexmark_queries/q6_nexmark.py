@@ -88,7 +88,7 @@ bid = env.table_from_file(bid_config, "bid_source")
 valid_bid = (col("bid_dateTime") <= col("expires"))
 
 #nel dataset attuale una auction dura 7/8 ore
-window = Window.createTBWindow(
+time_window = Window.createTBWindow(
     Duration.days(2)
 )
 
@@ -101,13 +101,15 @@ interval = Interval(
 auction_winners = (auction
     .name_query("winning_price_per_auction_by_seller")
     .join(bid, "auction_id", attachment= interval, where= valid_bid)
-    .group_by("auction_id", "seller", window= window)
+    .group_by("auction_id", "seller", window= time_window)
     .select("seller", max("price").alias("final"))
 )
 
+count_window = Window.createCBWindow(10, 1)
+
 q6 = (auction_winners
     .name_query("avg_selling_price_by_seller")
-    .group_by("seller") #così è su tutte non le ultime 10, per quello ci vuole un CBWindow
+    .group_by("seller", window= count_window)
     .select("seller", avg("final"))
 )
 
