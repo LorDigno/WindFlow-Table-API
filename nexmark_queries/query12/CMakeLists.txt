@@ -13,9 +13,9 @@ include_directories(
     "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/../include/WindFlow/wf"
     "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/../include/fastflow"
     "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/../include/Table_WindFlow"
-    "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/query6"
+    "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/query12"
 )
             
-# --- Target per Query: avg_selling_price_by_seller ---
-add_executable(avg_selling_price_by_seller avg_selling_price_by_seller_main.cpp)
-target_link_libraries(avg_selling_price_by_seller PRIVATE Threads::Threads pthread)
+# --- Target per Query: ingress_time_windows ---
+add_executable(ingress_time_windows ingress_time_windows_main.cpp)
+target_link_libraries(ingress_time_windows PRIVATE Threads::Threads pthread)

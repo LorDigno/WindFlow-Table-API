@@ -83,36 +83,58 @@ bid_config = InputFileConfiguration(
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-#---    QUERY 6
-#--- What is the average selling price per seller for their last 10 closed auctions.
-#--- Non viene bene
+#---    QUERY 17
+#--- Convert bid timestamp into types and find bids with specific price. 
+#--- Non viene
 
-valid_bid = (col("bid_dateTime") <= col("expires"))
-
-#nel dataset attuale una auction dura 7/8 ore
-time_window = Window.createTBWindow(
-    Duration.days(2)
+day_window = Window.createTBWindow(
+    Duration.days(1)
 )
 
-#interval brutto per simulare la join completa sul mese
-interval = Interval(
-    Duration.days(-40),
-    Duration.days(+40)
+general = (bid
+    .name_query("general_stats")
+    .group_by("auction_id", window= day_window)
+    .select(
+        "auction_id",
+        count().alias("total_count"),
+        min("price").alias("min_price"),
+        max("price").alias("max_price"),
+        avg("price").alias("avg_price"),
+        sum("price").alias("sum_price")
+    )
 )
 
-auction_winners = (auction
-    .name_query("winning_price_per_auction_by_seller")
-    .join(bid, ["auction_id"], attachment= interval, where= valid_bid)
-    .group_by("auction_id", "seller", window= time_window)
-    .select("seller", max("price").alias("final"))
+rank1 = (bid
+    .where(col("price") < 10000)
+    .group_by("auction_id", window= day_window)
+    .select(
+        "auction_id",
+        count().alias("rank1")
+    )
 )
 
-count_window = Window.createCBWindow(10, 1)
-
-q6 = (auction_winners
-    .name_query("avg_selling_price_by_seller")
-    .group_by("seller", window= count_window)
-    .select("seller", avg("final"))
+rank2 = (bid
+    .where((col("price") >= 10000) & (col("price") < 1000000))
+    .group_by("auction_id", window= day_window)
+    .select(
+        "auction_id",
+        count().alias("rank2")
+    )
 )
 
-env.execute(q6, rexecute= True, output_dir= "./query6")
+rank3 = (bid
+    .where(col("price") >= 1000000)
+    .group_by("auction_id", window= day_window)
+    .select(
+        "auction_id",
+        count().alias("rank3")
+    )
+)
+
+merged = (rank1
+    .join(rank2, on = ["auction_id"], )
+    .join(rank3, on = ["auction_id"], )
+    .join(general, on = ["auction_id"], )
+    .select(....)
+)
+

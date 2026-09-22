@@ -4,12 +4,13 @@ from pathlib import Path
 env = TableEnvironment(
     include_dir= Path("../include"),
     par= 2, 
-    policy=TimePolicy.EVENT_TIME,
-    epoch=("2026-09-01T00:00:00.000Z", TimeFormats.ISO8601)
+    policy= TimePolicy.INGRESS_TIME,
+    #epoch=("2026-09-01T00:00:00.000Z", TimeFormats.ISO8601)
 )
 
 #---- auction
 auction_schema = (SchemaBuilder()
+                  
     .add_column("auction_id", DataTypes.BIGINT)
     .add_column("item_name", DataTypes.STRING)
     .add_column("description", DataTypes.STRING)
@@ -27,7 +28,6 @@ auction_config = InputFileConfiguration(
     format= FileFormat.CSV,
     schema= auction_schema,
     has_header= True,
-    time_col= "auction_dateTime",
     order= True,                        
     split_size= SplitSize.kilobytes(500)
 )
@@ -52,7 +52,6 @@ person_config = InputFileConfiguration(
     format = FileFormat.CSV,
     schema = person_schema,
     has_header = True,
-    time_col = "person_dateTime",
     order = True,                                           # da vedere
     split_size= SplitSize.kilobytes(400)
 )
@@ -76,43 +75,25 @@ bid_config = InputFileConfiguration(
     format = FileFormat.CSV,
     schema = bid_schema,
     has_header = True,
-    time_col = "bid_dateTime",
-    order = True,                                           # da vedere
+    order = True,                                       # da vedere
     split_size= SplitSize.megabytes(5)
 )
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-#---    QUERY 6
-#--- What is the average selling price per seller for their last 10 closed auctions.
-#--- Non viene bene
+#---    QUERY 12
+#--- How many bids does a user make within a fixed processing time limit? 
+#--- Preambolo diverso dato che questa usa INGRESS_TIME
 
-valid_bid = (col("bid_dateTime") <= col("expires"))
-
-#nel dataset attuale una auction dura 7/8 ore
-time_window = Window.createTBWindow(
-    Duration.days(2)
+process_window = Window.createTBWindow(
+    Duration.milliseconds(100)
 )
 
-#interval brutto per simulare la join completa sul mese
-interval = Interval(
-    Duration.days(-40),
-    Duration.days(+40)
+q12 = (bid
+    .name_query("ingress_time_windows")
+    .group_by("bidder", window= process_window)
+    .select("bidder", count().alias("processed"))
 )
 
-auction_winners = (auction
-    .name_query("winning_price_per_auction_by_seller")
-    .join(bid, ["auction_id"], attachment= interval, where= valid_bid)
-    .group_by("auction_id", "seller", window= time_window)
-    .select("seller", max("price").alias("final"))
-)
+env.execute(q12, rexecute= True, output_dir= "./query12")
 
-count_window = Window.createCBWindow(10, 1)
-
-q6 = (auction_winners
-    .name_query("avg_selling_price_by_seller")
-    .group_by("seller", window= count_window)
-    .select("seller", avg("final"))
-)
-
-env.execute(q6, rexecute= True, output_dir= "./query6")

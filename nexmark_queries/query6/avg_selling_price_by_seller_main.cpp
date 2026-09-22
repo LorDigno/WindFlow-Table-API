@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_6>( "/home/user/TableAPI/data_streams/auction.csv",
+    auto from_1_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_6>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/auction.csv",
     [](const std::string& line, source_winning_price_per_auction_by_seller_from_6& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     .withOrderedEventTime(avg_selling_price_by_seller_epoch)
     .build();
 
-    auto from_2_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_7>( "/home/user/TableAPI/data_streams/bid.csv",
+    auto from_2_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_7>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
     [](const std::string& line, source_winning_price_per_auction_by_seller_from_7& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;

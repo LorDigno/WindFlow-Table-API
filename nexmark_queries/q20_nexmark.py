@@ -83,36 +83,34 @@ bid_config = InputFileConfiguration(
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-#---    QUERY 6
-#--- What is the average selling price per seller for their last 10 closed auctions.
-#--- Non viene bene
-
-valid_bid = (col("bid_dateTime") <= col("expires"))
-
-#nel dataset attuale una auction dura 7/8 ore
-time_window = Window.createTBWindow(
-    Duration.days(2)
-)
-
-#interval brutto per simulare la join completa sul mese
+# 2. Intervallo di join: un'offerta arriva da 0s a 12h dopo l'apertura dell'asta
+#    (-1 minuto di tolleranza su disallineamenti di lettura)
 interval = Interval(
-    Duration.days(-40),
-    Duration.days(+40)
+    Duration.minutes(-1),
+    Duration.hours(12)
 )
 
-auction_winners = (auction
-    .name_query("winning_price_per_auction_by_seller")
-    .join(bid, ["auction_id"], attachment= interval, where= valid_bid)
-    .group_by("auction_id", "seller", window= time_window)
-    .select("seller", max("price").alias("final"))
+# 3. Filter Join:
+#    - Filtriamo a monte solo la categoria 10
+#    - Rinominiamo 'id' in 'auction_id' per la chiave di join
+#    - Rinominiamo 'extra' in 'auction_extra' per evitare collisioni di schema
+target_auctions = (auction
+    .where(col("category") == 10)
+    .rename_columns({
+        "extra": "auction_extra"
+    })
 )
 
-count_window = Window.createCBWindow(10, 1)
-
-q6 = (auction_winners
-    .name_query("avg_selling_price_by_seller")
-    .group_by("seller", window= count_window)
-    .select("seller", avg("final"))
+# 4. Keyed Interval Join (auction Left, bid Right)
+#    t_auction - 1m <= t_bid <= t_auction + 12h
+q20 = (target_auctions
+    .name_query("expand_bid_with_auction")
+    .join(bid, ["auction_id"], attachment=interval)
+    .select(
+        "auction_id", "bidder", "price", "channel", "url", "bid_dateTime", "extra",
+        "itemName", "description", "initialBid", "reserve", "auction_dateTime", 
+        "expires", "seller", "category", "auction_extra"
+    )
 )
 
-env.execute(q6, rexecute= True, output_dir= "./query6")
+env.execute(q20, rexecute=True, output_dir="./query20")

@@ -83,36 +83,20 @@ bid_config = InputFileConfiguration(
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-#---    QUERY 6
-#--- What is the average selling price per seller for their last 10 closed auctions.
-#--- Non viene bene
+#---    QUERY 8
+#--- Select people who have entered the system and created auctions in the last period.
 
-valid_bid = (col("bid_dateTime") <= col("expires"))
-
-#nel dataset attuale una auction dura 7/8 ore
-time_window = Window.createTBWindow(
-    Duration.days(2)
-)
-
-#interval brutto per simulare la join completa sul mese
 interval = Interval(
-    Duration.days(-40),
-    Duration.days(+40)
+    Duration.minutes(-1),
+    Duration.hours(12)
 )
 
-auction_winners = (auction
-    .name_query("winning_price_per_auction_by_seller")
-    .join(bid, ["auction_id"], attachment= interval, where= valid_bid)
-    .group_by("auction_id", "seller", window= time_window)
-    .select("seller", max("price").alias("final"))
+renamed_auction = auction.rename_columns({"seller": "person_id"})
+
+q8 = (person
+    .name_query("new_users")
+    .join(renamed_auction, ["person_id"], attachment=interval)
+    .select("person_id", "name", "auction_id", "reserve")
 )
 
-count_window = Window.createCBWindow(10, 1)
-
-q6 = (auction_winners
-    .name_query("avg_selling_price_by_seller")
-    .group_by("seller", window= count_window)
-    .select("seller", avg("final"))
-)
-
-env.execute(q6, rexecute= True, output_dir= "./query6")
+env.execute(q8, rexecute=True, output_dir="./query8")

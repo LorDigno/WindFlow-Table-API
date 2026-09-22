@@ -83,36 +83,29 @@ bid_config = InputFileConfiguration(
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-#---    QUERY 6
-#--- What is the average selling price per seller for their last 10 closed auctions.
-#--- Non viene bene
+#---    QUERY 7
+#--- Select the bids with the highest bid price in the last period.
 
-valid_bid = (col("bid_dateTime") <= col("expires"))
+hour_window = Window.createTBWindow(Duration.hours(1))
 
-#nel dataset attuale una auction dura 7/8 ore
-time_window = Window.createTBWindow(
-    Duration.days(2)
+current_max = (bid
+    .name_query("window_max")
+    .group_by(window= hour_window)  #par = 1 se unkeyed
+    .select(max("price").alias("current_max"))
 )
 
-#interval brutto per simulare la join completa sul mese
 interval = Interval(
-    Duration.days(-40),
-    Duration.days(+40)
+    Duration.hours(0),
+    Duration.hours(1)
 )
 
-auction_winners = (auction
-    .name_query("winning_price_per_auction_by_seller")
-    .join(bid, ["auction_id"], attachment= interval, where= valid_bid)
-    .group_by("auction_id", "seller", window= time_window)
-    .select("seller", max("price").alias("final"))
+theta = col("current_max") == col("price")
+
+q7 = (bid
+    .name_query("max_bids")
+    #si usa un intervallo per prendere solo la finestra corrente
+    .join(current_max, on = [] ,attachment= interval, where= theta)
+    .select("auction_id", "price", "bidder")
 )
 
-count_window = Window.createCBWindow(10, 1)
-
-q6 = (auction_winners
-    .name_query("avg_selling_price_by_seller")
-    .group_by("seller", window= count_window)
-    .select("seller", avg("final"))
-)
-
-env.execute(q6, rexecute= True, output_dir= "./query6")
+env.execute(q7, rexecute= True, output_dir= "./query7")
