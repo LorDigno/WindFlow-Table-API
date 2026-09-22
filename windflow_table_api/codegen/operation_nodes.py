@@ -238,11 +238,11 @@ class WindowNode(ABC):
 
         kind = OpNode.require(window, "kind", op_type, str)
 
-        size = OpNode.require(window, "size", op_type, Union[int, dict])
+        size = OpNode.require(window, "size", op_type)
         if w_type == WindowType.TIME:
             size = OpNode.parse_duration(size, op_type) 
 
-        slide = OpNode.require(window, "slide", op_type, Union[int, dict])
+        slide = OpNode.require(window, "slide", op_type)
         if w_type == WindowType.TIME:
             slide = OpNode.parse_duration(slide, op_type) 
 

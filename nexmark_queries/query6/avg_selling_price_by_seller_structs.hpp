@@ -144,21 +144,21 @@ struct winning_price_per_auction_by_seller_select_3_struct_out {
 
 
 // ============================================================================
-// Struct: avg_selling_price_by_seller_global_group_by_2_key_struct
+// Struct: avg_selling_price_by_seller_window_group_by_2_key_struct
 // ============================================================================
-struct avg_selling_price_by_seller_global_group_by_2_key_struct {
+struct avg_selling_price_by_seller_window_group_by_2_key_struct {
     int64_t seller;
 
 
-    bool operator==(const avg_selling_price_by_seller_global_group_by_2_key_struct& other) const {
+    bool operator==(const avg_selling_price_by_seller_window_group_by_2_key_struct& other) const {
         return seller == other.seller;
     }
 };
 
 namespace std {
     template<>
-    struct hash<avg_selling_price_by_seller_global_group_by_2_key_struct> {
-        size_t operator()(const avg_selling_price_by_seller_global_group_by_2_key_struct& k) const {
+    struct hash<avg_selling_price_by_seller_window_group_by_2_key_struct> {
+        size_t operator()(const avg_selling_price_by_seller_window_group_by_2_key_struct& k) const {
             size_t h = 0;
             h ^= std::hash<int64_t>{}(k.seller) + 0x9e3779b9 + (h << 6) + (h >> 2);
             return h;
@@ -167,14 +167,22 @@ namespace std {
 }
 
 // ============================================================================
-// Struct: avg_selling_price_by_seller_global_group_by_2_struct_out
+// Struct: avg_selling_price_by_seller_window_group_by_2_struct_out
 // ============================================================================
-struct avg_selling_price_by_seller_global_group_by_2_struct_out {
+struct avg_selling_price_by_seller_window_group_by_2_struct_out {
     int64_t seller;
     int64_t COUNT = 0; 
     int64_t SUM_final = 0; 
     double AVG_final = 0.0; 
+    uint64_t win_id = 0; 
 
+    avg_selling_price_by_seller_window_group_by_2_struct_out() = default;
+
+    avg_selling_price_by_seller_window_group_by_2_struct_out(uint64_t _id) 
+        : win_id(_id) {}
+
+    avg_selling_price_by_seller_window_group_by_2_struct_out(const avg_selling_price_by_seller_window_group_by_2_key_struct& _key, uint64_t _id) 
+        : seller(_key.seller), win_id(_id) {}
 
 };
 

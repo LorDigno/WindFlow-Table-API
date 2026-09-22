@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
 
     //-----     OPERATOR BUILDERS   -----
 
-    auto from_1_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_6>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/auction.csv",
+    auto from_1_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_6>( "/home/user/TableAPI/data_streams/auction.csv",
     [](const std::string& line, source_winning_price_per_auction_by_seller_from_6& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     .withOrderedEventTime(avg_selling_price_by_seller_epoch)
     .build();
 
-    auto from_2_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_7>( "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
+    auto from_2_op = Table_Source_Builder<source_winning_price_per_auction_by_seller_from_7>( "/home/user/TableAPI/data_streams/bid.csv",
     [](const std::string& line, source_winning_price_per_auction_by_seller_from_7& record, uint64_t& timestamp) {
     std::stringstream ss(line);
     std::string token;
@@ -199,8 +199,8 @@ if( MAX_price_tmp > out.MAX_price ){
     .withParallelism(2)
     .build();
 
-    auto global_group_8_op = Global_Group_Builder<winning_price_per_auction_by_seller_select_3_struct_out, avg_selling_price_by_seller_global_group_by_2_struct_out, avg_selling_price_by_seller_global_group_by_2_key_struct>(
-    [](const winning_price_per_auction_by_seller_select_3_struct_out& in, avg_selling_price_by_seller_global_group_by_2_struct_out& out) -> void {
+    auto window_group_8_op = Windowed_Group_Builder<winning_price_per_auction_by_seller_select_3_struct_out, avg_selling_price_by_seller_window_group_by_2_struct_out, avg_selling_price_by_seller_window_group_by_2_key_struct>(
+    [](const winning_price_per_auction_by_seller_select_3_struct_out& in, avg_selling_price_by_seller_window_group_by_2_struct_out& out) -> void {
     out.seller = in.seller;
 
     out.COUNT += 1;
@@ -208,18 +208,19 @@ if( MAX_price_tmp > out.MAX_price ){
     out.AVG_final = out.SUM_final / out.COUNT ;
 }
 )
-    .withName("avg_selling_price_by_seller_global_group_by_2")
+    .withName("avg_selling_price_by_seller_window_group_by_2")
+    .withCBWindow(10ULL, 1ULL)
     .withParallelism(2)
-    .withKeyBy([](const winning_price_per_auction_by_seller_select_3_struct_out& in) -> avg_selling_price_by_seller_global_group_by_2_key_struct {
-    avg_selling_price_by_seller_global_group_by_2_key_struct out;
+    .withKeyBy([](const winning_price_per_auction_by_seller_select_3_struct_out& in) -> avg_selling_price_by_seller_window_group_by_2_key_struct {
+    avg_selling_price_by_seller_window_group_by_2_key_struct out;
     out.seller = in.seller;
     return out;
 })
     .build_keyed();
 
 
-    auto select_9_op = Select_Builder<avg_selling_price_by_seller_global_group_by_2_struct_out, avg_selling_price_by_seller_select_1_struct_out>(
-        [](const avg_selling_price_by_seller_global_group_by_2_struct_out& in) -> avg_selling_price_by_seller_select_1_struct_out {
+    auto select_9_op = Select_Builder<avg_selling_price_by_seller_window_group_by_2_struct_out, avg_selling_price_by_seller_select_1_struct_out>(
+        [](const avg_selling_price_by_seller_window_group_by_2_struct_out& in) -> avg_selling_price_by_seller_select_1_struct_out {
     avg_selling_price_by_seller_select_1_struct_out out;
     out.seller = in.seller;
     out.AVG_final = in.AVG_final;
@@ -256,7 +257,7 @@ if( MAX_price_tmp > out.MAX_price ){
 
     std::vector<wf::MultiPipe*> pipe_0_branches = {&pipe_1, &pipe_2};
 auto* pipe_0_pointer = wf::merge_multipipes_func(&topology, pipe_0_branches);
-auto& pipe_0 = (*pipe_0_pointer).add(join_5_op).add(window_group_6_op).add(select_7_op).add(global_group_8_op).add(select_9_op).add_sink(sink_10_op);
+auto& pipe_0 = (*pipe_0_pointer).add(join_5_op).add(window_group_6_op).add(select_7_op).add(window_group_8_op).add(select_9_op).add_sink(sink_10_op);
 
     topology.run();
     return 0;

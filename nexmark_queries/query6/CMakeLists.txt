@@ -9,11 +9,11 @@ set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNDEBUG")
 find_package(Threads REQUIRED)
 
 include_directories(
-    "/disc1/homes/lorenzoni/WindFlow-Table-API/include"
-    "/disc1/homes/lorenzoni/WindFlow-Table-API/include/WindFlow/wf"
-    "/disc1/homes/lorenzoni/WindFlow-Table-API/include/fastflow"
-    "/disc1/homes/lorenzoni/WindFlow-Table-API/include/Table_WindFlow"
-    "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_queries/query6"
+    "/home/user/TableAPI/nexmark_queries/../include"
+    "/home/user/TableAPI/nexmark_queries/../include/WindFlow/wf"
+    "/home/user/TableAPI/nexmark_queries/../include/fastflow"
+    "/home/user/TableAPI/nexmark_queries/../include/Table_WindFlow"
+    "/home/user/TableAPI/nexmark_queries/query6"
 )
             
 # --- Target per Query: avg_selling_price_by_seller ---

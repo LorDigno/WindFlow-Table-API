@@ -21,6 +21,7 @@ class TableEnvironment:
     """
 
     def __init__(self, 
+        include_dir: Path,
         par: int = 1, 
         policy: TimePolicy = TimePolicy.NO_POLICY,
         epoch: Optional[Tuple[str, TimeFormats]] = None
@@ -40,6 +41,7 @@ class TableEnvironment:
         self.par = par
         self.policy = policy
         self.epoch = epoch
+        self.include_dir = include_dir.absolute()
 
     def _generate_table_id(self, prefix: str = "tab") -> str:
         """Genera un identificativo univoco progressivo per ogni tabella o query nell'ambiente."""
@@ -308,7 +310,7 @@ class TableEnvironment:
         print(f"[ENV] Done generate_code for {query.table_id}, launching Executor")
 
         #compilazione ed esecuzione
-        executor = Executor(work_dir=out_path)
+        executor = Executor(self.include_dir, out_path)
         handle = executor.run_query(query.table_id)
 
         #log

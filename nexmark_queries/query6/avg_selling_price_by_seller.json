@@ -26,7 +26,7 @@
         ],
         "parents": [
             {
-                "op_type": "GLOBAL_GROUP_BY",
+                "op_type": "WINDOW_GROUP_BY",
                 "schema_out": {
                     "seller": "BIGINT",
                     "COUNT": "BIGINT",
@@ -40,7 +40,12 @@
                 "keys": [
                     "seller"
                 ],
-                "window": null,
+                "window": {
+                    "type": "COUNT",
+                    "kind": "SLIDING",
+                    "size": "10",
+                    "slide": "1"
+                },
                 "aggregations": [
                     {
                         "expr_type": "AGGREGATE",

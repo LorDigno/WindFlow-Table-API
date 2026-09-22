@@ -2,6 +2,7 @@ from windflow_table_api import *
 from pathlib import Path
 
 env = TableEnvironment(
+    include_dir= Path("../include"),
     par= 2, 
     policy=TimePolicy.EVENT_TIME,
     epoch=("2026-09-01T00:00:00.000Z", TimeFormats.ISO8601)
