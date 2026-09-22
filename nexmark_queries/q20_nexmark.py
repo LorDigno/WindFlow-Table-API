@@ -83,33 +83,22 @@ bid_config = InputFileConfiguration(
 
 bid = env.table_from_file(bid_config, "bid_source")
 
-# 2. Intervallo di join: un'offerta arriva da 0s a 12h dopo l'apertura dell'asta
-#    (-1 minuto di tolleranza su disallineamenti di lettura)
+#---    QUERY 20
+#--- Get bids with the corresponding auction information where category is 10.
+
 interval = Interval(
     Duration.minutes(-1),
     Duration.hours(12)
 )
 
-# 3. Filter Join:
-#    - Filtriamo a monte solo la categoria 10
-#    - Rinominiamo 'id' in 'auction_id' per la chiave di join
-#    - Rinominiamo 'extra' in 'auction_extra' per evitare collisioni di schema
-target_auctions = (auction
-    .where(col("category") == 10)
-    .rename_columns({
-        "extra": "auction_extra"
-    })
-)
-
-# 4. Keyed Interval Join (auction Left, bid Right)
-#    t_auction - 1m <= t_bid <= t_auction + 12h
-q20 = (target_auctions
-    .name_query("expand_bid_with_auction")
+q20 = (auction
+    .name_query("auction_expanded")
+    .where(col("category") == 11)
     .join(bid, ["auction_id"], attachment=interval)
     .select(
         "auction_id", "bidder", "price", "channel", "url", "bid_dateTime", "extra",
-        "itemName", "description", "initialBid", "reserve", "auction_dateTime", 
-        "expires", "seller", "category", "auction_extra"
+        "item_name", "description", "initial_bid", "reserve", "auction_dateTime", 
+        "expires", "seller", "category"
     )
 )
 
