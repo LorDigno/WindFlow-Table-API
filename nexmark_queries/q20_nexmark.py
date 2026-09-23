@@ -23,13 +23,13 @@ auction_schema = (SchemaBuilder()
 )
 
 auction_config = InputFileConfiguration(
-    path = Path("../data_streams/auction.csv"),
+    path = Path("../nexmark_datasets/auction.csv"),
     format= FileFormat.CSV,
     schema= auction_schema,
     has_header= True,
     time_col= "auction_dateTime",
     order= True,                        
-    split_size= SplitSize.kilobytes(500)
+    split_size= SplitSize.megabytes(10)
 )
 
 auction = env.table_from_file(auction_config, "auction_source")
@@ -48,13 +48,13 @@ person_schema = (SchemaBuilder()
 )
 
 person_config = InputFileConfiguration(
-    path = Path("../data_streams/person.csv"),
+    path = Path("../nexmark_datasets/person.csv"),
     format = FileFormat.CSV,
     schema = person_schema,
     has_header = True,
     time_col = "person_dateTime",
     order = True,                                           # da vedere
-    split_size= SplitSize.kilobytes(400)
+    split_size= SplitSize.megabytes(10)
 )
 
 person = env.table_from_file(person_config, "person_source")
@@ -72,13 +72,13 @@ bid_schema = (SchemaBuilder()
 )
 
 bid_config = InputFileConfiguration(
-    path = Path("../data_streams/bid.csv"),
+    path = Path("../nexmark_datasets/bid.csv"),
     format = FileFormat.CSV,
     schema = bid_schema,
     has_header = True,
     time_col = "bid_dateTime",
     order = True,                                           # da vedere
-    split_size= SplitSize.megabytes(5)
+    split_size= SplitSize.megabytes(128)
 )
 
 bid = env.table_from_file(bid_config, "bid_source")
@@ -93,7 +93,7 @@ interval = Interval(
 
 q20 = (auction
     .name_query("auction_expanded")
-    .where(col("category") == 11)
+    .where(col("category") == 10)
     .join(bid, ["auction_id"], attachment=interval)
     .select(
         "auction_id", "bidder", "price", "channel", "url", "bid_dateTime", "extra",
