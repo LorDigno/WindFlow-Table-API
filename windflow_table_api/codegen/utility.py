@@ -1,6 +1,6 @@
 from typing import Dict, Any, Tuple, Callable, Union
 from enum import Enum
-from ..datatypes import TYPE_TRANSLATION, DataTypes
+from ..types import TypeDescriptor, DataTypes
 from ..object_names import AggFuncType
 
 #registro per le funzioni di traduzione dei letterali
@@ -18,17 +18,17 @@ LITERAL_FORMATTERS: Dict[DataTypes, Callable[[Any], str]] = {
 #handler per i valori di default delle aggregazioni
 
 def _default_sum(dtype: DataTypes, cpp_type: str) -> str:
-    if not dtype.is_number():
+    if not dtype.is_number:
         raise TypeError(f"L'aggregazione SUM non è applicabile a un tipo non numerico: {dtype.value}")
     return "0.0" if dtype in (DataTypes.FLOAT, DataTypes.DOUBLE) else "0"
 
 def _default_max(dtype: DataTypes, cpp_type: str) -> str:
-    if dtype.is_number():
+    if dtype.is_number:
         return f"std::numeric_limits<{cpp_type}>::lowest()"
     raise TypeError(f"MAX non supportata per il tipo: {dtype.value}")
 
 def _default_min(dtype: DataTypes, cpp_type: str) -> str:
-    if dtype.is_number():
+    if dtype.is_number:
         return f"std::numeric_limits<{cpp_type}>::max()"
     raise TypeError(f"MIN non supportata per il tipo: {dtype.value}")
 
@@ -65,5 +65,5 @@ def get_aggregate_default(
     if not handler:
         raise NotImplementedError(f"Nessun handler di default registrato per: {agg_func.value}")
 
-    cpp_type = TYPE_TRANSLATION[dtype]
+    cpp_type = dtype.cpp_type
     return handler(dtype, cpp_type)

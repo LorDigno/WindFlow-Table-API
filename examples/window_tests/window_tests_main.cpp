@@ -20,15 +20,19 @@ int main(int argc, char* argv[]) {
     std::stringstream ss(line);
     std::string token;
 
-    //timestamp
     std::getline(ss, token, ',');
+    record.timestamp = parse_ISO8601(token);
     timestamp = parse_ISO8601(token);
-    //dati
-    std::getline(ss, record.sensor_id, ',');
+
+    std::getline(ss, token, ',');
+    record.sensor_id = parse_STRING(token);
+
     std::getline(ss, token, ',');
     record.temperature = parse_DOUBLE(token);
+
     std::getline(ss, token, ',');
     record.humidity = parse_DOUBLE(token);
+
 }
 )
     .withName("window_tests_from_4")
@@ -42,15 +46,19 @@ int main(int argc, char* argv[]) {
     std::stringstream ss(line);
     std::string token;
 
-    //timestamp
     std::getline(ss, token, ',');
+    record.timestamp = parse_ISO8601(token);
     timestamp = parse_ISO8601(token);
-    //dati
-    std::getline(ss, record.sensor_id, ',');
+
+    std::getline(ss, token, ',');
+    record.sensor_id = parse_STRING(token);
+
     std::getline(ss, token, ',');
     record.temperature = parse_DOUBLE(token);
+
     std::getline(ss, token, ',');
     record.humidity = parse_DOUBLE(token);
+
 }
 )
     .withName("renamed_src_from_6")
@@ -62,6 +70,7 @@ int main(int argc, char* argv[]) {
     auto select_3_op = Select_Builder<source_window_tests_from_4, renamed_src_select_5_struct_out>(
         [](const source_window_tests_from_4& in) -> renamed_src_select_5_struct_out {
     renamed_src_select_5_struct_out out;
+    out.ts = in.timestamp;
     out.sensor_id = in.sensor_id;
     out.temp = in.temperature;
     out.hum = in.humidity;
@@ -75,6 +84,7 @@ int main(int argc, char* argv[]) {
     auto left_unifier_4_op = Select_Builder<source_window_tests_from_4, source_window_tests_from_4_unified_renamed_src_select_5_struct_out>(
         [](const source_window_tests_from_4& in) -> source_window_tests_from_4_unified_renamed_src_select_5_struct_out {
     source_window_tests_from_4_unified_renamed_src_select_5_struct_out out;
+    out.timestamp = in.timestamp;
     out.sensor_id = in.sensor_id;
     out.temperature = in.temperature;
     out.humidity = in.humidity;
@@ -88,6 +98,7 @@ int main(int argc, char* argv[]) {
     auto right_unifier_5_op = Select_Builder<renamed_src_select_5_struct_out, source_window_tests_from_4_unified_renamed_src_select_5_struct_out>(
         [](const renamed_src_select_5_struct_out& in) -> source_window_tests_from_4_unified_renamed_src_select_5_struct_out {
     source_window_tests_from_4_unified_renamed_src_select_5_struct_out out;
+    out.ts = in.ts;
     out.sensor_id = in.sensor_id;
     out.temp = in.temp;
     out.hum = in.hum;
@@ -102,9 +113,11 @@ int main(int argc, char* argv[]) {
     [](const source_window_tests_from_4_unified_renamed_src_select_5_struct_out& left, const source_window_tests_from_4_unified_renamed_src_select_5_struct_out& right) -> std::optional<source_window_tests_from_4_unified_renamed_src_select_5_struct_out> {
 
     source_window_tests_from_4_unified_renamed_src_select_5_struct_out out{};
+    out.timestamp = left.timestamp;
     out.sensor_id = left.sensor_id;
     out.temperature = left.temperature;
     out.humidity = left.humidity;
+    out.ts = right.ts;
     out.temp = right.temp;
     out.hum = right.hum;
     return out;
@@ -155,7 +168,11 @@ int main(int argc, char* argv[]) {
 
     auto sink_9_op = Table_Sink_Builder<window_tests_select_1_struct_out>("window_tests",
     [](const window_tests_select_1_struct_out& record, std::ostream& os) {
- os << record.sensor_id << ","; os << record.media;}
+ 
+    os << record.sensor_id << ",";
+ 
+    os << record.media;
+}
 )
     .withName("window_tests_sink_7")
     .withParallelism(2)

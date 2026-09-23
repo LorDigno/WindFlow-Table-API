@@ -20,15 +20,19 @@ int main(int argc, char* argv[]) {
     std::stringstream ss(line);
     std::string token;
 
-    //timestamp
     std::getline(ss, token, ',');
+    record.timestamp = parse_ISO8601(token);
     timestamp = parse_ISO8601(token);
-    //dati
-    std::getline(ss, record.sensor_id, ',');
+
+    std::getline(ss, token, ',');
+    record.sensor_id = parse_STRING(token);
+
     std::getline(ss, token, ',');
     record.temperature = parse_DOUBLE(token);
+
     std::getline(ss, token, ',');
     record.humidity = parse_DOUBLE(token);
+
 }
 )
     .withName("sensor_source_query_5_from_5")
@@ -63,15 +67,19 @@ int main(int argc, char* argv[]) {
     std::stringstream ss(line);
     std::string token;
 
-    //timestamp
     std::getline(ss, token, ',');
+    record.timestamp = parse_ISO8601(token);
     timestamp = parse_ISO8601(token);
-    //dati
-    std::getline(ss, record.sensor_id, ',');
+
+    std::getline(ss, token, ',');
+    record.sensor_id = parse_STRING(token);
+
     std::getline(ss, token, ',');
     record.temperature = parse_DOUBLE(token);
+
     std::getline(ss, token, ',');
     record.humidity = parse_DOUBLE(token);
+
 }
 )
     .withName("sensor_source_query_6_from_8")
@@ -133,7 +141,11 @@ int main(int argc, char* argv[]) {
 
     auto sink_10_op = Table_Sink_Builder<sensor_source_query_5_select_3_struct_out>("intersect_tests",
     [](const sensor_source_query_5_select_3_struct_out& record, std::ostream& os) {
- os << record.sensor_id << ","; os << record.temperature;}
+ 
+    os << record.sensor_id << ",";
+ 
+    os << record.temperature;
+}
 )
     .withName("intersect_tests_sink_9")
     .withParallelism(2)

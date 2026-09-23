@@ -1,4 +1,6 @@
 from enum import Enum
+from .types import DataTypes, TypeDescriptor
+from typing import Optional, Callable, Dict
 
 #---- OPERATORI
 
@@ -62,27 +64,90 @@ SET_OPERATIONS = frozenset({
         OpType.UNION_ALL,
         OpType.INTERSECT,
         OpType.INTERSECT_ALL,
-    })
+    }
+)
 
 #---- ESPRESSIONI
 
 class ExprType(str, Enum):
-  """Tipi di espressione supportati nella Table API."""
+    """Tipi di espressione supportati nella Table API."""
 
-  COL_REF = "COL_REF"
-  LITERAL = "LITERAL"
-  BINARY_OP = "BINARY_OP"
-  UNARY_OP = "UNARY_OP"
-  AGGREGATE = "AGGREGATE"
+    COL_REF = "COL_REF"
+    LITERAL = "LITERAL"
+    BINARY_OP = "BINARY_OP"
+    UNARY_OP = "UNARY_OP"
+    AGGREGATE = "AGGREGATE"
+    CURRENT_TIMESTAMP = "CURRENT_TIMESTAMP"
+
+#---- Aggregazioni con metodi di risoluzione dei tipi
 
 class AggFuncType(str, Enum):
-  """Funzioni di aggregazione supportate."""
+    """Funzioni di aggregazione supportate."""
 
-  SUM = "SUM"
-  AVG = "AVG"
-  COUNT = "COUNT"
-  MIN = "MIN"
-  MAX = "MAX"
+    SUM = "SUM"
+    AVG = "AVG"
+    COUNT = "COUNT"
+    MIN = "MIN"
+    MAX = "MAX"
+
+    def resolve_agg_type(
+        self, input_type: Optional[TypeDescriptor] = None
+    ) -> TypeDescriptor:
+        """
+        Risolve il tipo risultante delegando la regola al registro AGG_TYPE_RULES.
+        """
+        target = AGG_TYPE_RULES.get(self, _resolve_fallback)
+        return target(self, input_type)
+
+def _resolve_count(func: AggFuncType, input_type: Optional[TypeDescriptor]) -> TypeDescriptor:
+  #COUNT rende sempre BIGINT perché il numero di record è potenzialmente illimitato
+  return DataTypes.BIGINT
+
+def _resolve_avg(func: AggFuncType, input_type: Optional[TypeDescriptor]) -> TypeDescriptor:
+  if input_type is None:
+    raise ValueError(
+        f"L'aggregazione {func.value} richiede un'espressione target."
+    )
+  if not input_type.is_number:
+    raise TypeError(
+        f"L'aggregazione {func.value} richiede un tipo numerico, ricevuto:"
+        f" {input_type.value}"
+    )
+  
+  #AVG rende sempre un DOUBLE
+  return DataTypes.DOUBLE
+
+def _resolve_numeric_identity(func: AggFuncType, input_type: Optional[TypeDescriptor]) -> TypeDescriptor:
+  if input_type is None:
+    raise ValueError(
+        f"L'aggregazione {func.value} richiede un'espressione target."
+    )
+  if not input_type.is_number:
+    raise TypeError(
+        f"L'aggregazione {func.value} richiede un tipo numerico, ricevuto:"
+        f" {input_type.value}"
+    )
+  
+  #SUM, MIN, MAX conservano il tipo numerico di input
+  return input_type
+
+def _resolve_fallback(
+    func: AggFuncType, input_type: Optional[TypeDescriptor]
+) -> TypeDescriptor:
+  raise NotImplementedError(
+     f"L'aggregazione {func.value} non è supportata."
+  )
+
+AGG_TYPE_RULES: Dict[
+    AggFuncType,
+    Callable[[AggFuncType, Optional[TypeDescriptor]], TypeDescriptor],
+] = {
+    AggFuncType.COUNT: _resolve_count,
+    AggFuncType.AVG: _resolve_avg,
+    AggFuncType.SUM: _resolve_numeric_identity,
+    AggFuncType.MIN: _resolve_numeric_identity,
+    AggFuncType.MAX: _resolve_numeric_identity,
+}
 
 #---- FINESTRE ED INTERVALLI
 

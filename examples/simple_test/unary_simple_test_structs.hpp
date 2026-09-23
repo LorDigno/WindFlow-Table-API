@@ -10,13 +10,14 @@
 // Struct: source_unary_simple_test_from_5
 // ============================================================================
 struct source_unary_simple_test_from_5 {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
 
 
     bool operator==(const source_unary_simple_test_from_5& other) const {
-        return sensor_id == other.sensor_id && temperature == other.temperature && humidity == other.humidity;
+        return timestamp == other.timestamp && sensor_id == other.sensor_id && temperature == other.temperature && humidity == other.humidity;
     }
 };
 
@@ -25,6 +26,7 @@ namespace std {
     struct hash<source_unary_simple_test_from_5> {
         size_t operator()(const source_unary_simple_test_from_5& k) const {
             size_t h = 0;
+            h ^= std::hash<uint64_t>{}(k.timestamp) + 0x9e3779b9 + (h << 6) + (h >> 2);
             h ^= std::hash<std::string>{}(k.sensor_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
             h ^= std::hash<double>{}(k.temperature) + 0x9e3779b9 + (h << 6) + (h >> 2);
             h ^= std::hash<double>{}(k.humidity) + 0x9e3779b9 + (h << 6) + (h >> 2);

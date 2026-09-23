@@ -1,11 +1,10 @@
 """WindFlow Table API - Python DSL e Code Generator per Streaming Analytics su WindFlow."""
 
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 # =============================================================================
 # Tipi ed Enum Condivisi (Contratti trasversali tra API, Codegen e Runtime)
 # =============================================================================
-from .datatypes import DataTypes, TYPE_TRANSLATION
 from .object_names import (
     OpType,
     AggFuncType,
@@ -14,15 +13,19 @@ from .object_names import (
     WindowType,
 )
 from .times import (
-    TimeFormats,
     TimePolicy,
     TimeUnits,
+)
+from .types import (
+    TypeDescriptor,
+    DataTypes,
+    TimeFormats
 )
 
 # =============================================================================
 # DSL e Componenti Principali (Accessibili con: from windflow_table_api import ...)
 # =============================================================================
-from .api.durations import Duration, TimeCol
+from .api.durations import Duration
 from .api.expressions import (
     AggregateExpression,
     BinaryOpExpression,
@@ -38,6 +41,7 @@ from .api.expressions import (
     min,
     neg,
     sum,
+    current_timestamp,
 )
 from .api.file_config import FileFormat, InputFileConfiguration, SplitSize
 from .api.schema import Field, Schema, SchemaBuilder
@@ -59,11 +63,11 @@ __all__ = [
     "OpType",
     "ExprType",
     "AggFuncType",
-    "DataTypes",
-    "TYPE_TRANSLATION",
     "TimeUnits",
-    "TimeFormats",
     "TimePolicy",
+    "TypeDescriptor",
+    "DataTypes",
+    "TimeFormats",
     "WindowType",
     "WindowKind",
     # DSL Environment & Tabelle
@@ -83,6 +87,7 @@ __all__ = [
     "min",
     "max",
     "count",
+    "current_timestamp",
     # Espressioni AST
     "Expression",
     "ColRefExpression",
@@ -92,7 +97,6 @@ __all__ = [
     "AggregateExpression",
     # Finestre, Durate e Configurazione File
     "Duration",
-    "TimeCol",
     "Window",
     "Interval",
     "InputFileConfiguration",

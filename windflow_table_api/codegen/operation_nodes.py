@@ -3,7 +3,8 @@ from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Union, Type, Tuple
 from abc import abstractmethod, ABC
 from ..object_names import WindowType, WindowKind, OpType
-from ..times import TimeFormats, TimeUnits
+from ..times import TimeUnits
+from ..types import TypeDescriptor, TimeFormats
 from .schema_gen import SchemaGenerator, CppStruct, CppField
 from .expr_translator import ExpressionTranslator
 from .lambda_gen import LambdaGenerator
@@ -237,11 +238,11 @@ class WindowNode(ABC):
 
         kind = OpNode.require(window, "kind", op_type, str)
 
-        size = OpNode.require(window, "size", op_type, Union[int, dict])
+        size = OpNode.require(window, "size", op_type)
         if w_type == WindowType.TIME:
             size = OpNode.parse_duration(size, op_type) 
 
-        slide = OpNode.require(window, "slide", op_type, Union[int, dict])
+        slide = OpNode.require(window, "slide", op_type)
         if w_type == WindowType.TIME:
             slide = OpNode.parse_duration(slide, op_type) 
 
@@ -272,8 +273,7 @@ class FromOpNode(OpNode):
     split_size:int
 
     #attributi riguardanti l'event time
-    time_col:Optional[str] = None       #nome
-    time_format:Optional[str] = None
+    time_col:Optional[str] = None       
     delay:Optional[int] = None
     ordered:bool
 
@@ -299,14 +299,7 @@ class FromOpNode(OpNode):
 
         order = OpNode.require(config, "order", cls.op_type, bool)
 
-        #gestione della TimeCol
-        time_col_name = None
-        time_format = None
-        time_col_dict = OpNode.require(config, "time_col", cls.op_type, optional=True)
-        if time_col_dict is not None:
-            #estraggo i campi
-            time_col_name = OpNode.require(time_col_dict, "name", cls.op_type, str)
-            time_format = OpNode.require(time_col_dict, "format", cls.op_type, str)
+        time_col_name = OpNode.require(config, "time_col", cls.op_type, optional=True)
 
         base_args = OpNode.extract_basic_commons(node_id, op_dict, cls.op_type)
 
@@ -321,7 +314,6 @@ class FromOpNode(OpNode):
             split_size= split_size,
 
             time_col= time_col_name,
-            time_format= time_format,
             delay= delay,
             ordered= order
         )
@@ -337,7 +329,6 @@ class FromOpNode(OpNode):
         parser_func = ctx.lambda_gen.parser_lambda(
             struct_out= struct_out.struct_name,
             time_col_name= self.time_col,
-            time_format= self.time_format,
             ordered_fields= [
                 {"name": col_name, "type": col_type}
                 for col_name, col_type in self.schema_out.items()
@@ -401,10 +392,19 @@ class SinkOpNode(OpNode):
         #preparazione dell'header
         header_str = ",".join(f.name for f in parent_struct.fields)
 
+        #riallienamento da uint64_t a date per i TimeFormats
+        dates = {}
+        for f in self.schema_out:
+            t = TypeDescriptor.from_value(self.schema_out[f])
+
+            if t.is_temporal:
+                dates[f] = t.logical_name
+
         #generazione della lambda
         formatter_func = ctx.lambda_gen.sink_lambda(
             parent_struct.struct_name,
-            fields= parent_struct.fields
+            fields= parent_struct.fields,
+            dates= dates
         )
 
         #nome di variabile

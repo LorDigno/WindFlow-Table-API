@@ -10,12 +10,13 @@ from .compiler import CppCompiler
 class Executor:
   """Entry point del runtime: gestisce CMake, compilazione e lancio del processo nativo."""
 
-  def __init__(self, work_dir: Path) -> None:
+  def __init__(self, include_dir: Path, work_dir: Path) -> None:
       self.work_dir = Path(work_dir)
       self.build_dir = self.work_dir / "build"
       self.logs_dir = self.work_dir / "logs"
+      self.include_dir = include_dir
 
-      self.cmake_mgr = CMakeManager(work_dir=self.work_dir)
+      self.cmake_mgr = CMakeManager(include_dir= self.include_dir, work_dir=self.work_dir)
       self.compiler = CppCompiler(
         source_dir=self.work_dir, build_dir=self.build_dir
       )

@@ -1,6 +1,6 @@
 from __future__ import annotations
-from windflow_table_api import TimeUnits, TimeFormats
-from enum import Enum
+from ..times import TimeUnits
+from ..types import TimeFormats
 from typing import Any, Dict
 from functools import total_ordering
 
@@ -75,21 +75,4 @@ class Duration:
         """Consente l'uso di Duration in set e chiavi di dizionari."""
         return hash(self.to_microseconds())
 
-class TimeCol:
-    """
-    Rappresenta una colonna da cui estrarre il timestamp nella sorgente.
-    """
-
-    def __init__(self, name: str, format: TimeFormats):
-        self.name = name
-        self.format = format    
-
-    def __repr__(self) -> str:
-        return f"({self.name}, {self.format.name})"
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "name": self.name,
-            "format": self.format.value
-        }
    

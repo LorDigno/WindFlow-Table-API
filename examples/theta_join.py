@@ -1,5 +1,4 @@
 from pathlib import Path
-import sys
 from windflow_table_api import *
 
 env = TableEnvironment(
@@ -9,6 +8,7 @@ env = TableEnvironment(
 )
 
 sensor_schema = (SchemaBuilder()
+                 .add_column("timestamp", TimeFormats.ISO8601)
                  .add_column("sensor_id", DataTypes.STRING)
                  .add_column("temperature", DataTypes.DOUBLE)
                  .add_column("humidity", DataTypes.DOUBLE)
@@ -21,7 +21,7 @@ source_config = InputFileConfiguration(
     schema= sensor_schema,
     split_size= SplitSize.kilobytes(1),
     has_header= True,
-    time_col= TimeCol("timestamp", TimeFormats.ISO8601),
+    time_col= "timestamp",
     order= False,
     delay= Duration.hours(2)
 )
@@ -30,22 +30,26 @@ tab = env.table_from_file(source_config, "sensor_stream_input")
 
 renamed_self = tab.name_query("renaming_for_self_join").rename_columns(
     {
+        "timestamp": "ts",
         "sensor_id": "sens",
         "temperature": "temp",
         "humidity": "hum"
     }
 )
 
-interval = Interval(
-    Duration.minutes(-30),
-    Duration.minutes(30)
+window = Window.createTBWindow(
+    Duration.minutes(5)
 )
 
-theta = (col("hum") > 50) & (col("temperature") < 20)
+theta = (
+    (col("hum") > 50) & (col("temperature") < 20) 
+    & (col("timestamp") > col("ts")) 
+    & (col("timestamp") > current_timestamp())
+)
 
 q1 = (tab
       .name_query("self_theta_join")
-      .join(renamed_self, attachment=interval, where= theta)
+      .join(renamed_self, attachment= window, where= theta)
       .select("sensor_id", "sens", "temperature", "hum")
 )
 

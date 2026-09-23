@@ -1,0 +1,80 @@
+{
+    "query_id": "dol_to_eur",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "auction_id": "BIGINT",
+            "price_eur": "DOUBLE",
+            "bidder": "BIGINT",
+            "bid_dateTime": "ISO8601"
+        },
+        "schema_in": {
+            "auction_id": "BIGINT",
+            "bidder": "BIGINT",
+            "price": "BIGINT",
+            "channel": "STRING",
+            "url": "STRING",
+            "bid_dateTime": "ISO8601",
+            "extra": "STRING"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "auction_id"
+            },
+            {
+                "expr_type": "BINARY_OP",
+                "data_type": "DOUBLE",
+                "name": "price_mult_0.87",
+                "alias": "price_eur",
+                "op": "*",
+                "left": {
+                    "expr_type": "COL_REF",
+                    "data_type": "BIGINT",
+                    "name": "price"
+                },
+                "right": {
+                    "expr_type": "LITERAL",
+                    "data_type": "DOUBLE",
+                    "name": "0.87",
+                    "value": 0.87
+                }
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "bidder"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "ISO8601",
+                "name": "bid_dateTime"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "FROM",
+                "schema_out": {
+                    "auction_id": "BIGINT",
+                    "bidder": "BIGINT",
+                    "price": "BIGINT",
+                    "channel": "STRING",
+                    "url": "STRING",
+                    "bid_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "source_id": "bid_source",
+                "config": {
+                    "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv",
+                    "file_format": "CSV",
+                    "header": true,
+                    "time_col": "bid_dateTime",
+                    "order": true,
+                    "delay": null,
+                    "split_size": 5242880
+                }
+            }
+        ]
+    }
+}

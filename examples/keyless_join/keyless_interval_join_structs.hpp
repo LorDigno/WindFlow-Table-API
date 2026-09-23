@@ -10,6 +10,7 @@
 // Struct: source_keyless_interval_join_from_3
 // ============================================================================
 struct source_keyless_interval_join_from_3 {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
@@ -22,6 +23,7 @@ struct source_keyless_interval_join_from_3 {
 // Struct: rerenamed_src_select_4_struct_out
 // ============================================================================
 struct rerenamed_src_select_4_struct_out {
+    uint64_t ts;
     std::string sens;
     double temp;
     double hum;
@@ -34,9 +36,11 @@ struct rerenamed_src_select_4_struct_out {
 // Struct: source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out
 // ============================================================================
 struct source_keyless_interval_join_from_3_unified_rerenamed_src_select_4_struct_out {
+    uint64_t timestamp;
     std::string sensor_id;
     double temperature;
     double humidity;
+    uint64_t ts;
     std::string sens;
     double temp;
     double hum;
@@ -53,6 +57,8 @@ struct keyless_interval_join_select_1_struct_out {
     double temperature;
     std::string sens;
     double hum;
+    uint64_t timestamp;
+    uint64_t ts;
 
 
 };

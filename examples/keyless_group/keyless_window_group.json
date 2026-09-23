@@ -23,6 +23,7 @@
                     "COUNT": "BIGINT"
                 },
                 "schema_in": {
+                    "timestamp": "ISO8601",
                     "sensor_id": "STRING",
                     "temperature": "DOUBLE",
                     "humidity": "DOUBLE"
@@ -54,6 +55,7 @@
                     {
                         "op_type": "FROM",
                         "schema_out": {
+                            "timestamp": "ISO8601",
                             "sensor_id": "STRING",
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
@@ -63,10 +65,7 @@
                             "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
                             "file_format": "CSV",
                             "header": true,
-                            "time_col": {
-                                "name": "timestamp",
-                                "format": "ISO8601"
-                            },
+                            "time_col": "timestamp",
                             "order": true,
                             "delay": null,
                             "split_size": 0

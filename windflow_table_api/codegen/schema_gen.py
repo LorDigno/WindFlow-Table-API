@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Tuple, Optional, Set
 from jinja2 import Environment
 from pathlib import Path
-from windflow_table_api import DataTypes, TYPE_TRANSLATION
+from ..types import TypeDescriptor, DataTypes
 
 @dataclass
 class CppField:
@@ -61,10 +61,8 @@ class SchemaGenerator:
         Lancia KeyError se il tipo non è supportato.
         """
 
-        if json_type not in TYPE_TRANSLATION:
-            raise KeyError(f"Il tipo {json_type} non è supportato.")
-
-        return TYPE_TRANSLATION[json_type]
+        real_type: TypeDescriptor = TypeDescriptor.from_value(json_type)
+        return real_type.cpp_type
 
     def get_or_create_struct(
         self, 
@@ -86,7 +84,7 @@ class SchemaGenerator:
 
         #aggiungiamo il win_id se necessario
         if needs_win and "win_id" not in schema_copy:
-            schema_copy["win_id"] = DataTypes.UBIGINT
+            schema_copy["win_id"] = DataTypes.UBIGINT.logical_name
 
         #costruzione dei field
         cpp_fields: List[CppField] = []

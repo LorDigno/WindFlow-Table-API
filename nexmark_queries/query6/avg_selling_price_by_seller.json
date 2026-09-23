@@ -1,0 +1,93 @@
+{
+    "query_id": "avg_selling_price_by_seller",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "seller": "BIGINT",
+            "AVG_final": "DOUBLE"
+        },
+        "schema_in": {
+            "seller": "BIGINT",
+            "COUNT": "BIGINT",
+            "SUM_final": "BIGINT",
+            "AVG_final": "DOUBLE"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "seller"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "DOUBLE",
+                "name": "AVG_final"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "WINDOW_GROUP_BY",
+                "schema_out": {
+                    "seller": "BIGINT",
+                    "COUNT": "BIGINT",
+                    "SUM_final": "BIGINT",
+                    "AVG_final": "DOUBLE"
+                },
+                "schema_in": {
+                    "seller": "BIGINT",
+                    "final": "BIGINT"
+                },
+                "keys": [
+                    "seller"
+                ],
+                "window": {
+                    "type": "COUNT",
+                    "kind": "SLIDING",
+                    "size": "10",
+                    "slide": "1"
+                },
+                "aggregations": [
+                    {
+                        "expr_type": "AGGREGATE",
+                        "data_type": "BIGINT",
+                        "name": "COUNT",
+                        "func": "COUNT",
+                        "target": null
+                    },
+                    {
+                        "expr_type": "AGGREGATE",
+                        "data_type": "BIGINT",
+                        "name": "SUM_final",
+                        "func": "SUM",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "data_type": "BIGINT",
+                            "name": "final"
+                        }
+                    },
+                    {
+                        "expr_type": "AGGREGATE",
+                        "data_type": "DOUBLE",
+                        "name": "AVG_final",
+                        "func": "AVG",
+                        "target": {
+                            "expr_type": "COL_REF",
+                            "data_type": "BIGINT",
+                            "name": "final"
+                        }
+                    }
+                ],
+                "parents": [
+                    {
+                        "op_type": "TAB_REF",
+                        "schema_out": {
+                            "seller": "BIGINT",
+                            "final": "BIGINT"
+                        },
+                        "source_id": "winning_price_per_auction_by_seller"
+                    }
+                ]
+            }
+        ]
+    }
+}

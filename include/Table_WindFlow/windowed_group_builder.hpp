@@ -20,9 +20,6 @@ class Windowed_Group_Functor{
 
         //metodo chiamato dalla keyed_windows
         void operator()(const wf::Iterable<InputT> &win, OutputT &out){
-            //riazzero lo stato
-            out = OutputT{};
-
             //la trasformazione è racchiusa nella lambda.
             //il builder non fa altro che cambiare lo stato tramite la lambda.
             for(const InputT &input : win){

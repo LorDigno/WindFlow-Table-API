@@ -42,12 +42,6 @@ _TO_MICROSECONDS:Dict[str, int] = {
     TimeUnits.DAYS: 86_400_000_000,
 }
 
-class TimeFormats(Enum):
-    """
-    Formati temporali di cui è supportato il parsing.
-    """
-    ISO8601 = "ISO8601"
-
 class TimePolicy(Enum):
     """
     Politiche di gestione del tempo.

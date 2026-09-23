@@ -68,9 +68,10 @@ public:
         Interval_Functor<InputT, OutputT> functor(join_func);
         return wf::Interval_Join_Builder(functor)
             .withName(op_name)
-            .withParallelism(parallelism)
-            .withKeyBy([](const InputT&) -> int { return 0; }) //dummy per il parallelismo
-            .withDPMode()
+            //.withParallelism(parallelism)
+            .withParallelism(1)
+            //.withKeyBy([](const InputT&) -> int { return 0; }) //dummy per il parallelismo
+            //.withDPMode()
             .withBoundaries(
                 std::chrono::microseconds(lower_bound), 
                 std::chrono::microseconds(upper_bound)

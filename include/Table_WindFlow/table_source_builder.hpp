@@ -20,50 +20,6 @@ struct File_Split{
     uint64_t length = 0; 
 };
 
-//funzioni helper per il parsing dei tipi elementari
-inline std::string parse_STRING(const std::string& s) { return s; }
-inline int32_t     parse_INT(const std::string& s)    { return std::stoi(s); }
-inline int64_t     parse_BIGINT(const std::string& s) { return std::stoll(s); }
-inline float       parse_FLOAT(const std::string& s)  { return std::stof(s); }
-inline double      parse_DOUBLE(const std::string& s) { return std::stod(s); }
-inline bool        parse_BOOLEAN(const std::string& s){ return s == "1" || s == "true" || s == "TRUE"; }
-
-//funzioni helper per il parsing del formato temporale
-// Converte 'YYYY-MM-DDTHH:MM:SS.mmmZ' in microsecondi lineari continui
-inline uint64_t parse_ISO8601(const std::string& s) {
-    if (s.size() < 23) return 0;
-
-    // 1. Parsing componenti data
-    uint64_t year  = (s[0] - '0') * 1000 + (s[1] - '0') * 100 + (s[2] - '0') * 10 + (s[3] - '0');
-    uint64_t month = (s[5] - '0') * 10 + (s[6] - '0');
-    uint64_t day   = (s[8] - '0') * 10 + (s[9] - '0');
-
-    // 2. Parsing componenti orarie
-    uint64_t hours = (s[11] - '0') * 10 + (s[12] - '0');
-    uint64_t mins  = (s[14] - '0') * 10 + (s[15] - '0');
-    uint64_t secs  = (s[17] - '0') * 10 + (s[18] - '0');
-    uint64_t ms    = (s[20] - '0') * 100 + (s[21] - '0') * 10 + (s[22] - '0');
-
-    // 3. Tabella giorni cumulativi pregressi per mese (anno non bisestile)
-    static const uint32_t days_before_month[13] = {
-        0, 0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334
-    };
-
-    // 4. Calcolo giorni totali assoluti (conteggiando gli anni bisestili)
-    uint64_t leap_years = (year - 1) / 4 - (year - 1) / 100 + (year - 1) / 400;
-    uint64_t total_days = (year * 365ULL) + leap_years + days_before_month[month] + day;
-    
-    // Giorno bisestile per l'anno corrente dopo febbraio
-    bool is_current_leap = (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
-    if (month > 2 && is_current_leap) {
-        total_days++;
-    }
-
-    // 5. Conversione lineare continua in microsecondi
-    uint64_t total_secs = total_days * 86400ULL + hours * 3600ULL + mins * 60ULL + secs;
-    return (total_secs * 1000ULL + ms) * 1000ULL;
-}
-
 //funtore che implementa il ciclo di getline
 template <typename TupleT>
 class Source_Functor {

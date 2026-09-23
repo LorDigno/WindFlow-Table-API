@@ -1,22 +1,20 @@
 from pathlib import Path
 
 class CMakeManager:
-    def __init__(self, work_dir: Path):
+    def __init__(self, include_dir:Path, work_dir: Path):
         self.work_dir = Path(work_dir)
+        self.include_dir = include_dir
         self.cmake_path = self.work_dir / "CMakeLists.txt"
 
         #per ora con directory statiche per i test
         #risale da windflow_table_api/runtime/ fino alla root
         self.repo_root = Path(__file__).resolve().parents[2]
 
-        #directory con le librerie
-        inc_root = self.repo_root / "include"
-
-        self.include_dirs = [
-            inc_root,
-            inc_root / "WindFlow" / "wf",
-            inc_root / "fastflow",
-            inc_root / "Table_WindFlow",
+        self.includes = [
+            self.include_dir,
+            self.include_dir / "WindFlow" / "wf",
+            self.include_dir / "fastflow",
+            self.include_dir / "Table_WindFlow",
             self.work_dir,  
         ]
 
@@ -34,7 +32,7 @@ class CMakeManager:
 
     def _create_base_cmake(self) -> None:
         # Genera le inclusioni nel file CMakeLists.txt
-        inc_str = "\n    ".join(f'"{d}"' for d in self.include_dirs)
+        inc_str = "\n    ".join(f'"{d}"' for d in self.includes)
 
         base_content = f"""
 cmake_minimum_required(VERSION 3.16)

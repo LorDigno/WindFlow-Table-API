@@ -1,0 +1,13 @@
+[32mWindFlow Status Message: PipeGraph [ingress_time_windows] is running with 8 threads[0m
+--> DEFAULT (out-of-order) mode [32menabled[0m
+--> INGRESS_TIME policy [32menabled[0m
+--> Backpressure [31mdisabled[0m
+--> Non-blocking queues [32menabled[0m
+--> Pinning of threads [32menabled[0m
+[SRC0] File /disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv aperto.
+[SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv aperto.
+[SINK] File [SINK] File ingress_time_windows_output1.csvingress_time_windows_output0.csv aperto. aperto.
+
+[SINK1] File ingress_time_windows_output1.csv completato e chiuso.
+[SINK0] File ingress_time_windows_output0.csv completato e chiuso.
+[32mWindFlow Status Message: PipeGraph [ingress_time_windows] executed successfully[0m

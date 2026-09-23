@@ -1,0 +1,149 @@
+{
+    "query_id": "new_users",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "person_id": "BIGINT",
+            "name": "STRING",
+            "auction_id": "BIGINT",
+            "reserve": "BIGINT"
+        },
+        "schema_in": {
+            "person_id": "BIGINT",
+            "name": "STRING",
+            "email_address": "STRING",
+            "credit_card": "STRING",
+            "city": "STRING",
+            "state": "STRING",
+            "person_dateTime": "ISO8601",
+            "extra": "STRING",
+            "auction_id": "BIGINT",
+            "item_name": "STRING",
+            "description": "STRING",
+            "initial_bid": "BIGINT",
+            "reserve": "BIGINT",
+            "auction_dateTime": "ISO8601",
+            "expires": "ISO8601",
+            "category": "BIGINT"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "person_id"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "name"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "auction_id"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "reserve"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "JOIN_INTERVAL",
+                "schema_out": {
+                    "person_id": "BIGINT",
+                    "name": "STRING",
+                    "email_address": "STRING",
+                    "credit_card": "STRING",
+                    "city": "STRING",
+                    "state": "STRING",
+                    "person_dateTime": "ISO8601",
+                    "extra": "STRING",
+                    "auction_id": "BIGINT",
+                    "item_name": "STRING",
+                    "description": "STRING",
+                    "initial_bid": "BIGINT",
+                    "reserve": "BIGINT",
+                    "auction_dateTime": "ISO8601",
+                    "expires": "ISO8601",
+                    "category": "BIGINT"
+                },
+                "tab1_schema": {
+                    "person_id": "BIGINT",
+                    "name": "STRING",
+                    "email_address": "STRING",
+                    "credit_card": "STRING",
+                    "city": "STRING",
+                    "state": "STRING",
+                    "person_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "tab2_schema": {
+                    "auction_id": "BIGINT",
+                    "item_name": "STRING",
+                    "description": "STRING",
+                    "initial_bid": "BIGINT",
+                    "reserve": "BIGINT",
+                    "auction_dateTime": "ISO8601",
+                    "expires": "ISO8601",
+                    "person_id": "BIGINT",
+                    "category": "BIGINT"
+                },
+                "keys": [
+                    "person_id"
+                ],
+                "attachment": {
+                    "lower_bound": {
+                        "value": -1,
+                        "unit": "MINUTES"
+                    },
+                    "upper_bound": {
+                        "value": 12,
+                        "unit": "HOURS"
+                    }
+                },
+                "parents": [
+                    {
+                        "op_type": "FROM",
+                        "schema_out": {
+                            "person_id": "BIGINT",
+                            "name": "STRING",
+                            "email_address": "STRING",
+                            "credit_card": "STRING",
+                            "city": "STRING",
+                            "state": "STRING",
+                            "person_dateTime": "ISO8601",
+                            "extra": "STRING"
+                        },
+                        "source_id": "person_source",
+                        "config": {
+                            "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/person.csv",
+                            "file_format": "CSV",
+                            "header": true,
+                            "time_col": "person_dateTime",
+                            "order": true,
+                            "delay": null,
+                            "split_size": 409600
+                        }
+                    },
+                    {
+                        "op_type": "TAB_REF",
+                        "schema_out": {
+                            "auction_id": "BIGINT",
+                            "item_name": "STRING",
+                            "description": "STRING",
+                            "initial_bid": "BIGINT",
+                            "reserve": "BIGINT",
+                            "auction_dateTime": "ISO8601",
+                            "expires": "ISO8601",
+                            "person_id": "BIGINT",
+                            "category": "BIGINT"
+                        },
+                        "source_id": "auction_source_query_4"
+                    }
+                ]
+            }
+        ]
+    }
+}

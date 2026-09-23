@@ -1,0 +1,15 @@
+[32mWindFlow Status Message: PipeGraph [auctions_with_max_bids] is running with 25 threads[0m
+--> DEFAULT (out-of-order) mode [32menabled[0m
+--> EVENT_TIME policy [32menabled[0m
+--> Backpressure [31mdisabled[0m
+--> Non-blocking queues [32menabled[0m
+--> Pinning of threads [32menabled[0m
+[SRC0] File /disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv aperto.
+[SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv aperto.
+[SRC0] File /disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv aperto.
+[SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/data_streams/bid.csv aperto.
+[SINK] File auctions_with_max_bids_output0.csv aperto.
+[SINK] File auctions_with_max_bids_output1.csv aperto.
+[SINK0] File auctions_with_max_bids_output0.csv completato e chiuso.
+[SINK1] File auctions_with_max_bids_output1.csv completato e chiuso.
+[32mWindFlow Status Message: PipeGraph [auctions_with_max_bids] executed successfully[0m

@@ -36,8 +36,10 @@
                 },
                 "schema_in": {
                     "sensor_id": "STRING",
+                    "timestamp": "ISO8601",
                     "temperature": "DOUBLE",
                     "humidity": "DOUBLE",
+                    "ts": "ISO8601",
                     "temp": "DOUBLE",
                     "hum": "DOUBLE"
                 },
@@ -93,17 +95,21 @@
                         "op_type": "JOIN_WINDOW",
                         "schema_out": {
                             "sensor_id": "STRING",
+                            "timestamp": "ISO8601",
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE",
+                            "ts": "ISO8601",
                             "temp": "DOUBLE",
                             "hum": "DOUBLE"
                         },
                         "tab1_schema": {
+                            "timestamp": "ISO8601",
                             "sensor_id": "STRING",
                             "temperature": "DOUBLE",
                             "humidity": "DOUBLE"
                         },
                         "tab2_schema": {
+                            "ts": "ISO8601",
                             "sensor_id": "STRING",
                             "temp": "DOUBLE",
                             "hum": "DOUBLE"
@@ -127,6 +133,7 @@
                             {
                                 "op_type": "FROM",
                                 "schema_out": {
+                                    "timestamp": "ISO8601",
                                     "sensor_id": "STRING",
                                     "temperature": "DOUBLE",
                                     "humidity": "DOUBLE"
@@ -136,10 +143,7 @@
                                     "filepath": "/home/user/TableAPI/data_streams/sensor_input_stream.csv",
                                     "file_format": "CSV",
                                     "header": true,
-                                    "time_col": {
-                                        "name": "timestamp",
-                                        "format": "ISO8601"
-                                    },
+                                    "time_col": "timestamp",
                                     "order": true,
                                     "delay": null,
                                     "split_size": 0
@@ -148,6 +152,7 @@
                             {
                                 "op_type": "TAB_REF",
                                 "schema_out": {
+                                    "ts": "ISO8601",
                                     "sensor_id": "STRING",
                                     "temp": "DOUBLE",
                                     "hum": "DOUBLE"

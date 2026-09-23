@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 from .schema import Schema, SchemaBuilder
 from .expressions import Expression, AggregateExpression
 from .windows import Window, Interval, WindowType
-from ..datatypes import DataTypes
 from .file_config import InputFileConfiguration
-from windflow_table_api import OpType
+from ..object_names import OpType
+from ..types import DataTypes
 
 class Operator(ABC):
     """

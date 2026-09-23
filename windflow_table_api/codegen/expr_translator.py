@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from jinja2 import Environment
 from .utility import LITERAL_FORMATTERS
 from ..object_names import ExprType, AggFuncType
-from ..datatypes import DataTypes
+from ..types import DataTypes
 
 #dati da passare alle sotto-espressioni
 @dataclass(frozen=True)
@@ -26,6 +26,7 @@ class ExpressionTranslator:
             ExprType.COL_REF: self._translate_col_ref,
             ExprType.BINARY_OP: self._translate_binary_op,
             ExprType.UNARY_OP: self._translate_unary_op,
+            ExprType.CURRENT_TIMESTAMP: self._translate_current_ts,
         }
 
         #dispatcher per aggregazioni
@@ -172,6 +173,9 @@ class ExpressionTranslator:
         inner_cpp = self.translate_expr(inner_expr, ctx)
 
         return f"{cpp_op}{inner_cpp}"
+
+    def _translate_current_ts(self, expr_dict: Dict[str, Any], ctx:TranslationContext) -> str:
+        return "current_time_micros()"
 
     #----- Entry Point per traduzioni a più variabili
     def translate_with_multiple_var(

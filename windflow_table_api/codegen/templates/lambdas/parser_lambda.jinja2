@@ -2,18 +2,12 @@
     std::stringstream ss(line);
     std::string token;
 
-{% if time_col_name %}
-    //timestamp
-    std::getline(ss, token, ',');
-    timestamp = parse_{{ time_col_format }}(token);
-{% endif %}
-    //dati
 {% for field in fields %}
-    {% if field.type == 'STRING' %}
-    std::getline(ss, record.{{ field.name }}, ',');
-    {% else %}
     std::getline(ss, token, ',');
     record.{{ field.name }} = parse_{{ field.type }}(token);
-    {% endif %}
+{% if field.name == time_col_name %}
+    timestamp = parse_{{ field.type }}(token);
+{% endif %}
+
 {% endfor %}
 }
