@@ -13,3 +13,4 @@ CONVENTIONS.md
 *.yml
 examples/
 data_streams/
+nexmark/
