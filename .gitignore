@@ -11,3 +11,5 @@ venv/
 .aider*
 CONVENTIONS.md
 *.yml
+examples/
+data_streams/
