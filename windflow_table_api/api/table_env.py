@@ -24,15 +24,15 @@ class TableEnvironment:
         include_dir: Path,
         par: int = 1, 
         policy: TimePolicy = TimePolicy.NO_POLICY,
-        epoch: Optional[Tuple[str, TimeFormats]] = None
+        time_baseline: Optional[Tuple[str, TimeFormats]] = None
         ) -> None:
-        if epoch is None and policy == TimePolicy.EVENT_TIME:
+        if time_baseline is None and policy == TimePolicy.EVENT_TIME:
             raise ValueError(
-                f"Con politica {TimePolicy.EVENT_TIME} è necessario inserire un epoch per la normalizzazione dei timestamp."
+                f"Con politica {TimePolicy.EVENT_TIME} è necessario inserire una baseline per la normalizzazione dei timestamp."
             )
-        if epoch and policy != TimePolicy.EVENT_TIME:
+        if time_baseline and policy != TimePolicy.EVENT_TIME:
             raise ValueError(
-                f"L'epoch va inserito solo con politica di tipo {TimePolicy.EVENT_TIME}"
+                f"La baseline va inserita solo con politica di tipo {TimePolicy.EVENT_TIME}"
             )
 
         self._table_counter: int = 0
@@ -40,7 +40,7 @@ class TableEnvironment:
         self._sources_config: Dict[str, InputFileConfiguration] = {}
         self.par = par
         self.policy = policy
-        self.epoch = epoch
+        self.time_baseline = time_baseline
         self.include_dir = include_dir.absolute()
 
     def _generate_table_id(self, prefix: str = "tab") -> str:
@@ -303,7 +303,7 @@ class TableEnvironment:
             time_policy=self.policy.name,
             parallelism=self.par,
             json_dir=out_path,
-            epoch= self.epoch
+            epoch= self.time_baseline
         )
 
         #log

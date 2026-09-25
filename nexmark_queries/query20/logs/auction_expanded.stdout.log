@@ -8,45 +8,45 @@
 [SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv aperto.
 [SRC2] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv aperto.
 [SRC3] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv aperto.
-[SRC4] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv aperto.
 [SRC0] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv aperto.
 [SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv aperto.
 [SRC2] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv aperto.
 [SRC3] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv aperto.
 [SRC4] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv aperto.
+[SRC4] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv aperto.
 [SINK] File auction_expanded_output1.csv aperto.
 [SINK] File auction_expanded_output3.csv aperto.
 [SINK] File auction_expanded_output4.csv aperto.
-[SINK] File auction_expanded_output0.csv aperto.
 [SINK] File auction_expanded_output2.csv aperto.
+[SINK] File auction_expanded_output0.csv aperto.
 [SRC4] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=4 start_us=51539367656883 stop_us=51539369019188 tuples=512745
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=4 start_us=51553501311165 stop_us=51553502734014 tuples=512745
 [SRC2] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=2 start_us=51539367655663 stop_us=51539371295422 tuples=918608
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=2 start_us=51553501309201 stop_us=51553505037160 tuples=918608
 [SRC0] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=0 start_us=51539367654745 stop_us=51539371529111 tuples=927590
-[SRC3] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=3 start_us=51539367656019 stop_us=51539371816171 tuples=918148
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=0 start_us=51553501308518 stop_us=51553505197770 tuples=927590
 [SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=1 start_us=51539367655219 stop_us=51539371846161 tuples=922909
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=1 start_us=51553501308796 stop_us=51553505454692 tuples=922909
+[SRC3] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv parsing terminato.
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv replica=3 start_us=51553501309542 stop_us=51553505464844 tuples=918148
 [SRC2] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=2 start_us=51539367658267 stop_us=51539401736140 tuples=12780743
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=2 start_us=51553501310536 stop_us=51553536112769 tuples=12780743
 [SRC3] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=3 start_us=51539367658597 stop_us=51539402141274 tuples=12773010
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=3 start_us=51553501310715 stop_us=51553536178716 tuples=12773010
 [SRC1] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=1 start_us=51539367657885 stop_us=51539402955128 tuples=12787540
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=1 start_us=51553501310382 stop_us=51553537150816 tuples=12787540
 [SRC0] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=0 start_us=51539367657433 stop_us=51539403321302 tuples=13286994
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=0 start_us=51553501310224 stop_us=51553538338740 tuples=13286994
 [SRC4] File /disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv parsing terminato.
-[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=4 start_us=51539367658881 stop_us=51539409082862 tuples=12771713
-[SINK2] File auction_expanded_output2.csv completato e chiuso.[SINK
-1[SINK_METRICS] sink=auction_expanded_output2.csv replica=2 start_us=51539367671815 stop_us=51539409082986 tuples=1280241
-] File auction_expanded_output1.csv completato e chiuso.
-[SINK_METRICS] sink=auction_expanded_output1.csv replica=1 start_us=51539367660574 stop_us=51539409082989 tuples=1286003
-[SINK0] File auction_expanded_output0.csv completato e chiuso.[SINK
-[SINK_METRICS] sink=auction_expanded_output0.csv replica=0 start_us=51539367671788 stop_us=51539409082985 tuples=1290340
-3] File auction_expanded_output3.csv completato e chiuso.
-[SINK_METRICS] sink=auction_expanded_output3.csv replica=3 start_us=51539367667242 stop_us=51539409082987 tuples=1290728
+[SRC_METRICS] source=/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv replica=4 start_us=51553501310964 stop_us=51553544083810 tuples=12771713
+[SINK1] File [SINKauction_expanded_output1.csv3] File auction_expanded_output3.csv completato e chiuso. completato e chiuso.[SINK
+0] File 
+[SINK_METRICS] sink=auction_expanded_output1.csv replica=1 start_us=51553501312653 stop_us=51553544083908 tuples=1286003
+[SINK_METRICS] sink=auction_expanded_output3.csv replica=3 start_us=auction_expanded_output0.csv51553501315308 stop_us=51553544083910 tuples=1290728
+ completato e chiuso.
+[SINK_METRICS] sink=auction_expanded_output0.csv replica=0 start_us=51553501327059 stop_us=51553544083908 tuples=1290340
+[SINK2] File auction_expanded_output2.csv completato e chiuso.
+[SINK_METRICS] sink=auction_expanded_output2.csv replica=2 start_us=51553501321683 stop_us=51553544083909 tuples=1280241
 [SINK4] File auction_expanded_output4.csv completato e chiuso.
-[SINK_METRICS] sink=auction_expanded_output4.csv replica=4 start_us=51539367671714 stop_us=51539480342283 tuples=7724667
+[SINK_METRICS] sink=auction_expanded_output4.csv replica=4 start_us=51553501319580 stop_us=51553615120610 tuples=7724667
 [32mWindFlow Status Message: PipeGraph [auction_expanded] executed successfully[0m

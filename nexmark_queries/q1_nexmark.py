@@ -4,7 +4,7 @@ from pathlib import Path
 env = TableEnvironment(
     par= 2, 
     policy=TimePolicy.EVENT_TIME,
-    epoch=("2026-09-01T00:00:00.000Z", TimeFormats.ISO8601)
+    time_baseline=("2026-09-01T00:00:00.000Z", TimeFormats.ISO8601)
 )
 
 #---- auction
