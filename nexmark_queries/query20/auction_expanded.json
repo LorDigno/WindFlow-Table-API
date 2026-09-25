@@ -1,0 +1,264 @@
+{
+    "query_id": "auction_expanded",
+    "root": {
+        "op_type": "SELECT",
+        "schema_out": {
+            "auction_id": "BIGINT",
+            "bidder": "BIGINT",
+            "price": "BIGINT",
+            "channel": "STRING",
+            "url": "STRING",
+            "bid_dateTime": "ISO8601",
+            "extra": "STRING",
+            "item_name": "STRING",
+            "description": "STRING",
+            "initial_bid": "BIGINT",
+            "reserve": "BIGINT",
+            "auction_dateTime": "ISO8601",
+            "expires": "ISO8601",
+            "seller": "BIGINT",
+            "category": "BIGINT"
+        },
+        "schema_in": {
+            "auction_id": "BIGINT",
+            "item_name": "STRING",
+            "description": "STRING",
+            "initial_bid": "BIGINT",
+            "reserve": "BIGINT",
+            "auction_dateTime": "ISO8601",
+            "expires": "ISO8601",
+            "seller": "BIGINT",
+            "category": "BIGINT",
+            "bidder": "BIGINT",
+            "price": "BIGINT",
+            "channel": "STRING",
+            "url": "STRING",
+            "bid_dateTime": "ISO8601",
+            "extra": "STRING"
+        },
+        "expressions": [
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "auction_id"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "bidder"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "price"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "channel"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "url"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "ISO8601",
+                "name": "bid_dateTime"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "extra"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "item_name"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "STRING",
+                "name": "description"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "initial_bid"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "reserve"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "ISO8601",
+                "name": "auction_dateTime"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "ISO8601",
+                "name": "expires"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "seller"
+            },
+            {
+                "expr_type": "COL_REF",
+                "data_type": "BIGINT",
+                "name": "category"
+            }
+        ],
+        "parents": [
+            {
+                "op_type": "JOIN_INTERVAL",
+                "schema_out": {
+                    "auction_id": "BIGINT",
+                    "item_name": "STRING",
+                    "description": "STRING",
+                    "initial_bid": "BIGINT",
+                    "reserve": "BIGINT",
+                    "auction_dateTime": "ISO8601",
+                    "expires": "ISO8601",
+                    "seller": "BIGINT",
+                    "category": "BIGINT",
+                    "bidder": "BIGINT",
+                    "price": "BIGINT",
+                    "channel": "STRING",
+                    "url": "STRING",
+                    "bid_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "tab1_schema": {
+                    "auction_id": "BIGINT",
+                    "item_name": "STRING",
+                    "description": "STRING",
+                    "initial_bid": "BIGINT",
+                    "reserve": "BIGINT",
+                    "auction_dateTime": "ISO8601",
+                    "expires": "ISO8601",
+                    "seller": "BIGINT",
+                    "category": "BIGINT"
+                },
+                "tab2_schema": {
+                    "auction_id": "BIGINT",
+                    "bidder": "BIGINT",
+                    "price": "BIGINT",
+                    "channel": "STRING",
+                    "url": "STRING",
+                    "bid_dateTime": "ISO8601",
+                    "extra": "STRING"
+                },
+                "keys": [
+                    "auction_id"
+                ],
+                "attachment": {
+                    "lower_bound": {
+                        "value": -1,
+                        "unit": "MINUTES"
+                    },
+                    "upper_bound": {
+                        "value": 12,
+                        "unit": "HOURS"
+                    }
+                },
+                "parents": [
+                    {
+                        "op_type": "WHERE",
+                        "schema_out": {
+                            "auction_id": "BIGINT",
+                            "item_name": "STRING",
+                            "description": "STRING",
+                            "initial_bid": "BIGINT",
+                            "reserve": "BIGINT",
+                            "auction_dateTime": "ISO8601",
+                            "expires": "ISO8601",
+                            "seller": "BIGINT",
+                            "category": "BIGINT"
+                        },
+                        "schema_in": {
+                            "auction_id": "BIGINT",
+                            "item_name": "STRING",
+                            "description": "STRING",
+                            "initial_bid": "BIGINT",
+                            "reserve": "BIGINT",
+                            "auction_dateTime": "ISO8601",
+                            "expires": "ISO8601",
+                            "seller": "BIGINT",
+                            "category": "BIGINT"
+                        },
+                        "condition": {
+                            "expr_type": "BINARY_OP",
+                            "data_type": "BOOL",
+                            "name": "category_eq_10",
+                            "op": "==",
+                            "left": {
+                                "expr_type": "COL_REF",
+                                "data_type": "BIGINT",
+                                "name": "category"
+                            },
+                            "right": {
+                                "expr_type": "LITERAL",
+                                "data_type": "INT",
+                                "name": "10",
+                                "value": 10
+                            }
+                        },
+                        "parents": [
+                            {
+                                "op_type": "FROM",
+                                "schema_out": {
+                                    "auction_id": "BIGINT",
+                                    "item_name": "STRING",
+                                    "description": "STRING",
+                                    "initial_bid": "BIGINT",
+                                    "reserve": "BIGINT",
+                                    "auction_dateTime": "ISO8601",
+                                    "expires": "ISO8601",
+                                    "seller": "BIGINT",
+                                    "category": "BIGINT"
+                                },
+                                "source_id": "auction_source",
+                                "config": {
+                                    "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_auction.csv",
+                                    "file_format": "CSV",
+                                    "header": true,
+                                    "time_col": "auction_dateTime",
+                                    "order": true,
+                                    "delay": null,
+                                    "split_size": 67108864
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "op_type": "FROM",
+                        "schema_out": {
+                            "auction_id": "BIGINT",
+                            "bidder": "BIGINT",
+                            "price": "BIGINT",
+                            "channel": "STRING",
+                            "url": "STRING",
+                            "bid_dateTime": "ISO8601",
+                            "extra": "STRING"
+                        },
+                        "source_id": "bid_source",
+                        "config": {
+                            "filepath": "/disc1/homes/lorenzoni/WindFlow-Table-API/nexmark_datasets/70m_bid.csv",
+                            "file_format": "CSV",
+                            "header": true,
+                            "time_col": "bid_dateTime",
+                            "order": true,
+                            "delay": null,
+                            "split_size": 268435456
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+}

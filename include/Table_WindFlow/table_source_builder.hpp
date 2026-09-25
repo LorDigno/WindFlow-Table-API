@@ -13,6 +13,7 @@
 #include <cassert> 
 #include <functional>
 #include <windflow.hpp>
+#include <helper_functions.hpp>
 
 //struct che rappresenta uno split
 struct File_Split{
@@ -49,6 +50,10 @@ class Source_Functor {
         uint64_t max_ts = 0, global_epoch = 0 , last_wm = 0;
         bool first_wm = true;
 
+        //per il rilevamento d'inizio
+        bool first_tuple = true;
+        uint64_t emitted_tuples = 0;
+
         void process_ordered(uint64_t& current_ts, uint64_t& current_wm) {
             //normalizza secondo la prima tupla
             current_ts = (current_ts >= global_epoch) ? (current_ts - global_epoch) : 0;
@@ -83,6 +88,7 @@ class Source_Functor {
         void operator()(wf::Source_Shipper<TupleT> &shipper, wf::RuntimeContext& ctx) {
             //replicaIndex necessario a ricavare gli split
             int replica_id = static_cast<int>(ctx.getReplicaIndex());
+            uint64_t t_start = 0;
 
             //apro il file
             std::ifstream file(file_path);
@@ -132,6 +138,11 @@ class Source_Functor {
 
                     parser_lambda(line, tuple, timestamp);
 
+                    if (first_tuple) {
+                        t_start = current_time_micros();
+                        first_tuple = false;
+                    }
+
                     if(event_time){
                         //usa la politica corretta per la normalizzazione e il watermarking
                         if (is_ordered) {
@@ -150,10 +161,22 @@ class Source_Functor {
                     else{
                         shipper.push(tuple);
                     }
+
+                    emitted_tuples++;
                 }
             }
 
+            auto t_stop = current_time_micros();
+
             file.close();
+
+            std::cout << "[SRC" << ctx.getReplicaIndex() << "] File " << file_path << " parsing terminato." << std::endl;
+
+            std::cout << "[SRC_METRICS] source=" << file_path 
+                    << " replica=" << replica_id 
+                    << " start_us=" << t_start
+                    << " stop_us=" << t_stop
+                    << " tuples=" << emitted_tuples << std::endl;
         }
 };
 

@@ -27,6 +27,10 @@ class Sink_Functor {
         std::string actual_filename;
         bool is_initialized = false;
 
+        //misurazioni benchmark
+        uint64_t t_start = 0;
+        uint64_t emitted_tuples = 0;
+
         //inizializza lo stream di lettura del file di output
         void init_file(size_t replica_id) {
             if (is_initialized) return;
@@ -49,6 +53,8 @@ class Sink_Functor {
             if (!header.empty()) {
                 *out_file << header << "\n";
             }
+
+            t_start = current_time_micros();
         }
 
     public:
@@ -70,11 +76,20 @@ class Sink_Functor {
 
             //fine dello stream
             if (!input) {
+                uint64_t t_stop = current_time_micros();
+
                 if (out_file && out_file->is_open()) {
                     out_file->flush();
                     out_file->close();
                 }
                 std::cout << "[SINK" << ctx.getReplicaIndex() << "] File " << actual_filename << " completato e chiuso." << std::endl;
+
+                std::cout << "[SINK_METRICS] sink=" << actual_filename 
+                          << " replica=" << ctx.getReplicaIndex() 
+                          << " start_us=" << t_start 
+                          << " stop_us=" << t_stop 
+                          << " tuples=" << emitted_tuples << std::endl;
+
                 return;
             }
 
@@ -82,6 +97,7 @@ class Sink_Functor {
             if (out_file && out_file->is_open()) {
                 formatter_lambda(*input, *out_file);
                 *out_file << "\n";
+                emitted_tuples++;
             }
         }
 };

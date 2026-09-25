@@ -115,7 +115,7 @@ inline std::string reformat_ISO8601(uint64_t ts_us) {
 inline uint64_t current_time_micros() {
     return static_cast<uint64_t>(
         std::chrono::duration_cast<std::chrono::microseconds>(
-            std::chrono::system_clock::now().time_since_epoch()
+            std::chrono::steady_clock::now().time_since_epoch()
         ).count()
     );
 }
